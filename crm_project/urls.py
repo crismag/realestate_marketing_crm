@@ -1,7 +1,10 @@
 from django.urls import include, path
 
+from crm.contacts.intake import intake_view
+
 urlpatterns = [
     path("", include("crm.core.urls")),
+    path("api/intake/inquiries", intake_view, name="intake"),
     path("accounts/", include("crm.accounts.urls")),
     path("contacts/", include("crm.contacts.urls")),
     path("work/", include("crm.work.urls")),
