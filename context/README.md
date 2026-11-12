@@ -21,3 +21,6 @@ Review [Lifecycle and screen organization v0.1](04_requirements/LIFECYCLE_AND_SC
 
 ## Package status
 This is an initial context folder, not a complete execution package. Architecture, verified UI catalogs, contracts, per-task bundles, interface checkpoints, development checklist/run log, project-specific skills and execution/verification companions remain pending. Generate them at the relevant design/planning stage using inspected repository evidence.
+
+## Portfolio attention requirement
+[Client attention and follow-up coverage](04_requirements/CLIENT_ATTENTION_AND_FOLLOWUP_v0.1.md) captures REQ-026: proactively resurface forgotten clients, including toured clients with no follow-up task. Queue, digest, metrics and detailed rule behavior are proposed under PROP-033; timing and channels remain open.

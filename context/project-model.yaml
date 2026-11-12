@@ -1,6 +1,6 @@
 model:
-  version: 21
-  last_commit: 21
+  version: 22
+  last_commit: 22
   generated: 2026-11-13
 project:
   name: Realstate CRM
@@ -18,7 +18,7 @@ baseline:
   preserved_snapshot: true
   embedded_model_version: 17
 requirements:
-  active: [REQ-001, REQ-002, REQ-003, REQ-004, REQ-005, REQ-014, REQ-015, REQ-016, REQ-017, REQ-018, REQ-019, REQ-020, REQ-021, REQ-022, REQ-023, REQ-024, REQ-025]
+  active: [REQ-001, REQ-002, REQ-003, REQ-004, REQ-005, REQ-014, REQ-015, REQ-016, REQ-017, REQ-018, REQ-019, REQ-020, REQ-021, REQ-022, REQ-023, REQ-024, REQ-025, REQ-026]
   deferred: [REQ-007, REQ-008, REQ-009, REQ-010, REQ-011]
   partial:
     REQ-006: internal-capture-active_customer-login-deferred
@@ -44,7 +44,7 @@ decisions:
     requirements: [REQ-015, REQ-019, REQ-020]
 actors: [USER-001, USER-002, USER-003, USER-004, USER-005]
 sources:
-  - user-conversation-through-commit-21
+  - user-conversation-through-commit-22
   - baseline-v0.1
   - official-product-documentation-researched-in-conversation
 open_questions: [OQ-002, OQ-008, OQ-010, OQ-011, OQ-012, OQ-013, OQ-014]
@@ -75,7 +75,10 @@ artifacts:
   - CLAUDE_HANDOFF.md
   - 04_requirements/SHARED_POOL_POLICY_v0.1.md
   - 04_requirements/LIFECYCLE_AND_SCREENS_v0.1.md
+  - 04_requirements/CLIENT_ATTENTION_AND_FOLLOWUP_v0.1.md
 id_register_additions:
+  - {id: REQ-026, status: captured, type: portfolio-followup-attention}
+  - {id: PROP-033, status: proposed, type: attention-queue-and-coverage}
   - {id: ADR-002, status: accepted, type: shared-pool-policy}
   - {id: PROP-032, status: proposed, type: lifecycle-and-screen-map}
   - {id: PROP-031, status: approved, type: shared-pool-policy}
@@ -96,4 +99,4 @@ undefined:
 resolved_questions:
   - {id: OQ-009, resolution: ADR-002, status: resolved}
   - {id: OQ-006, resolution: ADR-001, status: resolved}
-next: review-PROP-032_and-resolve-conversion-milestone
+next: define-attention-cadence-and-lifecycle_while-design-research-proceeds
