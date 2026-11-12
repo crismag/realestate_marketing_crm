@@ -1,0 +1,28 @@
+{% extends "base.html" %}{% load crm_ui %}{% block title %}Message #{{ msg.pk }}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1 class="cg-typography" data-variant="h4">Message #{{ msg.pk }}</h1><p class="muted">To <a href="{% url 'contacts:detail' msg.contact_id %}">{{ msg.contact.display_name }}</a></p></div><a href="{% url 'comms:list' %}">All messages</a></div>
+{% if msg.status == "sandbox_captured" %}<div class="alert-soft alert-soft--info">Captured by the local sandbox transport. This email was <strong>not sent</strong> to the customer.</div>{% endif %}
+<div class="grid grid--main-side mt-4">
+<section class="cg-card"><div class="card-title"><h2>{{ msg.subject|default:"(not rendered yet)" }}</h2>{% chip msg.get_status_display msg.status %}</div>
+<div class="card-pad">{% if msg.body %}<pre class="message-body">{{ msg.body }}</pre>{% else %}<p class="muted">The text is rendered when the message is processed.</p>{% endif %}</div></section>
+<aside class="stack">
+<section class="cg-card card-pad"><dl class="facts">
+<dt>Status</dt><dd>{{ msg.get_status_display }}</dd>
+{% if msg.status_reason %}<dt>Reason</dt><dd>{{ msg.status_reason }}</dd>{% endif %}
+<dt>To</dt><dd>{{ msg.to_address|default:"—" }}</dd>
+<dt>Channel</dt><dd>{{ msg.channel }}</dd>
+<dt>Transport</dt><dd>{{ msg.transport }}</dd>
+{% if msg.provider_ref %}<dt>Reference</dt><dd class="small">{{ msg.provider_ref }}</dd>{% endif %}
+<dt>Template</dt><dd>{% if msg.template %}{{ msg.template.name }} v{{ msg.template_version }}{% else %}—{% endif %}</dd>
+<dt>Rule</dt><dd>{% if msg.rule %}<a href="{% url 'automation:rule' msg.rule.key %}">{{ msg.rule.name }}</a> v{{ msg.rule_version }}{% else %}—{% endif %}</dd>
+<dt>Scheduled</dt><dd>{{ msg.scheduled_for|local }}</dd>
+<dt>Attempted</dt><dd>{{ msg.attempted_at|local|default:"—" }}</dd>
+</dl></section>
+{% if msg.status == "failed" %}<section class="cg-card card-pad"><form method="post" action="{% url 'comms:retry' msg.pk %}">{% csrf_token %}<p class="small muted">Retrying re-checks every stop policy before capturing again.</p><button class="cg-button" data-variant="solid" data-color="primary" data-size="md" data-shape="rounded" data-full-width="false" type="submit">Retry</button></form></section>{% endif %}
+{% if msg.status == "uncertain" %}<section class="cg-card card-pad"><form method="post" action="{% url 'comms:resolve' msg.pk %}" class="stack-sm">{% csrf_token %}
+<p class="small muted">The transport did not confirm whether this was accepted. It is not retried automatically, to avoid sending twice. Record what you found.</p>
+<div class="field"><label for="r-o">Outcome</label><select class="cg-select" id="r-o" name="outcome"><option value="delivered">It was delivered</option><option value="failed">It was not delivered</option></select></div>
+<div class="field"><label for="r-n">Note</label><input class="cg-input" data-size="md" data-color="default" id="r-n" name="note" maxlength="200"></div>
+<button class="cg-button" data-variant="solid" data-color="primary" data-size="md" data-shape="rounded" data-full-width="false" type="submit">Record outcome</button></form></section>{% endif %}
+</aside></div>
+{% endblock %}

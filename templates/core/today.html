@@ -1,0 +1,35 @@
+{% extends "base.html" %}{% load crm_ui %}{% block title %}Today{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1 class="cg-typography" data-variant="h4">Today</h1><p class="muted">Evaluated {{ now|local }} ({{ crm_policy.timezone }}). Counts per reason overlap; the client total counts each client once.</p></div>
+<a class="cg-button" data-variant="gradient" data-color="primary" data-size="md" data-shape="rounded" data-full-width="false" href="{% url 'contacts:new' %}">Capture contact</a></div>
+{% if not health.alive %}<div class="alert-soft" role="status">The background worker is not running, so reminders, notifications and customer messages are queued but not processed ({{ health.due_backlog }} due). Start it with <code>python manage.py run_worker</code>.</div>{% endif %}
+<section class="grid grid--stats" aria-label="My attention summary">
+  <div class="cg-card stat"><a href="{% url 'attention:queue' %}?scope=mine"><div class="stat__value">{{ summary.unique_contacts }}</div><div class="stat__label">My clients needing attention</div></a></div>
+  {% for code, label in reasons.items %}{% with n=summary.per_reason|get_item:code %}{% if n %}<div class="cg-card stat"><a href="{% url 'attention:queue' %}?scope=mine&amp;reason={{ code }}"><div class="stat__value">{{ n }}</div><div class="stat__label">{{ label }}</div></a></div>{% endif %}{% endwith %}{% endfor %}
+  <div class="cg-card stat"><a href="{% url 'reporting:index' %}"><div class="stat__value">{{ coverage.ratio|pct }}</div><div class="stat__label">My follow-up coverage ({{ coverage.met }}/{{ coverage.eligible }}{% if coverage.missing_history %}, {{ coverage.missing_history }} with no recorded contact{% endif %})</div></a></div>
+</section>
+<div class="grid grid--main-side mt-0">
+  <section class="cg-card" aria-labelledby="att-title">
+    <div class="card-title"><h2 id="att-title">My attention queue</h2><a href="{% url 'attention:queue' %}?scope=mine">All {{ mine_total }}</a></div>
+    {% for item in items %}{% include "partials/attention_item.html" %}{% empty %}<div class="empty">Nothing needs your attention right now.</div>{% endfor %}
+  </section>
+  <div class="stack">
+    <section class="cg-card" aria-labelledby="ho-title"><div class="card-title"><h2 id="ho-title">Handovers for you</h2></div>
+      {% for h in to_decide %}<div class="att-item"><a href="{% url 'contacts:detail' h.contact.pk %}">{{ h.contact.display_name }}</a> — {{ h.get_kind_display }} from {{ h.sender }} <span class="muted small">{{ h.requested_at|ago }}</span>
+        <div class="small">{{ h.reason }}</div>
+        <div class="row mt-0">
+          <form method="post" action="{% url 'work:handover_decide' h.pk 'accept' %}">{% csrf_token %}<input type="hidden" name="next" value="/"><button class="cg-button" data-variant="solid" data-color="success" data-size="sm" data-shape="rounded" data-full-width="false">Accept</button></form>
+          <form method="post" action="{% url 'work:handover_decide' h.pk 'decline' %}" class="row">{% csrf_token %}<input type="hidden" name="next" value="/"><label class="sr-only" for="dn{{ h.pk }}">Decline note</label><input class="cg-input" data-size="sm" data-color="default" id="dn{{ h.pk }}" name="note" placeholder="Reason (optional)"><button class="cg-button" data-variant="outline" data-color="secondary" data-size="sm" data-shape="rounded" data-full-width="false">Decline</button></form>
+        </div></div>{% empty %}<div class="empty">No handovers waiting for you.</div>{% endfor %}
+      {% if sent %}<div class="card-pad small"><strong>You requested (you stay responsible until accepted):</strong><ul>{% for h in sent %}<li><a href="{% url 'contacts:detail' h.contact.pk %}">{{ h.contact.display_name }}</a> → {{ h.destination_label }} ({{ h.requested_at|ago }})</li>{% endfor %}</ul></div>{% endif %}
+    </section>
+    <section class="cg-card" aria-labelledby="tasks-title"><div class="card-title"><h2 id="tasks-title">My open tasks</h2><a href="{% url 'work:tasks' %}">All</a></div>
+      <ul class="cg-list">{% for t in my_tasks %}<li class="cg-list__item" data-color="default"><span><a href="{% url 'work:task' t.pk %}">{{ t.title }}</a> · <a class="muted" href="{% url 'contacts:detail' t.contact.pk %}">{{ t.contact.display_name }}</a><br><span class="small {% if t.due_at and t.due_at < now %}muted{% endif %}">{% if t.due_at %}{% if t.due_at < now %}{% chip "Overdue" "failed" %} {% endif %}Due {{ t.due_at|local }}{% else %}No due date{% endif %}</span></span></li>{% empty %}<li class="empty">No open tasks.</li>{% endfor %}</ul>
+    </section>
+    <section class="cg-card" aria-labelledby="n-title"><div class="card-title"><h2 id="n-title">Recent notifications</h2><a href="{% url 'automation:notifications' %}">All</a></div>
+      <ul class="cg-list">{% for n in notes %}<li class="cg-list__item" data-color="default"><span>{% if not n.read_at %}<strong>{{ n.title }}</strong>{% else %}{{ n.title }}{% endif %}<br><span class="small muted">{{ n.reason }} · {{ n.created_at|ago }}</span></span></li>{% empty %}<li class="empty">No notifications.</li>{% endfor %}</ul>
+    </section>
+    <p class="small muted">Team-wide: {{ team_summary.unique_contacts }} client(s) need attention. <a href="{% url 'attention:queue' %}?scope=all">Open team queue</a></p>
+  </div>
+</div>
+{% endblock %}

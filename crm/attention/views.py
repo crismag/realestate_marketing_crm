@@ -1,0 +1,72 @@
+import datetime as dt
+
+from django.contrib import messages
+from django.contrib.auth import get_user_model
+from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.http import require_POST
+
+from crm.accounts.models import Team
+from crm.contacts.models import Contact
+from crm.core import clock
+from crm.core.errors import DomainError
+from crm.core.services import get_policy
+from crm.core.web import safe_next
+from crm.work.models import Pool
+
+from . import services
+
+User = get_user_model()
+
+
+def queue(request):
+    policy = get_policy()
+    now = clock.now()
+    scope = request.GET.get("scope", "mine")
+    reason = request.GET.get("reason", "")
+    include_snoozed = request.GET.get("snoozed") == "1"
+    pool_id = int(request.GET["pool"]) if request.GET.get("pool", "").isdigit() else None
+    team_id = int(request.GET["team"]) if request.GET.get("team", "").isdigit() else None
+    person = request.GET.get("person", "")
+    items = services.evaluate(now=now, policy=policy)
+    if person.isdigit():
+        target = User.objects.filter(pk=int(person)).first()
+        filtered = services.filter_items(items, user=target, scope="mine", reason=reason, include_snoozed=include_snoozed,
+                                         pool_id=pool_id, team_id=team_id)
+    else:
+        filtered = services.filter_items(items, user=request.user, scope=scope, reason=reason, include_snoozed=include_snoozed,
+                                         pool_id=pool_id, team_id=team_id)
+    summary = services.summarize(services.filter_items(items, user=request.user, scope=scope if not person else "all",
+                                                       pool_id=pool_id, team_id=team_id))
+    return render(request, "attention/queue.html", {
+        "items": filtered[:300], "total": len(filtered), "summary": summary, "reasons": services.REASONS,
+        "scope": scope, "reason": reason, "include_snoozed": include_snoozed, "now": now, "person": person,
+        "pools": Pool.objects.filter(active=True), "teams": Team.objects.filter(active=True), "pool_id": pool_id,
+        "team_id": team_id, "users": User.objects.filter(is_active=True).order_by("full_name"),
+        "evaluated_at": now,
+    })
+
+
+@require_POST
+def snooze(request, contact_id):
+    contact = get_object_or_404(Contact, pk=contact_id)
+    reason_code = request.POST.get("reason_code", "")
+    try:
+        days = int(request.POST.get("days", "0"))
+    except ValueError:
+        days = 0
+    until = clock.now() + dt.timedelta(days=days)
+    try:
+        services.snooze(contact, actor=request.user, reason_code=reason_code, until=until, note=request.POST.get("note", ""))
+    except DomainError as exc:
+        messages.error(request, exc.message)
+    else:
+        messages.success(request, f"Snoozed for {days} day(s). The reminder resurfaces after that; history is unchanged.")
+    return redirect(safe_next(request, f"/contacts/{contact.pk}/"))
+
+
+@require_POST
+def unsnooze(request, contact_id):
+    contact = get_object_or_404(Contact, pk=contact_id)
+    services.clear_snooze(contact, actor=request.user, reason_code=request.POST.get("reason_code", ""))
+    messages.success(request, "Snooze cleared.")
+    return redirect(safe_next(request, f"/contacts/{contact.pk}/"))

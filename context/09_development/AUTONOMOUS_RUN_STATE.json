@@ -1,0 +1,29 @@
+{
+  "run_id": "autonomous-build-2026-11-12",
+  "original_start_utc": "2026-11-12T19:08:03Z",
+  "fixed_deadline_utc": "2026-11-13T07:08:03Z",
+  "deadline_rule": "Fixed at start. Restarts, resumes and context resets never reset or extend it.",
+  "branch": "claude/project-thread-2p04se",
+  "base_commit": "96c10c9",
+  "stack": "Python 3.13 / Django 5.2.19 LTS / SQLite (WAL) / server-rendered templates with vendored CrisGen UI 1.1 vanilla target / waitress + whitenoise",
+  "current_stage": "J (handoff written; refinement optional)",
+  "stages": {
+    "A": "done", "B": "done", "C": "done", "D": "done", "E": "done",
+    "F": "done", "G": "done", "H": "done_sandbox_only", "I": "done", "J": "in_progress"
+  },
+  "last_checkpoint_utc": "2026-11-12T19:58:00Z",
+  "last_commit": "cca37ed",
+  "checks": [
+    {"name": "pytest (all suites)", "command": ".venv/bin/python -m pytest -p no:logging", "result": "94 passed", "at_utc": "2026-11-12T19:57:00Z"},
+    {"name": "ruff", "command": ".venv/bin/ruff check .", "result": "passed", "at_utc": "2026-11-12T19:55:00Z"},
+    {"name": "pip-audit", "command": ".venv/bin/pip-audit -r requirements.txt", "result": "no known vulnerabilities", "at_utc": "2026-11-12T19:48:00Z"},
+    {"name": "production smoke + browser journey", "command": "scripts/e2e.sh", "result": "15 checks passed (desktop 1280px + 390px)", "at_utc": "2026-11-12T19:54:00Z"},
+    {"name": "manage.py check --deploy", "result": "4 expected warnings with CRM_SECURE_COOKIES=0/no TLS in the loopback smoke; none with production TLS settings", "at_utc": "2026-11-12T19:54:00Z"},
+    {"name": "real email provider", "result": "not_run (no provider; sandbox only)"},
+    {"name": "MySQL", "result": "not_run (guide only)"},
+    {"name": "hosted CI run", "result": "passed on GitHub Actions (runs 43295590124, 43295644932) at head 0224dab", "at_utc": "2026-11-12T19:59:48Z"}
+  ],
+  "blockers": [],
+  "running_services": [],
+  "next_action": "Owner review of PR #1 and implementation defaults; optional refinements from docs/KNOWN_LIMITATIONS.md"
+}

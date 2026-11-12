@@ -1,0 +1,14 @@
+{% extends "base.html" %}{% block title %}Sign in{% endblock %}
+{% block auth_content %}
+<div class="cg-card auth-card" data-shadow="lg">
+  <div class="card-title"><h1 class="cg-typography" data-variant="h5" data-color="inherit">Sign in to {{ workspace_name }}</h1></div>
+  <form method="post" class="card-pad stack-sm" novalidate>
+    {% csrf_token %}
+    {% include "partials/form_errors.html" %}
+    {% for field in form %}{% include "partials/field.html" %}{% endfor %}
+    <input type="hidden" name="next" value="{{ next }}">
+    <button class="cg-button" data-variant="gradient" data-color="primary" data-size="md" data-shape="rounded" data-full-width="true" type="submit">Sign in</button>
+    <p class="muted small">Internal staff only. Accounts are created by a workspace administrator.</p>
+  </form>
+</div>
+{% endblock %}

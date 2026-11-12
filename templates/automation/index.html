@@ -1,0 +1,20 @@
+{% extends "base.html" %}{% load crm_ui %}{% block title %}Automation{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1 class="cg-typography" data-variant="h4">Automation</h1><p class="muted">Rules run in the background worker. Each one shows its trigger, conditions, action and stop policy.</p></div><a href="{% url 'automation:jobs' %}">Job history</a></div>
+<section class="cg-card card-pad" aria-label="Worker health">
+{% if health.alive %}{% chip "Worker running" "succeeded" %}{% else %}{% chip "Worker not running" "failed" %} <span>Start it with <code>python manage.py run_worker</code>. Work stays queued until then.</span>{% endif %}
+<span class="muted"> · {{ health.due_backlog }} job(s) due{% if health.oldest_due %}, oldest {{ health.oldest_due|ago }}{% endif %} · {{ health.running }} running · {{ health.dead }} failed permanently</span>
+{% for w in health.workers %}<div class="small muted">{{ w.worker_id }}: {{ w.state }}, last seen {{ w.last_seen_at|ago }}, {{ w.jobs_processed }} job(s)</div>{% endfor %}
+</section>
+<section class="cg-card"><div class="card-title"><h2>Rules</h2></div>
+<div class="cg-table table-scroll"><table class="cg-table__table"><thead><tr><th class="cg-table__head-cell" scope="col">Rule</th><th class="cg-table__head-cell" scope="col">Audience</th><th class="cg-table__head-cell" scope="col">State</th><th class="cg-table__head-cell" scope="col">Trigger</th><th class="cg-table__head-cell" scope="col">Last evaluation</th></tr></thead><tbody>
+{% for r in rules %}{% with run=last_runs|get_item:r.pk %}<tr><td class="cg-table__cell"><a href="{% url 'automation:rule' r.key %}">{{ r.name }}</a><div class="small muted">v{{ r.version }}</div></td><td class="cg-table__cell">{{ r.get_audience_display }}</td><td class="cg-table__cell">{% if r.enabled %}{% chip "Enabled" "succeeded" %}{% else %}{% chip "Disabled" %}{% endif %}</td><td class="cg-table__cell small">{{ r.trigger }}</td><td class="cg-table__cell small">{% if run %}{{ run.started_at|ago }}: {{ run.matched }} matched, {{ run.created }} new, {{ run.suppressed }} already sent{% else %}Event-driven / not yet run{% endif %}</td></tr>{% endwith %}{% endfor %}
+</tbody></table></div></section>
+<div class="grid grid--2">
+<section class="cg-card"><div class="card-title"><h2>Routing gaps</h2></div>
+<ul class="cg-list">{% for g in gaps %}<li class="cg-list__item" data-color="default"><span>{% chip "No recipient" "routing_gap" %} {{ g.title }}<br><span class="small muted">{{ g.rule.name|default:"" }} · {{ g.created_at|ago }}{% if g.contact %} · <a href="{% url 'contacts:detail' g.contact.pk %}">{{ g.contact.display_name }}</a>{% endif %}</span></span></li>{% empty %}<li class="empty">No routing gaps. Every alert had a recipient.</li>{% endfor %}</ul>
+<p class="card-pad small muted">Fix by setting a pool coordinator or escalation recipients in <a href="{% url 'core:settings' %}">Settings</a>.</p></section>
+<section class="cg-card"><div class="card-title"><h2>Failed jobs</h2><a href="{% url 'automation:jobs' %}?status=dead">All</a></div>
+<ul class="cg-list">{% for j in failed_jobs %}<li class="cg-list__item" data-color="default"><span><a href="{% url 'automation:job' j.pk %}">#{{ j.pk }} {{ j.kind }}</a> {% chip j.get_status_display j.status %}<br><span class="small muted">{{ j.last_error|truncatechars:120 }}</span></span></li>{% empty %}<li class="empty">No failed jobs.</li>{% endfor %}</ul></section>
+</div>
+{% endblock %}

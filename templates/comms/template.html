@@ -1,0 +1,10 @@
+{% extends "base.html" %}{% block title %}Template {{ tpl.name }}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1 class="cg-typography" data-variant="h4">{{ tpl.name }}</h1><p class="muted">Version {{ tpl.version }}. Only the placeholders listed below are filled in; anything else is rejected.</p></div><a href="{% url 'comms:list' %}">Back to messages</a></div>
+<div class="grid grid--main-side">
+<section class="cg-card"><form method="post" class="card-pad stack" novalidate>{% csrf_token %}{% include "partials/form_errors.html" %}
+{% for field in form %}{% include "partials/field.html" %}{% endfor %}
+<div class="form-actions"><button class="cg-button" data-variant="solid" data-color="primary" data-size="md" data-shape="rounded" data-full-width="false" type="submit" name="action" value="save">Save new version</button><button class="cg-button" data-variant="ghost" data-color="secondary" data-size="md" data-shape="rounded" data-full-width="false" type="submit" name="action" value="preview">Preview</button></div></form></section>
+<aside class="cg-card"><div class="card-title"><h2>Preview</h2></div><div class="card-pad">{% if preview %}<p><strong>{{ preview.subject }}</strong></p><pre class="message-body">{{ preview.body }}</pre><p class="small muted">Sample values only. Nothing was sent or saved.</p>{% else %}<p class="muted">Use Preview to see the text with sample values.</p>{% endif %}</div></aside>
+</div>
+{% endblock %}

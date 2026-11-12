@@ -1,0 +1,3 @@
+{% if messages %}<div class="messages" role="status" aria-live="polite">{% for message in messages %}
+<div class="cg-alert" data-cg="alert" role="{% if message.level_tag == 'error' %}alert{% else %}status{% endif %}" data-variant="gradient" data-color="{% if message.level_tag == 'error' %}error{% elif message.level_tag == 'warning' %}warning{% elif message.level_tag == 'success' %}success{% else %}info{% endif %}"><div class="cg-alert__content" data-cg-part="content">{{ message }}</div></div>
+{% endfor %}</div>{% endif %}

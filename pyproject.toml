@@ -1,0 +1,24 @@
+[project]
+name = "realstate-crm"
+version = "0.1.0"
+description = "Internal Sales and Marketing CRM (real estate first)"
+requires-python = ">=3.12"
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "crm_project.settings"
+testpaths = ["tests"]
+addopts = "-q --strict-markers"
+markers = ["concurrency: tests that use real threads and separate database connections"]
+filterwarnings = ["ignore:No directory at:UserWarning"]
+
+[tool.ruff]
+line-length = 130
+target-version = "py312"
+extend-exclude = ["crm/*/migrations/*", ".venv", "var"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "S", "UP"]
+ignore = ["S101", "S311", "B904", "E501"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S105", "S106", "S108", "S603"]  # S603: tests run manage.py with fixed arguments

@@ -1,0 +1,10 @@
+{% extends "base.html" %}{% load crm_ui %}{% block title %}Audit log{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1 class="cg-typography" data-variant="h4">Audit log</h1><p class="muted">Append-only record of consequential changes.</p></div><a href="{% url 'core:settings' %}">Settings</a></div>
+<section class="cg-card"><form method="get" class="card-pad filters"><div class="field"><label for="a-a">Action starts with</label><input class="cg-input" data-size="md" data-color="default" id="a-a" name="action" value="{{ action }}" placeholder="handover., contact."></div>
+<div class="field"><label for="a-u">Actor</label><select class="cg-select" id="a-u" name="actor"><option value="">Anyone</option>{% for u in users %}<option value="{{ u.pk }}" {% if actor == u.pk|stringformat:"d" %}selected{% endif %}>{{ u.full_name }}</option>{% endfor %}</select></div><div><button class="cg-button" data-variant="solid" data-color="primary" data-size="md" data-shape="rounded" data-full-width="false" type="submit">Apply</button></div></form>
+<div class="cg-table table-scroll"><table class="cg-table__table"><thead><tr><th class="cg-table__head-cell" scope="col">When</th><th class="cg-table__head-cell" scope="col">Who</th><th class="cg-table__head-cell" scope="col">Action</th><th class="cg-table__head-cell" scope="col">Summary</th><th class="cg-table__head-cell" scope="col">Contact</th></tr></thead><tbody>
+{% for e in page %}<tr><td class="cg-table__cell small">{{ e.occurred_at|local }}</td><td class="cg-table__cell">{% if e.actor %}{{ e.actor.full_name }}{% else %}{{ e.get_actor_kind_display }}{% endif %}</td><td class="cg-table__cell small">{{ e.action }}</td><td class="cg-table__cell">{{ e.summary }}</td><td class="cg-table__cell">{% if e.contact %}<a href="{% url 'contacts:detail' e.contact_id %}">{{ e.contact.display_name }}</a>{% endif %}</td></tr>
+{% empty %}<tr><td class="cg-table__cell" colspan="5"><div class="empty">No events match.</div></td></tr>{% endfor %}</tbody></table></div>
+{% include "partials/pagination.html" %}</section>
+{% endblock %}

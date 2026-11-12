@@ -1,0 +1,16 @@
+{% extends "base.html" %}{% load crm_ui %}{% block title %}Tasks{% endblock %}
+{% block content %}
+<div class="page-head"><h1 class="cg-typography" data-variant="h4">Tasks</h1></div>
+<section class="cg-card">
+<form method="get" class="card-pad filters"><div class="field"><label for="t-s">Whose</label><select class="cg-select" id="t-s" name="scope"><option value="mine">Mine</option><option value="all" {% if scope == 'all' %}selected{% endif %}>Everyone</option>{% for u in users %}<option value="{{ u.pk }}" {% if scope == u.pk|stringformat:'s' %}selected{% endif %}>{{ u.full_name }}</option>{% endfor %}</select></div>
+<div class="field"><label for="t-st">Status</label><select class="cg-select" id="t-st" name="status"><option value="open">Open</option><option value="overdue" {% if status == 'overdue' %}selected{% endif %}>Overdue</option><option value="done" {% if status == 'done' %}selected{% endif %}>Done / cancelled</option><option value="all" {% if status == 'all' %}selected{% endif %}>All</option></select></div>
+<div class="field"><label for="t-q">Search</label><input class="cg-input" data-size="md" data-color="default" id="t-q" name="q" value="{{ q }}"></div>
+<div><button class="cg-button" data-variant="solid" data-color="primary" data-size="md" data-shape="rounded" data-full-width="false">Apply</button></div></form>
+<div class="cg-table table-scroll"><table class="cg-table__table"><thead><tr><th class="cg-table__head-cell" scope="col">Task</th><th class="cg-table__head-cell" scope="col">Client</th><th class="cg-table__head-cell" scope="col">Assignee</th><th class="cg-table__head-cell" scope="col">Due</th><th class="cg-table__head-cell" scope="col">Status</th><th class="cg-table__head-cell" scope="col"><span class="sr-only">Actions</span></th></tr></thead>
+<tbody>{% for t in page %}<tr><td class="cg-table__cell"><a href="{% url 'work:task' t.pk %}">{{ t.title }}</a>{% if t.critical %} {% chip "Critical" "critical_task" %}{% endif %}<div class="small muted">{{ t.get_kind_display }}{% if t.replan_count %} · replanned {{ t.replan_count }}×{% endif %}</div></td>
+<td class="cg-table__cell"><a href="{% url 'contacts:detail' t.contact.pk %}">{{ t.contact.display_name }}</a></td><td class="cg-table__cell">{{ t.assignee }}</td>
+<td class="cg-table__cell">{% if t.due_at %}{{ t.due_at|local }}{% if t.status == 'open' and t.due_at < now %} {% chip "Overdue" "failed" %}{% endif %}{% else %}—{% endif %}</td><td class="cg-table__cell">{% chip t.get_status_display t.status %}</td>
+<td class="cg-table__cell">{% if t.status == 'open' %}<form method="post" action="{% url 'work:task_complete' t.pk %}">{% csrf_token %}<input type="hidden" name="version" value="{{ t.version }}"><input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="cg-button" data-variant="outline" data-color="success" data-size="sm" data-shape="rounded" data-full-width="false" aria-label="Mark {{ t.title }} done">Done</button></form>{% endif %}</td></tr>
+{% empty %}<tr><td class="cg-table__cell" colspan="6"><div class="empty">No tasks match.</div></td></tr>{% endfor %}</tbody></table></div>
+{% include "partials/pagination.html" %}</section>
+{% endblock %}

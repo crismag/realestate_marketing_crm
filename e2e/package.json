@@ -1,0 +1,8 @@
+{
+  "name": "realstate-crm-e2e",
+  "private": true,
+  "description": "Browser journey for the CRM. Run through scripts/e2e.sh.",
+  "devDependencies": {
+    "playwright": "1.63.0"
+  }
+}

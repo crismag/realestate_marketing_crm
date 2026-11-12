@@ -1,0 +1,16 @@
+{% extends "base.html" %}{% load crm_ui %}{% block title %}Capture contact{% endblock %}
+{% block content %}
+<div class="page-head"><h1 class="cg-typography" data-variant="h4">Capture contact</h1></div>
+{% if duplicates %}<section class="cg-card" aria-labelledby="dup-title"><div class="card-title"><h2 id="dup-title">Possible existing contacts</h2></div>
+<div class="card-pad"><p>These records share the email, phone or name. To record a repeat inquiry, open the existing contact instead of creating a duplicate. Records are never merged automatically.</p>
+<ul class="cg-list">{% for d in duplicates %}<li class="cg-list__item" data-color="default"><span><a href="{% url 'contacts:detail' d.pk %}">{{ d.display_name }}</a> · {{ d.email|default:"no email" }} · {{ d.phone|default:"no phone" }} · {{ d.assignment.describe }}</span></li>{% endfor %}</ul>
+<p class="small">If this is a different person, tick “create a new contact anyway” below and save again. Your entries are kept.</p></div></section>{% endif %}
+<section class="cg-card"><form method="post" class="card-pad stack" novalidate>{% csrf_token %}
+{% include "partials/form_errors.html" %}
+<div class="form-grid form-grid--2">
+{% for field in form %}{% if field.name == 'destination' %}<fieldset><legend>Responsibility</legend>{% for radio in field %}<div class="field--checkbox field">{{ radio.tag }} <label for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label></div>{% endfor %}<div class="help">Pool clients are visible to everyone and can be claimed by one agent. To give a client to a colleague, capture it yourself and request a handover.</div>{% if field.errors %}<div class="errors">{{ field.errors|join:" " }}</div>{% endif %}</fieldset>
+{% elif field.name == 'confirm_new' %}{% if duplicates %}{% include "partials/field.html" %}{% endif %}{% else %}{% include "partials/field.html" %}{% endif %}{% endfor %}
+</div>
+<div class="form-actions"><button class="cg-button" data-variant="gradient" data-color="primary" data-size="md" data-shape="rounded" data-full-width="false" type="submit">Save contact</button><a class="cg-button" data-variant="ghost" data-color="secondary" data-size="md" data-shape="rounded" data-full-width="false" href="{% url 'contacts:list' %}">Cancel</a></div>
+</form></section>
+{% endblock %}

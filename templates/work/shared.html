@@ -1,0 +1,29 @@
+{% extends "base.html" %}{% load crm_ui %}{% block title %}Shared work{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1 class="cg-typography" data-variant="h4">Shared work</h1><p class="muted">Pool clients are visible to everyone. The first successful claim wins; others see who claimed it.</p></div></div>
+<div class="grid grid--main-side">
+<div class="stack">
+{% for entry in pools %}<section class="cg-card" aria-labelledby="pool-{{ entry.pool.pk }}"><div class="card-title"><h2 id="pool-{{ entry.pool.pk }}">{{ entry.pool.name }} <span class="muted small">({{ entry.count }} waiting)</span></h2>
+<span class="small">{% if entry.pool.coordinator %}Coordinator: {{ entry.pool.coordinator }}{% if entry.pool.backup_coordinator %} (backup {{ entry.pool.backup_coordinator }}){% endif %}{% else %}{% chip "No coordinator: alerts have no recipient" "routing_gap" %}{% endif %}</span></div>
+<div class="cg-table table-scroll"><table class="cg-table__table"><thead><tr><th class="cg-table__head-cell" scope="col">Client</th><th class="cg-table__head-cell" scope="col">Waiting since</th><th class="cg-table__head-cell" scope="col"><span class="sr-only">Action</span></th></tr></thead><tbody>
+{% for a in entry.waiting %}<tr><td class="cg-table__cell"><a href="{% url 'contacts:detail' a.contact.pk %}">{{ a.contact.display_name }}</a> <span class="small muted">{{ a.contact.get_lifecycle_display }}</span></td><td class="cg-table__cell">{{ a.since|local }} ({{ a.since|ago }})</td>
+<td class="cg-table__cell"><form method="post" action="{% url 'work:claim' a.contact.pk %}">{% csrf_token %}<input type="hidden" name="version" value="{{ a.version }}"><input type="hidden" name="operation_id" value="{{ operation_id }}-{{ a.pk }}"><input type="hidden" name="next" value="/work/shared/"><button class="cg-button" data-variant="solid" data-color="primary" data-size="sm" data-shape="rounded" data-full-width="false" aria-label="Claim {{ a.contact.display_name }}">Claim</button></form></td></tr>
+{% empty %}<tr><td class="cg-table__cell" colspan="3"><div class="empty">No clients waiting in this pool.</div></td></tr>{% endfor %}</tbody></table></div></section>
+{% empty %}<div class="cg-card empty">No pools yet. <a href="{% url 'core:pool_new' %}">Create a pool</a>.</div>{% endfor %}
+</div>
+<div class="stack">
+<section class="cg-card" aria-labelledby="decide"><div class="card-title"><h2 id="decide">Waiting for your acceptance</h2></div>
+{% for h in to_decide %}<div class="att-item"><a href="{% url 'contacts:detail' h.contact.pk %}">{{ h.contact.display_name }}</a>: {{ h.get_kind_display }} from {{ h.sender }} <span class="small muted">{{ h.requested_at|ago }}</span><div class="small">{{ h.reason }}</div>
+<div class="row"><form method="post" action="{% url 'work:handover_decide' h.pk 'accept' %}">{% csrf_token %}<input type="hidden" name="next" value="/work/shared/"><button class="cg-button" data-variant="solid" data-color="success" data-size="sm" data-shape="rounded" data-full-width="false">Accept</button></form>
+<form method="post" action="{% url 'work:handover_decide' h.pk 'decline' %}" class="row">{% csrf_token %}<input type="hidden" name="next" value="/work/shared/"><label class="sr-only" for="sd{{ h.pk }}">Reason</label><input class="cg-input" data-size="sm" data-color="default" id="sd{{ h.pk }}" name="note" placeholder="Reason"><button class="cg-button" data-variant="outline" data-color="secondary" data-size="sm" data-shape="rounded" data-full-width="false">Decline</button></form></div></div>
+{% empty %}<div class="empty">Nothing waiting for you.</div>{% endfor %}</section>
+<section class="cg-card" aria-labelledby="sent"><div class="card-title"><h2 id="sent">You requested</h2></div>
+{% for h in sent %}<div class="att-item"><a href="{% url 'contacts:detail' h.contact.pk %}">{{ h.contact.display_name }}</a> → {{ h.destination_label }} <span class="small muted">{{ h.requested_at|ago }}</span><div class="small">You remain responsible until it is accepted.</div>
+<form method="post" action="{% url 'work:handover_decide' h.pk 'cancel' %}">{% csrf_token %}<input type="hidden" name="next" value="/work/shared/"><button class="cg-button" data-variant="ghost" data-color="secondary" data-size="sm" data-shape="rounded" data-full-width="false">Cancel request</button></form></div>
+{% empty %}<div class="empty">No pending requests from you.</div>{% endfor %}</section>
+<section class="cg-card" aria-labelledby="allpend"><div class="card-title"><h2 id="allpend">All pending handovers</h2></div>
+<ul class="cg-list">{% for h in pending %}<li class="cg-list__item" data-color="default"><span><a href="{% url 'contacts:detail' h.contact.pk %}">{{ h.contact.display_name }}</a>: {{ h.sender }} → {{ h.destination_label }} <span class="small muted">{{ h.requested_at|ago }}</span></span></li>{% empty %}<li class="empty">None.</li>{% endfor %}</ul></section>
+<section class="cg-card" aria-labelledby="recent"><div class="card-title"><h2 id="recent">Recently decided</h2></div>
+<ul class="cg-list">{% for h in recent %}<li class="cg-list__item" data-color="default"><span><a href="{% url 'contacts:detail' h.contact.pk %}">{{ h.contact.display_name }}</a> {% chip h.get_state_display h.state %}<br><span class="small muted">{{ h.sender }} → {{ h.destination_label }}{% if h.decided_at %} · {{ h.decided_at|local }}{% endif %}</span></span></li>{% empty %}<li class="empty">None.</li>{% endfor %}</ul></section>
+</div></div>
+{% endblock %}

@@ -1,0 +1,10 @@
+{% extends "base.html" %}{% block title %}Edit {{ contact.display_name }}{% endblock %}
+{% block content %}
+<div class="page-head"><h1 class="cg-typography" data-variant="h4">Edit {{ contact.display_name }}</h1><a href="{% url 'contacts:detail' contact.pk %}">Back to profile</a></div>
+{% if duplicates %}<div class="alert-soft alert-soft--info">Other contacts share this email or phone: {% for d in duplicates %}<a href="{% url 'contacts:detail' d.pk %}">{{ d.display_name }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}. Records are never merged automatically.</div>{% endif %}
+<section class="cg-card"><form method="post" class="card-pad stack" novalidate>{% csrf_token %}
+{% include "partials/form_errors.html" %}<input type="hidden" name="version" value="{{ version }}">
+<div class="form-grid form-grid--2">{% for field in form %}{% include "partials/field.html" %}{% endfor %}</div>
+<div class="form-actions"><button class="cg-button" data-variant="gradient" data-color="primary" data-size="md" data-shape="rounded" data-full-width="false" type="submit">Save</button><a class="cg-button" data-variant="ghost" data-color="secondary" data-size="md" data-shape="rounded" data-full-width="false" href="{% url 'contacts:detail' contact.pk %}">Cancel</a></div>
+</form></section>
+{% endblock %}
