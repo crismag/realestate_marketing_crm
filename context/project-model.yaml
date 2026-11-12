@@ -1,14 +1,14 @@
 model:
-  version: 23
-  last_commit: 23
+  version: 24
+  last_commit: 24
   generated: 2026-11-13
 project:
   name: Realstate CRM
   working_title: Sales and Marketing CRM
   repository: https://github.com/crismag/realestate_marketing_crm
   default_branch: main
-  status: requirements
-  current_stage: workflow-definition
+  status: design
+  current_stage: complete-first-pass-context_review-pending
   project_type: internal-tool
   target_platforms: [web]
   downstream_consumers: [product-owner, Claude]
@@ -44,12 +44,12 @@ decisions:
     requirements: [REQ-015, REQ-019, REQ-020]
 actors: [USER-001, USER-002, USER-003, USER-004, USER-005]
 sources:
-  - user-conversation-through-commit-23
+  - user-conversation-through-commit-24
   - baseline-v0.1
   - official-product-documentation-researched-in-conversation
 open_questions: [OQ-002, OQ-008, OQ-010, OQ-011, OQ-012, OQ-013, OQ-014]
 assumptions:
-  - workflow-defaults-other-than-ADR-001-remain-proposed
+  - workflow-defaults-other-than-approved-ADR-001-and-ADR-002-remain-proposed
 design_source:
   name: CrisGen UI
   repository_url: https://github.com/crismag/development_design_systems
@@ -77,8 +77,20 @@ modules:
   - {id: MOD-008, status: proposed, artifact: 06_architecture/MODULE_BOUNDARIES.md}
 interfaces: [INT-001, INT-002, INT-003, INT-004]
 entities: []
-tasks: []
-acceptance_tests: [AT-001, AT-002, AT-003, AT-004, AT-005]
+tasks:
+  - {id: TASK-001, status: ready, context: 07_tasks/TASK-001_CONTEXT.md}
+  - {id: TASK-002, status: ready, context: 07_tasks/TASK-002_CONTEXT.md}
+  - {id: TASK-003, status: draft, context: 07_tasks/TASK-003_CONTEXT.md}
+  - {id: TASK-004, status: draft, context: 07_tasks/TASK-004_CONTEXT.md}
+  - {id: TASK-005, status: draft, context: 07_tasks/TASK-005_CONTEXT.md}
+  - {id: TASK-006, status: draft, context: 07_tasks/TASK-006_CONTEXT.md}
+  - {id: TASK-007, status: draft, context: 07_tasks/TASK-007_CONTEXT.md}
+  - {id: TASK-008, status: draft, context: 07_tasks/TASK-008_CONTEXT.md}
+  - {id: TASK-009, status: draft, context: 07_tasks/TASK-009_CONTEXT.md}
+  - {id: TASK-010, status: draft, context: 07_tasks/TASK-010_CONTEXT.md}
+  - {id: TASK-011, status: draft, context: 07_tasks/TASK-011_CONTEXT.md}
+  - {id: TASK-012, status: draft, context: 07_tasks/TASK-012_CONTEXT.md}
+acceptance_tests: [AT-001, AT-002, AT-003, AT-004, AT-005, AT-006, AT-007, AT-008, AT-009, AT-010, AT-011, AT-012]
 traces:
   - requirements: [REQ-014, REQ-015, REQ-016, REQ-017]
     artifact: 04_requirements/WORKFLOWS_v0.1.md
@@ -111,14 +123,15 @@ undefined:
   - lifecycle-and-automation-policy
   - stack-and-operating-constraints
   - inspected-reference-interfaces-and-CrisGen-catalog
-  - architecture-contracts-checkpoints-checklist-skills-and-task-bundles
+  - finalized-physical-contracts-app-paths-and-commands
+  - application-and-real-integration-evidence
 resolved_questions:
   - {id: OQ-009, resolution: ADR-002, status: resolved}
   - {id: OQ-006, resolution: ADR-001, status: resolved}
-next: resolve-policy-and-stack_then-finalize-contracts-and-scoped-tasks
+next: TASK-001_or-independent-reference-portion-of-TASK-002
 
 context_package:
-  revision: 23
+  revision: 24
   manifest: PACKAGE_MANIFEST.yaml
   authority: requirements-baseline-plus-approved-decisions-and-model
   architecture_status: proposed
@@ -130,7 +143,7 @@ verification_checks: {path: 09_development/VERIFICATION_PLAN.yaml, status: not_r
 test_environments: {path: 09_development/TEST_ENVIRONMENT.md, status: unresolved}
 security_checks: {path: 09_development/SECURITY_VERIFICATION_MATRIX.md, status: not_run}
 recovery_policy: {path: 09_development/CHECKPOINT_AND_RECOVERY.md, status: proposed}
-checklist: {path: 09_development/DEVELOPMENT_CHECKLIST.yaml, revision: 1}
+checklist: {path: 09_development/DEVELOPMENT_CHECKLIST.yaml, revision: 2}
 new_identifiers_commit_23:
   proposals: [PROP-034, PROP-035]
   modules: [MOD-001, MOD-002, MOD-003, MOD-004, MOD-005, MOD-006, MOD-007, MOD-008]
@@ -139,3 +152,19 @@ new_identifiers_commit_23:
   checkpoints: [ICP-001, ICP-002, ICP-003, ICP-004, ICP-005]
   acceptance_tests: [AT-001, AT-002, AT-003, AT-004, AT-005]
   checklist_items: [CHK-001, CHK-002, CHK-003, CHK-004]
+
+new_identifiers_commit_24:
+  request: {id: REQ-027, classification: user-stated, statement: Complete remaining project context Markdown files, status: captured}
+  tasks: [TASK-001, TASK-002, TASK-003, TASK-004, TASK-005, TASK-006, TASK-007, TASK-008, TASK-009, TASK-010, TASK-011, TASK-012]
+  skills: [SKL-001, SKL-002, SKL-003]
+  acceptance_tests: [AT-006, AT-007, AT-008, AT-009, AT-010, AT-011, AT-012]
+  checklist_items: [CHK-005, CHK-006, CHK-007, CHK-008, CHK-009, CHK-010, CHK-011, CHK-012, CHK-013, CHK-014, CHK-015, CHK-016]
+project_skills:
+  - {id: SKL-001, path: 12_agent_skills/use-crisgen-ui/SKILL.md, status: draft, installed: false}
+  - {id: SKL-002, path: 12_agent_skills/verify-followup-coverage/SKILL.md, status: draft, installed: false}
+  - {id: SKL-003, path: 12_agent_skills/maintain-crm-context/SKILL.md, status: draft, installed: false}
+history:
+  - commit: 24
+    source_revision: a244131ed53e56a5e9cd78f0172733927985076f
+    added: [REQ-027, task-contexts, module-contexts, acceptance-catalog, operations-docs, draft-playbooks]
+    stage: design-and-planning_review-pending

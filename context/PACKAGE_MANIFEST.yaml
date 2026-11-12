@@ -1,8 +1,14 @@
-model_version: 23
-status: draft-design-context
-source_application_commit: 570abfc13bc02123b5459bda22dce2423d1bc95c
+model_version: 24
+status: first-pass-context-generated_review-pending
+source_repository_commit: a244131ed53e56a5e9cd78f0172733927985076f
 files:
+  - path: 01_discovery/PRODUCT_CONCEPT.md
+    status: current-context
+    stale: false
   - path: 01_discovery/TARGET_USERS.md
+    status: current-context
+    stale: false
+  - path: 01_discovery/USER_JOURNEYS.md
     status: current-context
     stale: false
   - path: 04_requirements/AUTOMATION_CATALOG.md
@@ -11,10 +17,22 @@ files:
   - path: 04_requirements/CLIENT_ATTENTION_AND_FOLLOWUP_v0.1.md
     status: current-context
     stale: false
+  - path: 04_requirements/CONFIGURATION_AND_POLICY.md
+    status: current-context
+    stale: false
   - path: 04_requirements/CRM_Requirements_Baseline_v0.1.md
     status: historical-draft-snapshot
     stale: false
+  - path: 04_requirements/GLOSSARY.md
+    status: current-context
+    stale: false
   - path: 04_requirements/LIFECYCLE_AND_SCREENS_v0.1.md
+    status: current-context
+    stale: false
+  - path: 04_requirements/METRIC_DICTIONARY.md
+    status: current-context
+    stale: false
+  - path: 04_requirements/NON_FUNCTIONAL_REQUIREMENTS.md
     status: current-context
     stale: false
   - path: 04_requirements/OPEN_DECISIONS.md
@@ -29,10 +47,34 @@ files:
   - path: 04_requirements/WORKFLOWS_v0.1.md
     status: current-context
     stale: false
+  - path: 05_research/REFERENCE_FEATURE_MATRIX.md
+    status: current-context
+    stale: false
   - path: 06_architecture/DATA_CONTRACTS.md
     status: current-context
     stale: false
+  - path: 06_architecture/ERROR_AND_EVENT_CATALOG.md
+    status: current-context
+    stale: false
+  - path: 06_architecture/INTEGRATION_DESIGN.md
+    status: current-context
+    stale: false
   - path: 06_architecture/MODULE_BOUNDARIES.md
+    status: current-context
+    stale: false
+  - path: 06_architecture/OPERATIONS_AND_DEPLOYMENT.md
+    status: current-context
+    stale: false
+  - path: 06_architecture/SECURITY_AND_DATA_LIFECYCLE.md
+    status: current-context
+    stale: false
+  - path: 06_architecture/SYSTEM_DESIGN.md
+    status: current-context
+    stale: false
+  - path: 06_architecture/decisions/ADR-001_handover-accountability.md
+    status: current-context
+    stale: false
+  - path: 06_architecture/decisions/ADR-002_shared-pool-policy.md
     status: current-context
     stale: false
   - path: 06_architecture/design_system/CRISGEN_COMPONENT_CATALOG.md
@@ -48,6 +90,72 @@ files:
     status: current-context
     stale: false
   - path: 06_architecture/design_system/UI_REUSE_MAP.md
+    status: current-context
+    stale: false
+  - path: 06_architecture/modules/MOD-001_customer-relationships.md
+    status: current-context
+    stale: false
+  - path: 06_architecture/modules/MOD-002_responsibility-and-work.md
+    status: current-context
+    stale: false
+  - path: 06_architecture/modules/MOD-003_interaction-history.md
+    status: current-context
+    stale: false
+  - path: 06_architecture/modules/MOD-004_client-attention.md
+    status: current-context
+    stale: false
+  - path: 06_architecture/modules/MOD-005_automation.md
+    status: current-context
+    stale: false
+  - path: 06_architecture/modules/MOD-006_communications.md
+    status: current-context
+    stale: false
+  - path: 06_architecture/modules/MOD-007_sales-and-measurement.md
+    status: current-context
+    stale: false
+  - path: 06_architecture/modules/MOD-008_organization-configuration.md
+    status: current-context
+    stale: false
+  - path: 07_tasks/EXECUTION_AND_REVIEW_PROMPTS.md
+    status: current-context
+    stale: false
+  - path: 07_tasks/ROADMAP.md
+    status: current-context
+    stale: false
+  - path: 07_tasks/TASK-001_CONTEXT.md
+    status: current-context
+    stale: false
+  - path: 07_tasks/TASK-002_CONTEXT.md
+    status: current-context
+    stale: false
+  - path: 07_tasks/TASK-003_CONTEXT.md
+    status: current-context
+    stale: false
+  - path: 07_tasks/TASK-004_CONTEXT.md
+    status: current-context
+    stale: false
+  - path: 07_tasks/TASK-005_CONTEXT.md
+    status: current-context
+    stale: false
+  - path: 07_tasks/TASK-006_CONTEXT.md
+    status: current-context
+    stale: false
+  - path: 07_tasks/TASK-007_CONTEXT.md
+    status: current-context
+    stale: false
+  - path: 07_tasks/TASK-008_CONTEXT.md
+    status: current-context
+    stale: false
+  - path: 07_tasks/TASK-009_CONTEXT.md
+    status: current-context
+    stale: false
+  - path: 07_tasks/TASK-010_CONTEXT.md
+    status: current-context
+    stale: false
+  - path: 07_tasks/TASK-011_CONTEXT.md
+    status: current-context
+    stale: false
+  - path: 07_tasks/TASK-012_CONTEXT.md
     status: current-context
     stale: false
   - path: 08_interfaces/INTERFACE_CHECKPOINTS.md
@@ -83,8 +191,32 @@ files:
   - path: 09_development/VERIFICATION_PLAN.yaml
     status: current-context
     stale: false
+  - path: 10_validation/ACCEPTANCE_CATALOG.md
+    status: current-context
+    stale: false
+  - path: 10_validation/SPECIFICATION_AUDIT.md
+    status: current-context
+    stale: false
+  - path: 11_operations/DATA_IMPORT_AND_RETENTION.md
+    status: current-context
+    stale: false
+  - path: 11_operations/OPERATOR_RUNBOOK.md
+    status: current-context
+    stale: false
+  - path: 11_operations/PILOT_AND_RELEASE_CHECKLIST.md
+    status: current-context
+    stale: false
   - path: 12_agent_skills/SKILL_INDEX.md
     status: current-context
+    stale: false
+  - path: 12_agent_skills/maintain-crm-context/SKILL.md
+    status: draft-export-not-installed
+    stale: false
+  - path: 12_agent_skills/use-crisgen-ui/SKILL.md
+    status: draft-export-not-installed
+    stale: false
+  - path: 12_agent_skills/verify-followup-coverage/SKILL.md
+    status: draft-export-not-installed
     stale: false
   - path: CLAUDE_HANDOFF.md
     status: current-context
@@ -93,6 +225,9 @@ files:
     status: current-context
     stale: false
   - path: PACKAGE_MANIFEST.yaml
+    status: current-context
+    stale: false
+  - path: PRD.md
     status: current-context
     stale: false
   - path: README.md
@@ -104,7 +239,7 @@ files:
   - path: traceability.json
     status: current-context
     stale: false
-omissions:
-  - Project-specific skills deferred until contract/target/task scopes are stable; SKILL_INDEX records this.
-  - Concrete task bundles and CI implementation deferred until stack and workflows are sufficiently specified.
-  - Complete component/API catalog deferred until selected target implementation is inspected.
+remaining_unknowns:
+  - Business policy values and technology decisions remain unresolved rather than invented.
+  - Application commands/physical paths and selected target APIs await evidence.
+  - No application or live provider checks executed.

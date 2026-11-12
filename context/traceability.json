@@ -1,5 +1,5 @@
 {
-  "model_version": 23,
+  "model_version": 24,
   "status": "proposed-design-links",
   "module_links": [
     {
@@ -137,9 +137,217 @@
     }
   ],
   "gaps": [
-    "No executable tasks or concrete hooks yet",
-    "Partial acceptance coverage; baseline criteria not all assigned AT identifiers",
-    "NFR implementation links incomplete",
-    "Selected UI target APIs not inspected"
+    "Concrete application paths and commands unresolved",
+    "Policy-dependent tasks draft, not implemented",
+    "Selected framework APIs not inspected",
+    "Application acceptance/security/provider/browser evidence not_run"
+  ],
+  "task_links": [
+    {
+      "task": "TASK-001",
+      "requirements": [
+        "REQ-020",
+        "REQ-022",
+        "REQ-024",
+        "REQ-026"
+      ],
+      "design": [
+        "MOD-004",
+        "MOD-007",
+        "MOD-008"
+      ],
+      "status": "ready",
+      "context": "07_tasks/TASK-001_CONTEXT.md",
+      "checklist": "CHK-005"
+    },
+    {
+      "task": "TASK-002",
+      "requirements": [
+        "REQ-002",
+        "REQ-025"
+      ],
+      "design": [
+        "MOD-001",
+        "MOD-002",
+        "MOD-004"
+      ],
+      "status": "ready",
+      "context": "07_tasks/TASK-002_CONTEXT.md",
+      "checklist": "CHK-006"
+    },
+    {
+      "task": "TASK-003",
+      "requirements": [
+        "NFR-001",
+        "NFR-003",
+        "REQ-024"
+      ],
+      "design": [
+        "MOD-001",
+        "MOD-002",
+        "MOD-008"
+      ],
+      "status": "draft",
+      "context": "07_tasks/TASK-003_CONTEXT.md",
+      "checklist": "CHK-007"
+    },
+    {
+      "task": "TASK-004",
+      "requirements": [
+        "REQ-003",
+        "REQ-004",
+        "REQ-005",
+        "REQ-006",
+        "FR-001"
+      ],
+      "design": [
+        "MOD-001"
+      ],
+      "status": "draft",
+      "context": "07_tasks/TASK-004_CONTEXT.md",
+      "checklist": "CHK-008"
+    },
+    {
+      "task": "TASK-005",
+      "requirements": [
+        "REQ-014",
+        "REQ-015",
+        "REQ-019"
+      ],
+      "design": [
+        "MOD-002",
+        "INT-001",
+        "INT-002"
+      ],
+      "status": "draft",
+      "context": "07_tasks/TASK-005_CONTEXT.md",
+      "checklist": "CHK-009"
+    },
+    {
+      "task": "TASK-006",
+      "requirements": [
+        "REQ-015",
+        "REQ-016",
+        "REQ-020",
+        "REQ-026"
+      ],
+      "design": [
+        "MOD-002",
+        "MOD-003"
+      ],
+      "status": "draft",
+      "context": "07_tasks/TASK-006_CONTEXT.md",
+      "checklist": "CHK-010"
+    },
+    {
+      "task": "TASK-007",
+      "requirements": [
+        "REQ-016",
+        "REQ-017",
+        "REQ-026"
+      ],
+      "design": [
+        "MOD-004",
+        "INT-003"
+      ],
+      "status": "draft",
+      "context": "07_tasks/TASK-007_CONTEXT.md",
+      "checklist": "CHK-011"
+    },
+    {
+      "task": "TASK-008",
+      "requirements": [
+        "REQ-019",
+        "REQ-020",
+        "REQ-023",
+        "REQ-026"
+      ],
+      "design": [
+        "MOD-005",
+        "MOD-006",
+        "INT-004"
+      ],
+      "status": "draft",
+      "context": "07_tasks/TASK-008_CONTEXT.md",
+      "checklist": "CHK-012"
+    },
+    {
+      "task": "TASK-009",
+      "requirements": [
+        "REQ-018",
+        "REQ-020",
+        "REQ-023"
+      ],
+      "design": [
+        "MOD-005",
+        "MOD-006"
+      ],
+      "status": "draft",
+      "context": "07_tasks/TASK-009_CONTEXT.md",
+      "checklist": "CHK-013"
+    },
+    {
+      "task": "TASK-010",
+      "requirements": [
+        "REQ-017",
+        "REQ-022",
+        "REQ-026"
+      ],
+      "design": [
+        "MOD-007"
+      ],
+      "status": "draft",
+      "context": "07_tasks/TASK-010_CONTEXT.md",
+      "checklist": "CHK-014"
+    },
+    {
+      "task": "TASK-011",
+      "requirements": [
+        "NFR-001",
+        "NFR-002",
+        "NFR-003",
+        "NFR-004"
+      ],
+      "design": [
+        "Verification plan"
+      ],
+      "status": "draft",
+      "context": "07_tasks/TASK-011_CONTEXT.md",
+      "checklist": "CHK-015"
+    },
+    {
+      "task": "TASK-012",
+      "requirements": [
+        "REQ-014",
+        "REQ-015",
+        "REQ-017",
+        "REQ-020",
+        "REQ-022",
+        "REQ-026"
+      ],
+      "design": [
+        "Cross-module journey"
+      ],
+      "status": "draft",
+      "context": "07_tasks/TASK-012_CONTEXT.md",
+      "checklist": "CHK-016"
+    }
+  ],
+  "project_skills": [
+    {
+      "id": "SKL-001",
+      "path": "12_agent_skills/use-crisgen-ui/SKILL.md",
+      "status": "draft"
+    },
+    {
+      "id": "SKL-002",
+      "path": "12_agent_skills/verify-followup-coverage/SKILL.md",
+      "status": "draft"
+    },
+    {
+      "id": "SKL-003",
+      "path": "12_agent_skills/maintain-crm-context/SKILL.md",
+      "status": "draft"
+    }
   ]
 }

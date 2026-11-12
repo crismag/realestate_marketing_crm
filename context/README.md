@@ -27,3 +27,6 @@ This is an initial context folder, not a complete execution package. Architectur
 
 ## Design and execution context — revision 23
 Start with [Context index](CONTEXT_INDEX.md) and [Readiness review](09_development/READINESS_REVIEW.md). Added proposed module boundaries, automation catalog, user coverage, data/interface contracts, verification companions, planning checklist and fixed-revision CrisGen source records. No application code or live automation has been created. Remaining policies are not silently approved.
+
+## Completed first-pass Markdown set — revision 24
+The remaining product/discovery, detailed module, scoped task, acceptance, operations and draft playbook documents are generated. See [Context index](CONTEXT_INDEX.md), [roadmap](07_tasks/ROADMAP.md) and [specification audit](10_validation/SPECIFICATION_AUDIT.md). Documentation completeness does not resolve policy/stack questions or mean application implementation is ready. Start with one ready documentation/research task.
