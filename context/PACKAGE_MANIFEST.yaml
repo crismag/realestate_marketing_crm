@@ -47,6 +47,9 @@ files:
   - path: 04_requirements/WORKFLOWS_v0.1.md
     status: current-context
     stale: false
+  - path: 05_research/AI_AUTOMATION_RESEARCH.md
+    status: current-context
+    stale: false
   - path: 05_research/REFERENCE_FEATURE_MATRIX.md
     status: current-context
     stale: false
