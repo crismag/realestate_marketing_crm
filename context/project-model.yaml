@@ -1,6 +1,6 @@
 model:
-  version: 19
-  last_commit: 19
+  version: 20
+  last_commit: 20
   generated: 2026-11-13
 project:
   name: Realstate CRM
@@ -38,7 +38,7 @@ decisions:
     requirements: [REQ-015, REQ-019, REQ-020]
 actors: [USER-001, USER-002, USER-003, USER-004, USER-005]
 sources:
-  - user-conversation-through-commit-19
+  - user-conversation-through-commit-20
   - baseline-v0.1
   - official-product-documentation-researched-in-conversation
 open_questions: [OQ-002, OQ-008, OQ-009, OQ-010, OQ-011, OQ-012, OQ-013, OQ-014]
@@ -67,7 +67,9 @@ artifacts:
   - 04_requirements/WORKFLOWS_v0.1.md
   - 04_requirements/OPEN_DECISIONS.md
   - CLAUDE_HANDOFF.md
+  - 04_requirements/SHARED_POOL_POLICY_v0.1.md
 id_register_additions:
+  - {id: PROP-031, status: proposed, type: shared-pool-policy}
   - {id: ART-002, status: active, type: repository-context}
   - {id: PROP-030, status: proposed, type: workflow-policy}
   - {id: OQ-009, status: active, type: pool-policy}
@@ -84,4 +86,4 @@ undefined:
   - architecture-contracts-checkpoints-checklist-skills-and-task-bundles
 resolved_questions:
   - {id: OQ-006, resolution: ADR-001, status: resolved}
-next: define-lifecycle-and-pool-rules_while-reference-research-proceeds
+next: review-PROP-031_then-define-lifecycle-and-screen-map

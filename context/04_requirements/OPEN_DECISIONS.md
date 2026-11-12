@@ -6,7 +6,7 @@ These are unresolved, not blockers on unrelated documentation or research.
 |---|---|---|---|
 | OQ-002 | What differentiates lead, prospect and client? | One contact identity with separate lifecycle and opportunities | Capture, reporting, sales process |
 | OQ-008 | What event is onboarding; who receives emails; what timing/channels/stop policies apply? | Explicit configurable event and bounded enabled rules | REQ-018–023 |
-| OQ-009 | Can pool records be claimed and when released? | Atomic exclusive claim; no automatic release without policy | REQ-014 |
+| OQ-009 | Approve manual exclusive claiming and coordinator-accepted release? | PROP-031: atomic claim, accepted release, overdue alerts without auto-removal; see SHARED_POOL_POLICY_v0.1.md | REQ-014–020 |
 | OQ-010 | Which systems supply intake, email and engagement data? | Select only verified integrations | REQ-003–006, REQ-018–023 |
 | OQ-011 | What do spending, earnings, signup and engagement mean? | Named formulas with reconciled source data | REQ-022 |
 | OQ-012 | Hosting, scale, authentication, recovery, retention, currency and timezone constraints? | Unknown; do not select stack prematurely | Architecture |
