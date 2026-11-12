@@ -61,6 +61,7 @@ async function desktopJourney(browser) {
   await page.getByLabel("Put in a shared pool").check();
   await page.getByLabel("Pool", { exact: true }).selectOption({ label: "North team pool" });
   await page.getByLabel("Inquiry (optional)").fill("Looking for a 2-bedroom near the park.");
+  await page.screenshot({ path: `${OUT}/00-capture-form.png`, fullPage: true });
   await page.getByRole("button", { name: "Save contact" }).click();
   await page.getByRole("heading", { name }).waitFor();
   await page.screenshot({ path: `${OUT}/01-captured.png`, fullPage: true });

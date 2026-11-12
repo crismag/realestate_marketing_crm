@@ -7,5 +7,5 @@
 - Licence: MIT (see `LICENSE`, copied from the source package)
 
 Do not edit these files. They are generated upstream by Cartograph. CRM layout and
-composition live in `crm/core/static/crm/crm.css`, which uses only CrisGen tokens.
+composition live in `static/crm/crm.css`, which uses only CrisGen tokens.
 To upgrade, copy the same files from a newer pinned commit and update this record.

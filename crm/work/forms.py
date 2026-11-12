@@ -38,7 +38,6 @@ class HandoverForm(Form):
 
     def __init__(self, *args, tasks=(), exclude_user=None, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["kind"].widget.attrs.pop("class", None)
         if exclude_user is not None:
             self.fields["recipient"].queryset = self.fields["recipient"].queryset.exclude(pk=exclude_user.pk)
         self.task_fields = []

@@ -6,7 +6,7 @@
 <div class="form-grid form-grid--2">{% for field in form %}{% if field.name != "stages" and field.name != "contact_reset_types" and field.name != "escalation_recipients" and field.name != "note" %}{% include "partials/field.html" %}{% endif %}{% endfor %}</div>
 {% with field=form.stages %}{% include "partials/field.html" %}{% endwith %}
 <fieldset><legend>{{ form.contact_reset_types.label }}</legend>{{ form.contact_reset_types }}</fieldset>
-<fieldset><legend>Escalation recipients</legend>{{ form.escalation_recipients }}<div class="help small muted">Who is told when a task is overdue past the escalation threshold, in addition to pool coordinators.</div></fieldset>
+<fieldset><legend>Escalation recipients</legend>{{ form.escalation_recipients }}<div class="help small muted">Who is told when a task is overdue past the escalation threshold. With nobody chosen, the escalation is recorded as a routing gap.</div></fieldset>
 {% with field=form.note %}{% include "partials/field.html" %}{% endwith %}
 <div class="form-actions"><button class="cg-button" data-variant="solid" data-color="primary" data-size="md" data-shape="rounded" data-full-width="false" type="submit">Save settings</button></div></form>
 {% else %}<div class="card-pad"><p class="muted">Only workspace administrators can change these settings.</p></div>{% endif %}</section>

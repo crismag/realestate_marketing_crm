@@ -13,7 +13,13 @@ class CrisGenMixin:
         for name, field in self.fields.items():
             widget = field.widget
             attrs = widget.attrs
-            if isinstance(widget, forms.CheckboxInput):
+            if isinstance(widget, forms.RadioSelect):
+                attrs.setdefault("class", "cg-radio")
+                attrs.setdefault("data-color", "primary")
+            elif isinstance(widget, forms.CheckboxSelectMultiple):
+                attrs.setdefault("class", "cg-checkbox")
+                attrs.setdefault("data-color", "primary")
+            elif isinstance(widget, forms.CheckboxInput):
                 attrs.setdefault("class", "cg-checkbox")
                 attrs.setdefault("data-color", "primary")
             elif isinstance(widget, (forms.Select, forms.SelectMultiple)):

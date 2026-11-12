@@ -43,11 +43,6 @@ class PolicyForm(Form):
     note = forms.CharField(max_length=200, required=False, label="Change note")
     version = forms.IntegerField(widget=forms.HiddenInput)
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        for name in ("contact_reset_types", "escalation_recipients"):
-            self.fields[name].widget.attrs.pop("class", None)
-
     def clean_timezone(self):
         value = self.cleaned_data["timezone"].strip()
         try:

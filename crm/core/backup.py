@@ -41,6 +41,8 @@ def integrity_check(path: Path) -> str:
 
 
 def _db_path() -> Path:
+    if "sqlite3" not in settings.DATABASES["default"]["ENGINE"]:
+        raise BackupError("backup_db/restore_db only support SQLite. Use your database's own backup tooling.")
     return Path(settings.DATABASES["default"]["NAME"])
 
 

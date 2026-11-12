@@ -49,10 +49,6 @@ class CaptureForm(ContactFieldsForm):
     field_order = ["display_name", "email", "phone", "source", "source_detail", "introducer", "destination", "pool",
                    "inquiry_message", "inquiry_channel", "interests", "preferred_channel", "next_contact_agreed_at", "notes"]
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields["destination"].widget.attrs.pop("class", None)
-
     def clean(self):
         data = super().clean()
         if data.get("destination") == "pool" and not data.get("pool"):
