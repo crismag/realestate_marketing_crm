@@ -1,0 +1,14 @@
+{% load crm_ui %}<article class="att-item" aria-labelledby="att-{{ item.contact.pk }}">
+  <div class="row row--between">
+    <h3 class="cg-typography" data-variant="h6" data-color="inherit" id="att-{{ item.contact.pk }}"><a href="{% url 'contacts:detail' item.contact.pk %}">{{ item.contact.display_name }}</a> <span class="muted small">{{ item.contact.get_lifecycle_display }}</span></h3>
+    <span class="muted small">Handler: {{ item.handler_label }}</span>
+  </div>
+  {% for r in item.reasons %}<div class="reason">{% chip r.label r.code %}{% if r.overdue %} {% chip "past target" "failed" %}{% endif %}
+    <div><div>{{ r.detail }}</div>{% if r.snoozed_until %}<div class="small muted">Snoozed until {{ r.snoozed_until|local }}</div>{% endif %}</div></div>{% endfor %}
+  <div class="att-facts">
+    <div><strong>Last attempt</strong>{% if item.last_attempt %}{{ item.last_attempt|local }} ({{ item.last_attempt|ago }}){% else %}No attempt recorded{% endif %}</div>
+    <div><strong>Last reached</strong>{% if item.last_success %}{{ item.last_success|local }} ({{ item.last_success|ago }}){% else %}Never reached (recorded){% endif %}</div>
+    <div><strong>Last tour</strong>{% if item.last_tour %}{{ item.last_tour|local }}{% else %}—{% endif %}</div>
+    <div><strong>Next action</strong>{% if item.next_task %}{{ item.next_task.title }}{% if item.next_task.due_at %} · {{ item.next_task.due_at|local }}{% endif %}{% else %}None{% endif %}</div>
+  </div>
+</article>

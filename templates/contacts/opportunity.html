@@ -1,0 +1,15 @@
+{% extends "base.html" %}{% load crm_ui %}{% block title %}{{ opp.title }}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1 class="cg-typography" data-variant="h4">{{ opp.title }}</h1><p class="muted">For <a href="{% url 'contacts:detail' contact.pk %}">{{ contact.display_name }}</a> · {% chip opp.get_outcome_display opp.outcome %}{% if opp.closed_at %} closed {{ opp.closed_at|local }}{% endif %}</p></div></div>
+<div class="grid grid--2">
+<section class="cg-card"><div class="card-title"><h2>Details</h2></div>
+{% if opp.outcome == 'open' %}<form method="post" class="card-pad stack-sm" novalidate>{% csrf_token %}{% include "partials/form_errors.html" %}{% for field in form %}{% include "partials/field.html" %}{% endfor %}
+<button class="cg-button" data-variant="solid" data-color="primary" data-size="sm" data-shape="rounded" data-full-width="false">Save</button></form>
+{% else %}<div class="card-pad"><p>Closed opportunities cannot be edited. Reopen to change them.</p>{% if opp.outcome_reason %}<p>Reason: {{ opp.outcome_reason }}</p>{% endif %}</div>{% endif %}
+</section>
+<section class="cg-card"><div class="card-title"><h2>Outcome</h2></div>
+<form method="post" action="{% url 'contacts:opportunity_outcome' contact.pk opp.pk %}" class="card-pad stack-sm" novalidate>{% csrf_token %}{% with form=outcome_form %}{% for field in form %}{% include "partials/field.html" %}{% endfor %}{% endwith %}
+<p class="small muted">Won value is a potential transaction amount, not earnings or cash received.</p>
+<button class="cg-button" data-variant="outline" data-color="primary" data-size="sm" data-shape="rounded" data-full-width="false">Record outcome</button></form>
+</section></div>
+{% endblock %}

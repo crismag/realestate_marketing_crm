@@ -13,3 +13,4 @@ urlpatterns = [
 
 handler404 = "crm.core.views.not_found"
 handler500 = "crm.core.views.server_error"
+handler403 = "crm.core.views.permission_denied"

@@ -1,0 +1,2 @@
+{% extends "base.html" %}{% block title %}Not allowed{% endblock %}
+{% block content %}<div class="cg-card card-pad"><h1 class="cg-typography" data-variant="h4">Not allowed</h1><p>{{ reason|default:"You cannot perform this action." }}</p></div>{% endblock %}

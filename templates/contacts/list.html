@@ -1,0 +1,30 @@
+{% extends "base.html" %}{% load crm_ui %}{% block title %}Contacts{% endblock %}
+{% block content %}
+<div class="page-head"><h1 class="cg-typography" data-variant="h4">Contacts</h1>
+<div class="row"><a class="cg-button" data-variant="outline" data-color="secondary" data-size="sm" data-shape="rounded" data-full-width="false" href="?{{ request.GET.urlencode }}&amp;format=csv">Export CSV</a>
+<a class="cg-button" data-variant="gradient" data-color="primary" data-size="md" data-shape="rounded" data-full-width="false" href="{% url 'contacts:new' %}">Capture contact</a></div></div>
+<section class="cg-card">
+<form method="get" class="card-pad filters" role="search" aria-label="Filter contacts">
+  <div class="field"><label for="f-q">Search</label><input class="cg-input" data-size="md" data-color="default" id="f-q" name="q" value="{{ params.q }}" placeholder="Name, email, phone, interest"></div>
+  <div class="field"><label for="f-l">Lifecycle</label><select class="cg-select" id="f-l" name="lifecycle"><option value="">Any</option>{% for code, label in lifecycles %}<option value="{{ code }}" {% if params.lifecycle == code %}selected{% endif %}>{{ crm_policy.lifecycle_labels|get_item:code|default:label }}</option>{% endfor %}</select></div>
+  <div class="field"><label for="f-r">Responsibility</label><select class="cg-select" id="f-r" name="responsibility"><option value="">Anyone</option><option value="mine" {% if params.responsibility == 'mine' %}selected{% endif %}>Mine</option><option value="pool" {% if params.responsibility == 'pool' %}selected{% endif %}>In a pool</option></select></div>
+  <div class="field"><label for="f-p">Pool</label><select class="cg-select" id="f-p" name="pool"><option value="">Any</option>{% for p in pools %}<option value="{{ p.pk }}" {% if params.pool == p.pk|stringformat:'s' %}selected{% endif %}>{{ p.name }}</option>{% endfor %}</select></div>
+  <div class="field"><label for="f-s">Source</label><select class="cg-select" id="f-s" name="source"><option value="">Any</option>{% for s in sources %}<option value="{{ s.pk }}" {% if params.source == s.pk|stringformat:'s' %}selected{% endif %}>{{ s.label }}</option>{% endfor %}</select></div>
+  <div class="field"><label for="f-o">Sort</label><select class="cg-select" id="f-o" name="sort"><option value="name">Name</option><option value="-created" {% if params.sort == '-created' %}selected{% endif %}>Newest</option><option value="created" {% if params.sort == 'created' %}selected{% endif %}>Oldest</option><option value="-updated" {% if params.sort == '-updated' %}selected{% endif %}>Recently updated</option></select></div>
+  <div class="row"><button class="cg-button" data-variant="solid" data-color="primary" data-size="md" data-shape="rounded" data-full-width="false" type="submit">Apply</button>{% if filtered %}<a href="{% url 'contacts:list' %}">Clear</a>{% endif %}</div>
+</form>
+<div class="cg-table table-scroll"><table class="cg-table__table">
+<caption class="sr-only">Contacts</caption>
+<thead><tr><th class="cg-table__head-cell" scope="col">Name</th><th class="cg-table__head-cell" scope="col">Lifecycle</th><th class="cg-table__head-cell" scope="col">Responsible</th><th class="cg-table__head-cell" scope="col">Source</th><th class="cg-table__head-cell" scope="col">Contact</th><th class="cg-table__head-cell" scope="col">Captured</th></tr></thead>
+<tbody>{% for c in page %}<tr>
+<td class="cg-table__cell"><a href="{% url 'contacts:detail' c.pk %}">{{ c.display_name }}</a>{% if c.archived_at %} {% chip "Archived" %}{% endif %}{% if c.disposition != 'active' %} {% chip c.get_disposition_display %}{% endif %}</td>
+<td class="cg-table__cell">{{ crm_policy.lifecycle_labels|get_item:c.lifecycle }}</td>
+<td class="cg-table__cell">{% if c.assignment.kind == 'pool' %}{% chip "Pool" "pool_waiting" %} {{ c.assignment.pool }}{% else %}{{ c.assignment.user }}{% endif %}</td>
+<td class="cg-table__cell">{{ c.source|default:"—" }}</td>
+<td class="cg-table__cell small">{{ c.email }}{% if c.email and c.phone %}<br>{% endif %}{{ c.phone }}</td>
+<td class="cg-table__cell small">{{ c.created_at|local:"Y-m-d" }}</td></tr>
+{% empty %}<tr><td class="cg-table__cell" colspan="6"><div class="empty">{% if filtered %}No contacts match these filters. <a href="{% url 'contacts:list' %}">Clear filters</a>{% else %}No contacts yet. <a href="{% url 'contacts:new' %}">Capture the first one</a>.{% endif %}</div></td></tr>{% endfor %}</tbody>
+</table></div>
+{% include "partials/pagination.html" %}
+</section>
+{% endblock %}

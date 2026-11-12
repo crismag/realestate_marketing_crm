@@ -1,0 +1,12 @@
+{% extends "base.html" %}{% load crm_ui %}{% block title %}Sales{% endblock %}
+{% block content %}
+<div class="page-head"><h1 class="cg-typography" data-variant="h4">Sales opportunities</h1></div>
+<section class="cg-card">
+<form method="get" class="card-pad filters"><div class="field"><label for="o-o">Outcome</label><select class="cg-select" id="o-o" name="outcome"><option value="open" {% if outcome == 'open' %}selected{% endif %}>Open</option><option value="won" {% if outcome == 'won' %}selected{% endif %}>Won</option><option value="lost" {% if outcome == 'lost' %}selected{% endif %}>Lost</option><option value="all" {% if outcome == 'all' %}selected{% endif %}>All</option></select></div>
+<div class="field"><label for="o-s">Stage</label><select class="cg-select" id="o-s" name="stage"><option value="">Any</option>{% for s in stages %}<option value="{{ s.code }}" {% if stage == s.code %}selected{% endif %}>{{ s.label }}</option>{% endfor %}</select></div>
+<div><button class="cg-button" data-variant="solid" data-color="primary" data-size="md" data-shape="rounded" data-full-width="false">Apply</button></div></form>
+<div class="cg-table table-scroll"><table class="cg-table__table"><thead><tr><th class="cg-table__head-cell" scope="col">Opportunity</th><th class="cg-table__head-cell" scope="col">Contact</th><th class="cg-table__head-cell" scope="col">Stage</th><th class="cg-table__head-cell" scope="col">Outcome</th><th class="cg-table__head-cell num" scope="col">Amount</th><th class="cg-table__head-cell" scope="col">Expected close</th><th class="cg-table__head-cell" scope="col">Handler</th></tr></thead>
+<tbody>{% for o in page %}<tr><td class="cg-table__cell"><a href="{% url 'contacts:opportunity' o.contact.pk o.pk %}">{{ o.title }}</a></td><td class="cg-table__cell"><a href="{% url 'contacts:detail' o.contact.pk %}">{{ o.contact.display_name }}</a></td><td class="cg-table__cell">{{ stage_labels|get_item:o.stage|default:o.stage }}</td><td class="cg-table__cell">{% chip o.get_outcome_display o.outcome %}</td><td class="cg-table__cell num">{{ o.amount_minor|money:o.currency }}</td><td class="cg-table__cell">{{ o.expected_close|default:"—" }}</td><td class="cg-table__cell">{{ o.contact.assignment.describe }}</td></tr>
+{% empty %}<tr><td class="cg-table__cell" colspan="7"><div class="empty">No opportunities match.</div></td></tr>{% endfor %}</tbody></table></div>
+{% include "partials/pagination.html" %}</section>
+{% endblock %}

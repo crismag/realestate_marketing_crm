@@ -1,0 +1,11 @@
+{% extends "base.html" %}{% load crm_ui %}{% block title %}Marketing spend{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1 class="cg-typography" data-variant="h4">Marketing spend</h1><p class="muted">Manual entries in {{ currency }}. Reports use actual spend whose whole period lies inside the report period.</p></div><a href="{% url 'reporting:index' %}">Back to reports</a></div>
+<div class="grid grid--main-side">
+<section class="cg-card"><div class="card-title"><h2>Entries</h2></div><div class="cg-table table-scroll"><table class="cg-table__table"><thead><tr><th class="cg-table__head-cell" scope="col">Source</th><th class="cg-table__head-cell" scope="col">Kind</th><th class="cg-table__head-cell" scope="col">Period</th><th class="cg-table__head-cell num" scope="col">Amount</th><th class="cg-table__head-cell" scope="col">Note</th><th class="cg-table__head-cell" scope="col">Entered by</th></tr></thead><tbody>
+{% for e in entries %}<tr><td class="cg-table__cell">{{ e.source.label }}</td><td class="cg-table__cell">{{ e.get_kind_display }}</td><td class="cg-table__cell small">{{ e.period_start|date:"Y-m-d" }} – {{ e.period_end|date:"Y-m-d" }}</td><td class="cg-table__cell num">{{ e.amount_minor|money:e.currency }}</td><td class="cg-table__cell small">{{ e.note }}</td><td class="cg-table__cell small">{{ e.created_by.full_name }}</td></tr>
+{% empty %}<tr><td class="cg-table__cell" colspan="6"><div class="empty">No spend entered yet.</div></td></tr>{% endfor %}</tbody></table></div></section>
+<aside class="cg-card"><div class="card-title"><h2>Add spend</h2></div><form method="post" class="card-pad stack-sm" novalidate>{% csrf_token %}{% include "partials/form_errors.html" %}
+{% for field in form %}{% include "partials/field.html" %}{% endfor %}<div class="form-actions"><button class="cg-button" data-variant="solid" data-color="primary" data-size="md" data-shape="rounded" data-full-width="false" type="submit">Save</button></div></form></aside>
+</div>
+{% endblock %}

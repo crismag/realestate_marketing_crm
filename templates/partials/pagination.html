@@ -1,0 +1,5 @@
+{% if page.paginator.num_pages > 1 %}<nav class="pagination cg-pagination" aria-label="Pagination">
+<span class="muted">Page {{ page.number }} of {{ page.paginator.num_pages }} · {{ page.paginator.count }} total</span>
+<span class="row">{% if page.has_previous %}<a class="cg-button" data-variant="outline" data-color="secondary" data-size="sm" data-shape="rounded" data-full-width="false" href="?{% if querystring %}{{ querystring }}&amp;{% endif %}page={{ page.previous_page_number }}">Previous</a>{% endif %}
+{% if page.has_next %}<a class="cg-button" data-variant="outline" data-color="secondary" data-size="sm" data-shape="rounded" data-full-width="false" href="?{% if querystring %}{{ querystring }}&amp;{% endif %}page={{ page.next_page_number }}">Next</a>{% endif %}</span>
+</nav>{% elif page.paginator.count %}<div class="pagination"><span class="muted">{{ page.paginator.count }} total</span></div>{% endif %}

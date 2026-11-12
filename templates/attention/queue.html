@@ -1,0 +1,21 @@
+{% extends "base.html" %}{% load crm_ui %}{% block title %}Attention{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1 class="cg-typography" data-variant="h4">Attention queue</h1><p class="muted">Computed from recorded facts at {{ evaluated_at|local }}. Reason counts overlap; “clients” counts each client once.</p></div></div>
+<section class="grid grid--stats" aria-label="Summary">
+<div class="cg-card stat"><div class="stat__value">{{ summary.unique_contacts }}</div><div class="stat__label">Clients needing attention</div></div>
+{% for code, label in reasons.items %}{% with n=summary.per_reason|get_item:code %}{% if n %}<div class="cg-card stat"><a href="?scope={{ scope }}&amp;reason={{ code }}{% if pool_id %}&amp;pool={{ pool_id }}{% endif %}{% if team_id %}&amp;team={{ team_id }}{% endif %}"><div class="stat__value">{{ n }}</div><div class="stat__label">{{ label }}</div></a></div>{% endif %}{% endwith %}{% endfor %}
+</section>
+<section class="cg-card">
+<form method="get" class="card-pad filters" aria-label="Filter attention">
+<div class="field"><label for="a-s">Scope</label><select class="cg-select" id="a-s" name="scope"><option value="mine">Routed to me</option><option value="all" {% if scope == 'all' %}selected{% endif %}>Everyone</option></select></div>
+<div class="field"><label for="a-p">Person</label><select class="cg-select" id="a-p" name="person"><option value="">—</option>{% for u in users %}<option value="{{ u.pk }}" {% if person == u.pk|stringformat:'s' %}selected{% endif %}>{{ u.full_name }}</option>{% endfor %}</select></div>
+<div class="field"><label for="a-t">Team</label><select class="cg-select" id="a-t" name="team"><option value="">Any</option>{% for t in teams %}<option value="{{ t.pk }}" {% if team_id == t.pk %}selected{% endif %}>{{ t.name }}</option>{% endfor %}</select></div>
+<div class="field"><label for="a-po">Pool</label><select class="cg-select" id="a-po" name="pool"><option value="">Any</option>{% for p in pools %}<option value="{{ p.pk }}" {% if pool_id == p.pk %}selected{% endif %}>{{ p.name }}</option>{% endfor %}</select></div>
+<div class="field"><label for="a-r">Reason</label><select class="cg-select" id="a-r" name="reason"><option value="">Any</option>{% for code, label in reasons.items %}<option value="{{ code }}" {% if reason == code %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+<div class="field field--checkbox"><input class="cg-checkbox" data-color="primary" type="checkbox" id="a-z" name="snoozed" value="1" {% if include_snoozed %}checked{% endif %}><label for="a-z">Include snoozed</label></div>
+<div><button class="cg-button" data-variant="solid" data-color="primary" data-size="md" data-shape="rounded" data-full-width="false">Apply</button></div>
+</form>
+<div class="card-title"><h2>{{ total }} client(s)</h2></div>
+{% for item in items %}{% include "partials/attention_item.html" %}{% empty %}<div class="empty">No clients match. {% if reason or person or pool_id or team_id %}<a href="{% url 'attention:queue' %}">Clear filters</a>{% endif %}</div>{% endfor %}
+</section>
+{% endblock %}

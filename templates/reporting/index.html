@@ -1,0 +1,40 @@
+{% extends "base.html" %}{% load crm_ui %}{% block title %}Reports{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1 class="cg-typography" data-variant="h4">Reports</h1><p class="muted">{{ period.start_date|date:"Y-m-d" }} to {{ period.end_date|date:"Y-m-d" }} ({{ policy_tz }}). Generated {{ generated_at|local }}. Definitions v{{ definitions_version }}. Every number links to the records behind it.</p></div><a href="{% url 'reporting:spend' %}">Marketing spend</a></div>
+<section class="cg-card"><form method="get" class="card-pad filters"><div class="field"><label for="r-from">From</label><input class="cg-input" data-size="md" data-color="default" type="date" id="r-from" name="from" value="{{ period.start_date|date:'Y-m-d' }}"></div><div class="field"><label for="r-to">To</label><input class="cg-input" data-size="md" data-color="default" type="date" id="r-to" name="to" value="{{ period.end_date|date:'Y-m-d' }}"></div><div><button class="cg-button" data-variant="solid" data-color="primary" data-size="md" data-shape="rounded" data-full-width="false" type="submit">Apply</button></div></form></section>
+
+<h2 class="cg-typography section-title" data-variant="h6">Right now</h2>
+<div class="grid grid--stats">
+<div class="cg-card stat"><a href="{% url 'attention:queue' %}?scope=all"><div class="stat__value">{{ team.unique_contacts }}</div><div class="stat__label">Relationships needing attention</div></a></div>
+{% for code, label in reasons.items %}<div class="cg-card stat"><a href="{% url 'attention:queue' %}?scope=all&amp;reason={{ code }}"><div class="stat__value">{{ team.per_reason|get_item:code }}</div><div class="stat__label">{{ label }}</div></a></div>{% endfor %}
+</div>
+<p class="small muted">Reason counts overlap (one relationship can have several reasons), so they do not add up to the total.</p>
+
+<section class="cg-card mt-4"><div class="card-title"><h2>By person</h2></div><div class="cg-table table-scroll"><table class="cg-table__table"><thead><tr><th class="cg-table__head-cell" scope="col">Person</th><th class="cg-table__head-cell num" scope="col">Handling</th><th class="cg-table__head-cell num" scope="col">Needing attention</th><th class="cg-table__head-cell num" scope="col">Open tasks</th><th class="cg-table__head-cell num" scope="col">Overdue</th><th class="cg-table__head-cell num" scope="col">Tasks done in period</th><th class="cg-table__head-cell num" scope="col">Follow-up coverage</th></tr></thead><tbody>
+{% for p in people %}<tr><td class="cg-table__cell">{{ p.user.full_name }}</td><td class="cg-table__cell num">{{ p.assigned }}</td><td class="cg-table__cell num">{{ p.needing }}</td><td class="cg-table__cell num">{{ p.open_tasks }}</td><td class="cg-table__cell num">{{ p.overdue }}</td><td class="cg-table__cell num">{{ p.done_in_period }}</td><td class="cg-table__cell num">{% if p.coverage.eligible %}{{ p.coverage.ratio|pct }} <span class="small muted">({{ p.coverage.met }}/{{ p.coverage.eligible }})</span>{% else %}<span class="muted">not applicable</span>{% endif %}</td></tr>
+{% empty %}<tr><td class="cg-table__cell" colspan="7"><div class="empty">No active users.</div></td></tr>{% endfor %}</tbody></table></div>
+<div class="card-pad small muted">Coverage: share of active relationships handled by the person whose last real contact is within the lifecycle cadence, or with an agreed next contact date in the future. Workload numbers describe the current queue, not performance.</div></section>
+
+<section class="cg-card mt-4"><div class="card-title"><h2>By acquisition source</h2></div><div class="cg-table table-scroll"><table class="cg-table__table"><thead><tr><th class="cg-table__head-cell" scope="col">Source</th><th class="cg-table__head-cell num" scope="col">Acquisitions</th><th class="cg-table__head-cell num" scope="col">Inquiries</th><th class="cg-table__head-cell num" scope="col">Won</th><th class="cg-table__head-cell num" scope="col">Won value</th><th class="cg-table__head-cell num" scope="col">Actual spend</th><th class="cg-table__head-cell num" scope="col">Cost per acquisition</th></tr></thead><tbody>
+{% for s in sources %}{% with sid=s.source.pk|default_if_none:"none" %}<tr><td class="cg-table__cell">{{ s.source.label|default:"No source" }}</td>
+<td class="cg-table__cell num"><a href="{% url 'reporting:drill' %}?metric=acquisitions&amp;source={{ sid }}&amp;{{ query }}">{{ s.acquisitions }}</a></td>
+<td class="cg-table__cell num"><a href="{% url 'reporting:drill' %}?metric=inquiries&amp;source={{ sid }}&amp;{{ query }}">{{ s.inquiries }}</a></td>
+<td class="cg-table__cell num"><a href="{% url 'reporting:drill' %}?metric=won&amp;source={{ sid }}&amp;{{ query }}">{{ s.won }}</a></td>
+<td class="cg-table__cell num">{{ s.won_value|money:currency }}{% if s.won_other %}<div class="small muted">+ other currencies: {{ s.won_other|join:", " }}</div>{% endif %}</td>
+<td class="cg-table__cell num">{% if s.source %}<a href="{% url 'reporting:drill' %}?metric=spend&amp;source={{ sid }}&amp;{{ query }}">{{ s.spend|money:currency }}</a>{% if s.partial %}<div class="small muted">{{ s.partial }} partly overlapping excluded</div>{% endif %}{% else %}—{% endif %}</td>
+<td class="cg-table__cell num">{% if s.cpa is not None %}{{ s.cpa|money:currency }}{% else %}<span class="muted">n/a</span>{% endif %}</td></tr>{% endwith %}
+{% empty %}<tr><td class="cg-table__cell" colspan="7"><div class="empty">No sources configured.</div></td></tr>{% endfor %}</tbody></table></div></section>
+
+<div class="grid grid--2 mt-4">
+<section class="cg-card"><div class="card-title"><h2>Inquiry response</h2></div><div class="card-pad"><dl class="facts">
+<dt>Responded</dt><dd><a href="{% url 'reporting:drill' %}?metric=responded&amp;{{ query }}">{{ response.responded }}</a></dd>
+<dt>Still awaiting</dt><dd>{{ response.awaiting }}</dd>
+<dt>Median hours to respond</dt><dd>{% if response.median_hours is not None %}{{ response.median_hours|floatformat:1 }}{% else %}<span class="muted">not applicable</span>{% endif %}</dd></dl></div></section>
+<section class="cg-card"><div class="card-title"><h2>Logged activity</h2></div><div class="cg-table table-scroll"><table class="cg-table__table"><thead><tr><th class="cg-table__head-cell" scope="col">Person</th><th class="cg-table__head-cell" scope="col">Type</th><th class="cg-table__head-cell num" scope="col">Count</th></tr></thead><tbody>
+{% for a in activity_by_user %}<tr><td class="cg-table__cell">{{ a.actor__full_name|default:"System" }}</td><td class="cg-table__cell">{{ a.kind }}</td><td class="cg-table__cell num">{{ a.n }}</td></tr>{% empty %}<tr><td class="cg-table__cell" colspan="3"><div class="empty">No interactions logged in this period.</div></td></tr>{% endfor %}</tbody></table></div></section>
+</div>
+
+<section class="cg-card mt-4"><div class="card-title"><h2>Relationships by lifecycle</h2></div><div class="card-pad row">{% for l in lifecycle_counts %}{% chip l.lifecycle %} <strong>{{ l.n }}</strong>{% empty %}<span class="muted">No contacts yet.</span>{% endfor %}</div></section>
+
+<details class="cg-card card-pad disclosure mt-4"><summary>Metric definitions</summary><dl class="facts">{% for key, d in definitions.items %}<dt>{{ d.0 }}</dt><dd>{{ d.1 }}</dd>{% endfor %}</dl></details>
+{% endblock %}

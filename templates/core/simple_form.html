@@ -1,0 +1,7 @@
+{% extends "base.html" %}{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="page-head"><h1 class="cg-typography" data-variant="h4">{{ title }}</h1><a href="{% url 'core:settings' %}">Back to settings</a></div>
+<section class="cg-card narrow"><form method="post" class="card-pad stack" novalidate>{% csrf_token %}{% include "partials/form_errors.html" %}
+{% for field in form %}{% include "partials/field.html" %}{% endfor %}
+<div class="form-actions"><button class="cg-button" data-variant="solid" data-color="primary" data-size="md" data-shape="rounded" data-full-width="false" type="submit">Save</button><a class="cg-button" data-variant="ghost" data-color="secondary" data-size="md" data-shape="rounded" data-full-width="false" href="{% url 'core:settings' %}">Cancel</a></div></form></section>
+{% endblock %}

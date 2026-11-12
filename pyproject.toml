@@ -9,6 +9,7 @@ DJANGO_SETTINGS_MODULE = "crm_project.settings"
 testpaths = ["tests"]
 addopts = "-q --strict-markers"
 markers = ["concurrency: tests that use real threads and separate database connections"]
+filterwarnings = ["ignore:No directory at:UserWarning"]
 
 [tool.ruff]
 line-length = 130

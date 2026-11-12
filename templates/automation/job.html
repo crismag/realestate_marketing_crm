@@ -1,0 +1,13 @@
+{% extends "base.html" %}{% load crm_ui %}{% block title %}Job {{ job.pk }}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1 class="cg-typography" data-variant="h4">Job #{{ job.pk }}: {{ job.kind }}</h1><p>{% chip job.get_status_display job.status %} · attempt {{ job.attempts }} of {{ job.max_attempts }}</p></div><a href="{% url 'automation:jobs' %}">All jobs</a></div>
+<div class="grid grid--2"><section class="cg-card"><div class="card-title"><h2>Details</h2></div><div class="card-pad"><dl class="facts">
+<dt>Logical key</dt><dd>{{ job.logical_key|default:"—" }}</dd><dt>Rule</dt><dd>{{ job.rule.name|default:"—" }}{% if job.rule_version %} v{{ job.rule_version }}{% endif %}</dd>
+<dt>Run at</dt><dd>{{ job.run_at|local }}</dd><dt>Created</dt><dd>{{ job.created_at|local }}</dd><dt>Finished</dt><dd>{% if job.finished_at %}{{ job.finished_at|local }}{% else %}—{% endif %}</dd>
+<dt>Payload</dt><dd>{% for k, v in job.payload.items %}{{ k }}={{ v }}{% if not forloop.last %}, {% endif %}{% endfor %}</dd>
+<dt>Result</dt><dd>{% for k, v in job.result.items %}{{ k }}={{ v }}{% if not forloop.last %}, {% endif %}{% empty %}—{% endfor %}</dd>
+<dt>Last error</dt><dd class="tl-summary">{{ job.last_error|default:"—" }}</dd></dl>
+<div class="row">{% if job.status == 'dead' or job.status == 'failed' %}<form method="post" action="{% url 'automation:job_action' job.pk 'retry' %}">{% csrf_token %}<button class="cg-button" data-variant="solid" data-color="primary" data-size="sm" data-shape="rounded" data-full-width="false">Retry now</button></form>{% endif %}
+{% if job.status == 'queued' or job.status == 'failed' or job.status == 'dead' %}<form method="post" action="{% url 'automation:job_action' job.pk 'cancel' %}">{% csrf_token %}<button class="cg-button" data-variant="outline" data-color="secondary" data-size="sm" data-shape="rounded" data-full-width="false">Cancel job</button></form>{% endif %}</div></div></section>
+<section class="cg-card"><div class="card-title"><h2>Attempts</h2></div><ul class="cg-list">{% for a in attempts %}<li class="cg-list__item" data-color="default"><span>#{{ a.attempt_no }} by {{ a.worker_id }} · {{ a.started_at|local }} · {% chip a.outcome|default:"running" a.outcome %}{% if a.error %}<br><span class="small muted">{{ a.error|truncatechars:200 }}</span>{% endif %}</span></li>{% empty %}<li class="empty">Not attempted yet.</li>{% endfor %}</ul></section></div>
+{% endblock %}

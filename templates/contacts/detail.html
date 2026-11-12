@@ -1,0 +1,113 @@
+{% extends "base.html" %}{% load crm_ui %}{% block title %}{{ contact.display_name }}{% endblock %}
+{% block content %}
+<nav class="cg-breadcrumb small" aria-label="Breadcrumb"><a class="cg-breadcrumb__link" href="{% url 'contacts:list' %}">Contacts</a> <span class="cg-breadcrumb__separator" aria-hidden="true">/</span> <span aria-current="page">{{ contact.display_name }}</span></nav>
+<div class="page-head">
+  <div><h1 class="cg-typography" data-variant="h4">{{ contact.display_name }}</h1>
+    <div class="row">{% chip lifecycle_labels|get_item:contact.lifecycle "open" "solid" %}{% if contact.disposition != 'active' %} {% chip contact.get_disposition_display %}{% endif %}{% if contact.archived_at %} {% chip "Archived" %}{% endif %}{% if contact.email_opt_out %} {% chip "Email opt-out" "suppressed" %}{% endif %}
+    <span class="muted">Responsible: <strong>{% if assignment.kind == 'pool' %}Pool {{ assignment.pool }}{% else %}{{ assignment.user }}{% endif %}</strong> since {{ assignment.since|local }}</span></div>
+  </div>
+  <div class="row">
+    {% if assignment.kind == 'pool' %}<form method="post" action="{% url 'work:claim' contact.pk %}">{% csrf_token %}<input type="hidden" name="version" value="{{ assignment.version }}"><input type="hidden" name="operation_id" value="{{ operation_id }}"><button class="cg-button" data-variant="gradient" data-color="primary" data-size="md" data-shape="rounded" data-full-width="false">Claim this client</button></form>{% endif %}
+    {% if can_handover %}<a class="cg-button" data-variant="outline" data-color="primary" data-size="md" data-shape="rounded" data-full-width="false" href="{% url 'work:handover_new' contact.pk %}">{% if assignment.kind == 'pool' %}Offer to an agent{% else %}Hand over / release{% endif %}</a>{% endif %}
+    <form method="post" action="{% url 'contacts:watch' contact.pk %}">{% csrf_token %}<input type="hidden" name="watch" value="{% if watching %}0{% else %}1{% endif %}"><button class="cg-button" data-variant="ghost" data-color="secondary" data-size="md" data-shape="rounded" data-full-width="false">{% if watching %}Stop watching{% else %}Watch{% endif %}</button></form>
+    <a class="cg-button" data-variant="ghost" data-color="secondary" data-size="md" data-shape="rounded" data-full-width="false" href="{% url 'contacts:edit' contact.pk %}">Edit details</a>
+  </div>
+</div>
+
+<div class="grid grid--main-side">
+<div class="stack">
+  <section class="cg-card" aria-labelledby="attn"><div class="card-title"><h2 id="attn">Attention</h2><span class="small muted">Evaluated {{ now|local }}</span></div>
+  {% if attention %}{% for r in attention.reasons %}<div class="att-item"><div class="reason">{% chip r.label r.code %}{% if r.overdue %} {% chip "past target" "failed" %}{% endif %}<div>{{ r.detail }}{% if r.snoozed_until %}<div class="small muted">Snoozed until {{ r.snoozed_until|local }}</div>{% endif %}</div></div>
+    {% if r.code in snoozable %}{% if r.snoozed_until %}<form method="post" action="{% url 'attention:unsnooze' contact.pk %}">{% csrf_token %}<input type="hidden" name="reason_code" value="{{ r.code }}"><button class="cg-button" data-variant="ghost" data-color="secondary" data-size="sm" data-shape="rounded" data-full-width="false">Clear snooze</button></form>
+    {% else %}<details class="disclosure"><summary>Snooze this reminder</summary><form method="post" action="{% url 'attention:snooze' contact.pk %}" class="form-grid form-grid--2">{% csrf_token %}<input type="hidden" name="reason_code" value="{{ r.code }}">
+      <div class="field"><label for="sz-d-{{ r.code }}">For</label><select class="cg-select" id="sz-d-{{ r.code }}" name="days"><option value="1">1 day</option><option value="3">3 days</option><option value="7" selected>1 week</option><option value="14">2 weeks</option><option value="30">30 days</option></select></div>
+      <div class="field"><label for="sz-n-{{ r.code }}">Why</label><input class="cg-input" data-size="md" data-color="default" id="sz-n-{{ r.code }}" name="note" required maxlength="300"></div>
+      <div><button class="cg-button" data-variant="outline" data-color="secondary" data-size="sm" data-shape="rounded" data-full-width="false">Snooze</button></div></form></details>{% endif %}{% endif %}
+  </div>{% endfor %}
+  <div class="att-facts card-pad">
+    <div><strong>Last attempt</strong>{% if attention.last_attempt %}{{ attention.last_attempt|local }}{% else %}None recorded{% endif %}</div>
+    <div><strong>Last reached</strong>{% if attention.last_success %}{{ attention.last_success|local }}{% else %}Never (recorded){% endif %}</div>
+    <div><strong>Last tour</strong>{% if attention.last_tour %}{{ attention.last_tour|local }}{% else %}—{% endif %}</div>
+  </div>
+  {% else %}<div class="empty">Nothing needs attention for this client.</div>{% endif %}
+  </section>
+
+  <section class="cg-card" aria-labelledby="next"><div class="card-title"><h2 id="next">Next actions</h2></div>
+  <ul class="cg-list">{% for t in open_tasks %}<li class="cg-list__item" data-color="default"><span class="row row--between full">
+    <span><a href="{% url 'work:task' t.pk %}">{{ t.title }}</a> {% if t.critical %}{% chip "Critical" "critical_task" %}{% endif %}<br><span class="small muted">{{ t.get_kind_display }} · {{ t.assignee }} · {% if t.due_at %}{% if t.due_at < now %}overdue, {% endif %}due {{ t.due_at|local }}{% else %}no due date{% endif %}</span></span>
+    <form method="post" action="{% url 'work:task_complete' t.pk %}">{% csrf_token %}<input type="hidden" name="version" value="{{ t.version }}"><button class="cg-button" data-variant="outline" data-color="success" data-size="sm" data-shape="rounded" data-full-width="false">Mark done</button></form></span></li>
+  {% empty %}<li class="empty">No open next action.</li>{% endfor %}</ul>
+  <details class="disclosure card-pad" {% if task_form.errors %}open{% endif %}><summary>Add next action</summary>
+  <form method="post" action="{% url 'work:task_create' contact.pk %}" class="stack-sm" novalidate>{% csrf_token %}{% with form=task_form %}{% include "partials/form_errors.html" %}<div class="form-grid form-grid--2">{% for field in form %}{% include "partials/field.html" %}{% endfor %}</div>{% endwith %}
+  <button class="cg-button" data-variant="solid" data-color="primary" data-size="sm" data-shape="rounded" data-full-width="false">Create task</button></form></details>
+  </section>
+
+  <section class="cg-card" aria-labelledby="logix"><div class="card-title"><h2 id="logix">Log interaction</h2></div>
+  <form method="post" action="{% url 'contacts:add_interaction' contact.pk %}" class="card-pad stack-sm" novalidate>{% csrf_token %}{% with form=interaction_form %}{% include "partials/form_errors.html" %}<div class="form-grid form-grid--2">{% for field in form %}{% include "partials/field.html" %}{% endfor %}</div>{% endwith %}
+  <p class="small muted">Opening this page, notes and automated emails never count as contacting the customer.</p>
+  <button class="cg-button" data-variant="solid" data-color="primary" data-size="sm" data-shape="rounded" data-full-width="false">Log interaction</button></form>
+  </section>
+
+  <section class="cg-card" aria-labelledby="hist"><div class="card-title"><h2 id="hist">History</h2></div>
+  <div class="card-pad"><ol class="cg-timeline">{% for e in timeline %}<li class="cg-timeline__item tl-kind-{{ e.kind }}"><div class="tl-rail"><span class="cg-timeline__indicator"></span>{% if not forloop.last %}<span class="cg-timeline__connector"></span>{% endif %}</div>
+    <div class="cg-timeline__body"><div><strong>{{ e.title }}</strong> <span class="small muted">{{ e.at|local }}</span></div><div class="small muted">{{ e.meta }}</div>{% if e.body %}<div class="tl-summary">{{ e.body }}</div>{% endif %}</div></li>
+  {% empty %}<li class="empty">No history yet.</li>{% endfor %}</ol></div>
+  </section>
+</div>
+
+<div class="stack">
+  <section class="cg-card" aria-labelledby="facts"><div class="card-title"><h2 id="facts">Details</h2></div>
+  <div class="card-pad"><dl class="facts">
+    <dt>Email</dt><dd>{{ contact.email|default:"—" }}</dd>
+    <dt>Phone</dt><dd>{{ contact.phone|default:"—" }}</dd>
+    <dt>Source</dt><dd>{{ contact.source|default:"—" }}{% if contact.source_detail %} · {{ contact.source_detail }}{% endif %}</dd>
+    <dt>Introduced by</dt><dd>{{ contact.introducer|default:"—" }}</dd>
+    <dt>Prefers</dt><dd>{{ contact.get_preferred_channel_display|default:"No preference" }}</dd>
+    <dt>Agreed contact</dt><dd>{% if contact.next_contact_agreed_at %}{{ contact.next_contact_agreed_at|local }}{% else %}—{% endif %}</dd>
+    <dt>Interests</dt><dd class="tl-summary">{{ contact.interests|default:"—" }}</dd>
+    <dt>Notes</dt><dd class="tl-summary">{{ contact.notes|default:"—" }}</dd>
+    <dt>Captured</dt><dd>{{ contact.created_at|local }} by {{ contact.created_by|default:"system" }}</dd>
+    <dt>Watchers</dt><dd>{% for w in watchers %}{{ w.user }}{% if not forloop.last %}, {% endif %}{% empty %}None{% endfor %}</dd>
+  </dl>
+  <form method="post" action="{% url 'contacts:opt_out' contact.pk %}" class="row">{% csrf_token %}<input type="hidden" name="opt_out" value="{% if contact.email_opt_out %}0{% else %}1{% endif %}"><button class="cg-button" data-variant="ghost" data-color="secondary" data-size="sm" data-shape="rounded" data-full-width="false">{% if contact.email_opt_out %}Remove email opt-out{% else %}Customer opted out of email{% endif %}</button></form></div>
+  </section>
+
+  <section class="cg-card" aria-labelledby="resp"><div class="card-title"><h2 id="resp">Responsibility</h2></div><div class="card-pad stack-sm">
+  {% if open_handover %}<div class="alert-soft"><strong>{{ open_handover.get_kind_display }}</strong> to {{ open_handover.destination_label }} requested by {{ open_handover.sender }} {{ open_handover.requested_at|ago }}. {{ open_handover.sender }} remains responsible until it is accepted.<div class="small">Reason: {{ open_handover.reason }}</div>{% if open_handover.context %}<div class="small tl-summary">{{ open_handover.context }}</div>{% endif %}</div>
+    {% if can_decide %}<div class="row"><form method="post" action="{% url 'work:handover_decide' open_handover.pk 'accept' %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.path }}"><button class="cg-button" data-variant="solid" data-color="success" data-size="sm" data-shape="rounded" data-full-width="false">Accept</button></form>
+      <form method="post" action="{% url 'work:handover_decide' open_handover.pk 'decline' %}" class="row">{% csrf_token %}<input type="hidden" name="next" value="{{ request.path }}"><label class="sr-only" for="decline-note">Decline reason</label><input class="cg-input" data-size="sm" data-color="default" id="decline-note" name="note" placeholder="Reason"><button class="cg-button" data-variant="outline" data-color="secondary" data-size="sm" data-shape="rounded" data-full-width="false">Decline</button></form></div>{% endif %}
+    {% if is_sender %}<form method="post" action="{% url 'work:handover_decide' open_handover.pk 'cancel' %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.path }}"><button class="cg-button" data-variant="ghost" data-color="secondary" data-size="sm" data-shape="rounded" data-full-width="false">Cancel my request</button></form>{% endif %}
+  {% endif %}
+  {% if handovers %}<ul class="small">{% for h in handovers %}<li>{{ h.requested_at|local:"Y-m-d" }}: {{ h.get_kind_display }} to {{ h.destination_label }} — {% chip h.get_state_display h.state %}{% if h.decided_by %} by {{ h.decided_by }}{% endif %}</li>{% endfor %}</ul>{% endif %}
+  </div></section>
+
+  <section class="cg-card" aria-labelledby="inq"><div class="card-title"><h2 id="inq">Inquiries</h2></div>
+  <ul class="cg-list">{% for q in inquiries %}<li class="cg-list__item" data-color="default"><span>{% chip q.get_status_display q.status %} <span class="small muted">{{ q.received_at|local }} · {{ q.get_channel_display }}</span><br><span class="tl-summary">{{ q.message }}</span>
+    {% if q.status == 'awaiting' %}<details class="disclosure small"><summary>Close without response</summary><form method="post" action="{% url 'contacts:close_inquiry' contact.pk q.pk %}" class="row">{% csrf_token %}<label class="sr-only" for="cq{{ q.pk }}">Reason</label><input class="cg-input" data-size="sm" data-color="default" id="cq{{ q.pk }}" name="reason" placeholder="Reason (e.g. spam)" required><button class="cg-button" data-variant="outline" data-color="secondary" data-size="sm" data-shape="rounded" data-full-width="false">Close</button></form></details>{% endif %}</span></li>
+  {% empty %}<li class="empty">No inquiries recorded.</li>{% endfor %}</ul>
+  <details class="disclosure card-pad" {% if inquiry_form.errors %}open{% endif %}><summary>Record a repeat inquiry</summary>
+  <form method="post" action="{% url 'contacts:add_inquiry' contact.pk %}" class="stack-sm" novalidate>{% csrf_token %}{% with form=inquiry_form %}{% include "partials/form_errors.html" %}{% for field in form %}{% include "partials/field.html" %}{% endfor %}{% endwith %}
+  <button class="cg-button" data-variant="solid" data-color="primary" data-size="sm" data-shape="rounded" data-full-width="false">Record inquiry</button></form></details>
+  </section>
+
+  <section class="cg-card" aria-labelledby="opps"><div class="card-title"><h2 id="opps">Opportunities</h2></div>
+  <ul class="cg-list">{% for o in opportunities %}<li class="cg-list__item" data-color="default"><span><a href="{% url 'contacts:opportunity' contact.pk o.pk %}">{{ o.title }}</a> {% chip o.get_outcome_display o.outcome %}<br><span class="small muted">{{ stage_labels|get_item:o.stage|default:o.stage }} · {{ o.amount_minor|money:o.currency }}</span></span></li>{% empty %}<li class="empty">No opportunities.</li>{% endfor %}</ul>
+  <details class="disclosure card-pad" {% if opportunity_form.errors %}open{% endif %}><summary>Add opportunity</summary>
+  <form method="post" action="{% url 'contacts:add_opportunity' contact.pk %}" class="stack-sm" novalidate>{% csrf_token %}{% with form=opportunity_form %}{% include "partials/form_errors.html" %}{% for field in form %}{% include "partials/field.html" %}{% endfor %}{% endwith %}
+  <button class="cg-button" data-variant="solid" data-color="primary" data-size="sm" data-shape="rounded" data-full-width="false">Add</button></form></details>
+  </section>
+
+  <section class="cg-card" aria-labelledby="lc"><div class="card-title"><h2 id="lc">Lifecycle</h2></div>
+  <form method="post" action="{% url 'contacts:lifecycle' contact.pk %}" class="card-pad stack-sm" novalidate>{% csrf_token %}{% with form=lifecycle_form %}{% include "partials/form_errors.html" %}{% for field in form %}{% include "partials/field.html" %}{% endfor %}{% endwith %}
+  <p class="small muted">Implementation default: winning an opportunity makes the contact a client. Lifecycle does not change responsibility.</p>
+  <button class="cg-button" data-variant="outline" data-color="primary" data-size="sm" data-shape="rounded" data-full-width="false">Save lifecycle</button></form>
+  </section>
+
+  <section class="cg-card" aria-labelledby="auto"><div class="card-title"><h2 id="auto">Automated emails</h2><a class="small" href="{% url 'comms:list' %}">All</a></div>
+  <ul class="cg-list">{% for m in messages_out %}<li class="cg-list__item" data-color="default"><span><a href="{% url 'comms:detail' m.pk %}">{{ m.template.name|default:"Message" }}</a> {% chip m.get_status_display m.status %}<br><span class="small muted">{{ m.status_reason }}</span></span></li>{% empty %}<li class="empty">None.</li>{% endfor %}</ul>
+  </section>
+
+  {% if not contact.archived_at %}<details class="disclosure"><summary>Archive this contact</summary><form method="post" action="{% url 'contacts:archive' contact.pk %}" class="row">{% csrf_token %}<label class="sr-only" for="arch">Reason</label><input class="cg-input" data-size="sm" data-color="default" id="arch" name="reason" placeholder="Reason" required><button class="cg-button" data-variant="outline" data-color="warning" data-size="sm" data-shape="rounded" data-full-width="false">Archive</button></form><p class="small muted">Archiving hides the contact from lists and attention. History is kept.</p></details>{% endif %}
+</div>
+</div>
+{% endblock %}

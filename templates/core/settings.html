@@ -1,0 +1,19 @@
+{% extends "base.html" %}{% load crm_ui %}{% block title %}Settings{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1 class="cg-typography" data-variant="h4">Workspace settings</h1><p class="muted">Version {{ row.version }}. These are implementation defaults chosen to get started; change them to match how your team works.</p></div><div class="row"><a href="{% url 'accounts:users' %}">People</a><a href="{% url 'core:audit' %}">Audit log</a></div></div>
+<div class="grid grid--main-side">
+<section class="cg-card">{% if user.is_staff %}<form method="post" class="card-pad stack" novalidate>{% csrf_token %}{% include "partials/form_errors.html" %}
+<div class="form-grid form-grid--2">{% for field in form %}{% if field.name != "stages" and field.name != "contact_reset_types" and field.name != "escalation_recipients" and field.name != "note" %}{% include "partials/field.html" %}{% endif %}{% endfor %}</div>
+{% with field=form.stages %}{% include "partials/field.html" %}{% endwith %}
+<fieldset><legend>{{ form.contact_reset_types.label }}</legend>{{ form.contact_reset_types }}</fieldset>
+<fieldset><legend>Escalation recipients</legend>{{ form.escalation_recipients }}<div class="help small muted">Who is told when a task is overdue past the escalation threshold, in addition to pool coordinators.</div></fieldset>
+{% with field=form.note %}{% include "partials/field.html" %}{% endwith %}
+<div class="form-actions"><button class="cg-button" data-variant="solid" data-color="primary" data-size="md" data-shape="rounded" data-full-width="false" type="submit">Save settings</button></div></form>
+{% else %}<div class="card-pad"><p class="muted">Only workspace administrators can change these settings.</p></div>{% endif %}</section>
+<aside class="stack">
+<section class="cg-card"><div class="card-title"><h2>Shared pools</h2>{% if user.is_staff %}<a href="{% url 'core:pool_new' %}">Add</a>{% endif %}</div><div class="card-pad stack-sm">{% for p in pools %}<div>{% if user.is_staff %}<a href="{% url 'core:pool_edit' p.pk %}">{{ p.name }}</a>{% else %}<strong>{{ p.name }}</strong>{% endif %}{% if not p.active %} {% chip "Inactive" %}{% endif %}<div class="small muted">Coordinator: {{ p.coordinator.full_name|default:"none (routing gap)" }}{% if p.backup_coordinator %}; backup {{ p.backup_coordinator.full_name }}{% endif %}</div></div>{% empty %}<p class="muted">No pools.</p>{% endfor %}</div></section>
+<section class="cg-card"><div class="card-title"><h2>Teams</h2>{% if user.is_staff %}<a href="{% url 'core:team_new' %}">Add</a>{% endif %}</div><div class="card-pad row">{% for t in teams %}{% if user.is_staff %}<a href="{% url 'core:team_edit' t.pk %}">{{ t.name }}</a>{% else %}<span>{{ t.name }}</span>{% endif %}{% empty %}<span class="muted">No teams.</span>{% endfor %}</div></section>
+<section class="cg-card"><div class="card-title"><h2>Acquisition sources</h2>{% if user.is_staff %}<a href="{% url 'core:source_new' %}">Add</a>{% endif %}</div><div class="card-pad stack-sm">{% for s in sources %}<div>{% if user.is_staff %}<a href="{% url 'core:source_edit' s.pk %}">{{ s.label }}</a>{% else %}{{ s.label }}{% endif %} <span class="small muted">{{ s.get_kind_display }}{% if not s.active %}, inactive{% endif %}</span></div>{% empty %}<p class="muted">No sources.</p>{% endfor %}</div></section>
+<section class="cg-card"><div class="card-title"><h2>Recent versions</h2></div><div class="card-pad stack-sm">{% for v in versions %}<div><strong>v{{ v.version }}</strong> <span class="small muted">{{ v.changed_at|local }} by {{ v.changed_by.full_name|default:"system" }}</span>{% if v.note %}<div class="small">{{ v.note }}</div>{% endif %}</div>{% empty %}<p class="muted">No history.</p>{% endfor %}</div></section>
+</aside></div>
+{% endblock %}

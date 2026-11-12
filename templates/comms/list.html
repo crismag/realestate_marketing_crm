@@ -1,0 +1,15 @@
+{% extends "base.html" %}{% load crm_ui %}{% block title %}Customer messages{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1 class="cg-typography" data-variant="h4">Customer messages</h1>
+<p class="muted">Automated customer email goes through the <strong>sandbox transport</strong>: each message is saved as a local file and is <strong>not sent</strong> to anyone. "Captured by sandbox" is never a provider delivery.</p></div></div>
+<div class="grid grid--stats">{% for code, label in statuses %}<div class="cg-card stat"><a href="?status={{ code }}"><div class="stat__value">{{ counts|get_item:code }}</div><div class="stat__label">{{ label }}</div></a></div>{% endfor %}</div>
+<section class="cg-card mt-4"><div class="card-title"><h2>Messages{% if status %} · {{ status }}{% endif %}</h2>{% if status %}<a href="{% url 'comms:list' %}">Show all</a>{% endif %}</div>
+<div class="cg-table table-scroll"><table class="cg-table__table"><thead><tr><th class="cg-table__head-cell" scope="col">Customer</th><th class="cg-table__head-cell" scope="col">Subject</th><th class="cg-table__head-cell" scope="col">Status</th><th class="cg-table__head-cell" scope="col">Rule</th><th class="cg-table__head-cell" scope="col">Scheduled for</th></tr></thead><tbody>
+{% for m in page %}<tr><td class="cg-table__cell"><a href="{% url 'contacts:detail' m.contact_id %}">{{ m.contact.display_name }}</a></td><td class="cg-table__cell"><a href="{% url 'comms:detail' m.pk %}">{{ m.subject|default:"(not rendered yet)" }}</a></td><td class="cg-table__cell">{% chip m.get_status_display m.status %}{% if m.status_reason %}<div class="small muted">{{ m.status_reason|truncatechars:80 }}</div>{% endif %}</td><td class="cg-table__cell small">{{ m.rule.name|default:"manual" }}</td><td class="cg-table__cell small">{{ m.scheduled_for|local }}</td></tr>
+{% empty %}<tr><td class="cg-table__cell" colspan="5"><div class="empty">No customer messages{% if status %} with this status{% endif %}.</div></td></tr>{% endfor %}</tbody></table></div>
+{% include "partials/pagination.html" %}</section>
+<section class="cg-card mt-4"><div class="card-title"><h2>Templates</h2></div>
+<div class="cg-table table-scroll"><table class="cg-table__table"><thead><tr><th class="cg-table__head-cell" scope="col">Name</th><th class="cg-table__head-cell" scope="col">Subject</th><th class="cg-table__head-cell" scope="col">Version</th><th class="cg-table__head-cell" scope="col">Status</th></tr></thead><tbody>
+{% for t in templates %}<tr><td class="cg-table__cell"><a href="{% url 'comms:template' t.pk %}">{{ t.name }}</a></td><td class="cg-table__cell">{{ t.subject }}</td><td class="cg-table__cell">v{{ t.version }}</td><td class="cg-table__cell">{% if t.active %}{% chip "Active" "succeeded" %}{% else %}{% chip "Inactive" %}{% endif %}</td></tr>
+{% empty %}<tr><td class="cg-table__cell" colspan="4"><div class="empty">No templates.</div></td></tr>{% endfor %}</tbody></table></div></section>
+{% endblock %}

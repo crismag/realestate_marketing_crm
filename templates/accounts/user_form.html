@@ -1,0 +1,13 @@
+{% extends "base.html" %}{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="page-head"><h1 class="cg-typography" data-variant="h4">{{ title }}</h1><a href="{% url 'accounts:users' %}">Back to people</a></div>
+<div class="grid grid--2">
+<section class="cg-card"><form method="post" class="card-pad stack" novalidate>{% csrf_token %}{% include "partials/form_errors.html" %}
+{% for field in form %}{% include "partials/field.html" %}{% endfor %}
+<div class="form-actions"><button class="cg-button" data-variant="solid" data-color="primary" data-size="md" data-shape="rounded" data-full-width="false" type="submit">Save</button><a class="cg-button" data-variant="ghost" data-color="secondary" data-size="md" data-shape="rounded" data-full-width="false" href="{% url 'accounts:users' %}">Cancel</a></div></form></section>
+{% if reset %}<section class="cg-card"><div class="card-title"><h2>Reset password</h2></div><form method="post" action="{% url 'accounts:user_reset_password' target.pk %}" class="card-pad stack" novalidate>{% csrf_token %}
+<p class="small muted">Sets a temporary password, signs the person out everywhere, and makes them choose a new one at next sign-in.</p>
+{% for field in reset %}{% include "partials/field.html" %}{% endfor %}
+<div class="form-actions"><button class="cg-button" data-variant="outline" data-color="warning" data-size="md" data-shape="rounded" data-full-width="false" type="submit">Reset password</button></div></form></section>{% endif %}
+</div>
+{% endblock %}

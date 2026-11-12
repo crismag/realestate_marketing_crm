@@ -1,0 +1,11 @@
+{% extends "base.html" %}{% load crm_ui %}{% block title %}Hand over {{ contact.display_name }}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1 class="cg-typography" data-variant="h4">Hand over {{ contact.display_name }}</h1><p class="muted">Currently: {{ assignment.describe }}. Responsibility only changes when the recipient (or the pool coordinator) accepts.</p></div><a href="{% url 'contacts:detail' contact.pk %}">Back</a></div>
+<section class="cg-card narrow"><form method="post" class="card-pad stack" novalidate>{% csrf_token %}{% include "partials/form_errors.html" %}
+{% for field in form %}{% if field.name == 'kind' %}<fieldset><legend>Type</legend>{% for radio in field %}<div class="field field--checkbox">{{ radio.tag }} <label for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label></div>{% endfor %}</fieldset>
+{% elif not field.name|slice:":5" == "task_" %}{% include "partials/field.html" %}{% endif %}{% endfor %}
+{% if form.task_fields %}<fieldset><legend>Open tasks ({{ form.task_fields|length }})</legend><p class="small muted">Tasks are never moved silently. Choose for each one.</p>
+{% for task, name in form.task_fields %}{% for field in form %}{% if field.name == name %}{% include "partials/field.html" %}{% endif %}{% endfor %}{% endfor %}</fieldset>{% endif %}
+<div class="form-actions"><button class="cg-button" data-variant="gradient" data-color="primary" data-size="md" data-shape="rounded" data-full-width="false">Request handover</button></div>
+</form></section>
+{% endblock %}

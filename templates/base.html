@@ -1,0 +1,44 @@
+{% load static crm_ui %}<!doctype html>
+<html lang="en" data-cg-theme="crisgen-light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}{{ workspace_name }}{% endblock %} · {{ workspace_name }}</title>
+<link rel="stylesheet" href="{% static 'vendor/crisgen-ui/tokens.css' %}">
+<link rel="stylesheet" href="{% static 'vendor/crisgen-ui/base.css' %}">
+<link rel="stylesheet" href="{% static 'vendor/crisgen-ui/components.css' %}">
+<link rel="stylesheet" href="{% static 'vendor/crisgen-ui/themes/crisgen-light.css' %}">
+<link rel="stylesheet" href="{% static 'crm/crm.css' %}">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+{% if user.is_authenticated %}
+<div class="shell">
+  <aside class="shell__sidebar" aria-label="Main navigation">
+    <div class="cg-card" data-shadow="sm">
+      <a class="brand" href="{% url 'core:today' %}">{{ workspace_name }}</a>
+      {% include "partials/nav.html" %}
+    </div>
+  </aside>
+  <div class="shell__main">
+    <nav class="cg-navbar topbar" data-color="light" data-sticky="false" aria-label="Top bar">
+      <details class="mobile-nav">
+        <summary class="cg-button" data-variant="outline" data-color="secondary" data-size="sm" data-shape="rounded" data-full-width="false">Menu</summary>
+        <div class="mobile-nav__panel">{% include "partials/nav.html" %}</div>
+      </details>
+      <div class="topbar__title"><span class="muted small">Signed in as</span> <strong>{{ user.full_name }}</strong></div>
+      <a class="cg-button" data-variant="ghost" data-color="secondary" data-size="sm" data-shape="rounded" data-full-width="false" href="{% url 'automation:notifications' %}">Notifications{% if unread_notifications %} ({{ unread_notifications }}){% endif %}</a>
+      <a class="cg-button" data-variant="ghost" data-color="secondary" data-size="sm" data-shape="rounded" data-full-width="false" href="{% url 'accounts:password_change' %}">Password</a>
+      <form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}<button class="cg-button" data-variant="outline" data-color="secondary" data-size="sm" data-shape="rounded" data-full-width="false" type="submit">Sign out</button></form>
+    </nav>
+    <main id="main" tabindex="-1">
+      {% include "partials/messages.html" %}
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</div>
+{% else %}
+<main id="main" class="auth-wrap">{% include "partials/messages.html" %}{% block auth_content %}{% endblock %}</main>
+{% endif %}
+</body>
+</html>

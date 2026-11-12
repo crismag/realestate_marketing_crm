@@ -1,0 +1,13 @@
+{% load crm_ui %}<ul class="cg-list nav-list">
+  <li><a class="cg-list__item" data-color="default" href="{% url 'core:today' %}" aria-current="{% nav_current '/' %}">Today</a></li>
+  <li><a class="cg-list__item" data-color="default" href="{% url 'contacts:list' %}" aria-current="{% nav_current '/contacts/' %}">Contacts</a></li>
+  <li><a class="cg-list__item" data-color="default" href="{% url 'work:shared' %}" aria-current="{% nav_current '/work/shared' %}">Shared work</a></li>
+  <li><a class="cg-list__item" data-color="default" href="{% url 'work:tasks' %}" aria-current="{% nav_current '/work/tasks' %}">Tasks</a></li>
+  <li><a class="cg-list__item" data-color="default" href="{% url 'attention:queue' %}" aria-current="{% nav_current '/attention/' %}">Attention</a></li>
+  <li><a class="cg-list__item" data-color="default" href="{% url 'contacts:opportunities' %}" aria-current="{% nav_current '/contacts/opportunities' %}">Sales</a></li>
+  <li><a class="cg-list__item" data-color="default" href="{% url 'automation:notifications' %}" aria-current="{% nav_current '/automation/notifications' %}">Notifications{% if unread_notifications %} <span class="nav-count">{% chip unread_notifications 'requested' %}</span>{% endif %}</a></li>
+  <li><a class="cg-list__item" data-color="default" href="{% url 'automation:index' %}" aria-current="{% nav_current '/automation/rules' %}">Automation</a></li>
+  <li><a class="cg-list__item" data-color="default" href="{% url 'comms:list' %}" aria-current="{% nav_current '/messages/' %}">Customer messages</a></li>
+  <li><a class="cg-list__item" data-color="default" href="{% url 'reporting:index' %}" aria-current="{% nav_current '/reports/' %}">Reports</a></li>
+  <li><a class="cg-list__item" data-color="default" href="{% url 'core:settings' %}" aria-current="{% nav_current '/settings/' %}">Settings</a></li>
+</ul>

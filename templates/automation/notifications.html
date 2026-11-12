@@ -1,0 +1,13 @@
+{% extends "base.html" %}{% load crm_ui %}{% block title %}Notifications{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1 class="cg-typography" data-variant="h4">Notifications</h1><p class="muted">Reading or dismissing a notification never completes the underlying work.</p></div>
+<form method="post" action="{% url 'automation:notifications_read_all' %}">{% csrf_token %}<button class="cg-button" data-variant="outline" data-color="secondary" data-size="sm" data-shape="rounded" data-full-width="false">Mark all read</button></form></div>
+<nav class="row" aria-label="Filter"><a href="?show=active" {% if show == 'active' %}aria-current="page"{% endif %}>Active</a> · <a href="?show=dismissed" {% if show == 'dismissed' %}aria-current="page"{% endif %}>Dismissed</a> · <a href="?show=all" {% if show == 'all' %}aria-current="page"{% endif %}>All</a></nav>
+<section class="cg-card">
+{% for n in page %}<div class="att-item"><div class="row row--between"><div>{% if not n.read_at %}{% chip "New" "requested" %} {% endif %}<strong>{{ n.title }}</strong><div class="small muted">{{ n.created_at|local }} · {{ n.reason }}{% if n.rule %} · rule: {{ n.rule.name }}{% endif %}</div>{% if n.body %}<div class="tl-summary small">{{ n.body }}</div>{% endif %}</div>
+<div class="row">{% if n.contact %}<form method="post" action="{% url 'automation:notification_action' n.pk 'open' %}">{% csrf_token %}<button class="cg-button" data-variant="solid" data-color="primary" data-size="sm" data-shape="rounded" data-full-width="false">Open client</button></form>{% endif %}
+{% if not n.read_at %}<form method="post" action="{% url 'automation:notification_action' n.pk 'read' %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="cg-button" data-variant="ghost" data-color="secondary" data-size="sm" data-shape="rounded" data-full-width="false">Mark read</button></form>{% endif %}
+{% if not n.dismissed_at %}<form method="post" action="{% url 'automation:notification_action' n.pk 'dismiss' %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="cg-button" data-variant="ghost" data-color="secondary" data-size="sm" data-shape="rounded" data-full-width="false">Dismiss</button></form>{% endif %}</div></div></div>
+{% empty %}<div class="empty">No notifications.</div>{% endfor %}
+{% include "partials/pagination.html" %}</section>
+{% endblock %}
