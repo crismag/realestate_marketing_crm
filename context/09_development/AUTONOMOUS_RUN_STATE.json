@@ -6,7 +6,7 @@
   "branch": "claude/project-thread-2p04se",
   "base_commit": "96c10c9",
   "stack": "Python 3.13 / Django 5.2.19 LTS / SQLite (WAL) / server-rendered templates with vendored CrisGen UI 1.1 vanilla target / waitress + whitenoise",
-  "current_stage": "J",
+  "current_stage": "J (handoff written; refinement optional)",
   "stages": {
     "A": "done", "B": "done", "C": "done", "D": "done", "E": "done",
     "F": "done", "G": "done", "H": "done_sandbox_only", "I": "done", "J": "in_progress"
@@ -25,5 +25,5 @@
   ],
   "blockers": [],
   "running_services": [],
-  "next_action": "Refinement passes (UI review at both viewports, accessibility basics, worker/ops polish), final run report, open PR."
+  "next_action": "Owner review of PR #1 and implementation defaults; optional refinements from docs/KNOWN_LIMITATIONS.md"
 }
