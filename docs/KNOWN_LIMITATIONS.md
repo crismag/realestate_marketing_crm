@@ -14,7 +14,6 @@ until the items marked *Before pilot* are done and the product owner has reviewe
 | Real email provider (if customer email is wanted) | Only the sandbox transport exists | Needs provider choice, sender identity, SPF/DKIM, signed callbacks, bounce handling, sandbox-account test |
 | Usability pass with 2–3 agents and a coordinator | No user has tried the screens | Watch capture, claim, handover and attention flows |
 | Accessibility review | Semantic HTML, labels, keyboard-reachable native controls and focus styles are in place; no audit with assistive tech was done | WCAG 2.1 AA check |
-| Confirm the first CI run on GitHub | Workflow committed but not observed running | `.github/workflows/ci.yml` |
 
 ## Product backlog (not in this build)
 

@@ -71,4 +71,4 @@ Commands: `pytest -p no:logging` (all `tests/`), `scripts/e2e.sh` (production-li
 - MySQL (guide only; no MySQL server in the build environment).
 - Usability testing with the sales team; accessibility audit beyond semantic markup and keyboard-reachable native controls.
 - Load testing; behaviour above a single-office team size is unmeasured.
-- CI run on GitHub: the workflow is committed; its first hosted run happens on push and is not verified here.
+- Hosted CI: first runs on GitHub Actions passed on 2026-11-12 (head 0224dab, runs 43295590124 and 43295644932).

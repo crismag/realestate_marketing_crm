@@ -121,14 +121,14 @@ items:
   - id: CHK-015
     task_id: TASK-011
     title: "Enforce agreed automated checks in CI"
-    status: implemented_not_observed
+    status: implemented_local_evidence
     dependencies: [CHK-007]
     task_status: draft
     allowed_files: "CI configuration paths enumerated after host/toolchain discovery; context verification plan/checklist/log"
     prohibited_changes: [production-sends, deployment, unrelated-refactors, customer-portal, upstream-CrisGen-edits]
     entry_conditions: "Actual CI conventions, commands and credentials"
     completion_evidence: [".github/workflows/ci.yml mirrors README commands", "commit: see git log on claude/project-thread-2p04se"]
-    next_action: "Observe first hosted CI run"
+    next_action: "Keep CI green; add MySQL job when adopted"
   - id: CHK-016
     task_id: TASK-012
     title: "Verify release candidate and pilot handoff"

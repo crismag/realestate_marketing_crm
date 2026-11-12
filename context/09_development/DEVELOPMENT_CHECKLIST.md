@@ -15,7 +15,7 @@ Planning items CHK-001–004 remain under review/in progress. Generated task bri
 | CHK-012 | [TASK-008: Execute bounded internal reminders and digest](../07_tasks/TASK-008_CONTEXT.md) | implemented; local evidence (AT-004/009/011 passed) | TASK-007 |
 | CHK-013 | [TASK-009: Add configured onboarding and customer follow-up](../07_tasks/TASK-009_CONTEXT.md) | implemented with sandbox transport only; real provider not_run | TASK-008 |
 | CHK-014 | [TASK-010: Report workload and sourced sales/marketing outcomes](../07_tasks/TASK-010_CONTEXT.md) | implemented; local evidence; earnings unavailable (OQ-011) | TASK-007 |
-| CHK-015 | [TASK-011: Enforce agreed automated checks in CI](../07_tasks/TASK-011_CONTEXT.md) | workflow committed; first hosted run not observed | TASK-003 |
+| CHK-015 | [TASK-011: Enforce agreed automated checks in CI](../07_tasks/TASK-011_CONTEXT.md) | implemented; hosted CI passed (head 0224dab) | TASK-003 |
 | CHK-016 | [TASK-012: Verify release candidate and pilot handoff](../07_tasks/TASK-012_CONTEXT.md) | in progress; local acceptance evidence done, pilot not started | TASK-005, TASK-007, TASK-008, TASK-010, TASK-011 |
 
 Autonomous build run 2026-11-12/13 implemented TASK-003 to TASK-011 locally; evidence and gaps are in [docs/REQUIREMENTS_MATRIX.md](../../docs/REQUIREMENTS_MATRIX.md). "Implemented" means built and verified by automated tests in the build environment, not accepted by the product owner. Implementation defaults remain unapproved (see [docs/IMPLEMENTATION_DEFAULTS.md](../../docs/IMPLEMENTATION_DEFAULTS.md)). TASK-001 and TASK-002 (owner decisions and reference research) are still open.

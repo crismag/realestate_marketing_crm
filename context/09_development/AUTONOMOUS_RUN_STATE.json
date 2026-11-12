@@ -21,7 +21,7 @@
     {"name": "manage.py check --deploy", "result": "4 expected warnings with CRM_SECURE_COOKIES=0/no TLS in the loopback smoke; none with production TLS settings", "at_utc": "2026-11-12T19:54:00Z"},
     {"name": "real email provider", "result": "not_run (no provider; sandbox only)"},
     {"name": "MySQL", "result": "not_run (guide only)"},
-    {"name": "hosted CI run", "result": "not_observed"}
+    {"name": "hosted CI run", "result": "passed on GitHub Actions (runs 43295590124, 43295644932) at head 0224dab", "at_utc": "2026-11-12T19:59:48Z"}
   ],
   "blockers": [],
   "running_services": [],
