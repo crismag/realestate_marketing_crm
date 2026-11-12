@@ -1,0 +1,79 @@
+model:
+  version: 18
+  last_commit: 18
+  generated: 2026-11-13
+project:
+  name: Realstate CRM
+  working_title: Sales and Marketing CRM
+  repository: https://github.com/crismag/realestate_marketing_crm
+  default_branch: main
+  status: requirements
+  current_stage: workflow-definition
+  project_type: internal-tool
+  target_platforms: [web]
+  downstream_consumers: [product-owner, Claude]
+baseline:
+  path: 04_requirements/CRM_Requirements_Baseline_v0.1.md
+  status: draft-for-review
+  preserved_snapshot: true
+  embedded_model_version: 17
+requirements:
+  active: [REQ-001, REQ-002, REQ-003, REQ-004, REQ-005, REQ-014, REQ-015, REQ-016, REQ-017, REQ-018, REQ-019, REQ-020, REQ-021, REQ-022, REQ-023, REQ-024, REQ-025]
+  deferred: [REQ-007, REQ-008, REQ-009, REQ-010, REQ-011]
+  partial:
+    REQ-006: internal-capture-active_customer-login-deferred
+  derived_proposed: [FR-001, NFR-001, NFR-003]
+  recommended_proposed: [NFR-002, NFR-004]
+decisions:
+  company_workspace: shared-single-company
+  internal_access: unrestricted-functions_authenticated-users
+  customer_portal: deferred
+  industry: real-estate-first_reusable-sales-foundation
+  reference_patterns: adopted-not-wholesale-product-cloning
+actors: [USER-001, USER-002, USER-003, USER-004, USER-005]
+sources:
+  - user-conversation-through-commit-18
+  - baseline-v0.1
+  - official-product-documentation-researched-in-conversation
+open_questions: [OQ-002, OQ-006, OQ-008, OQ-009, OQ-010, OQ-011, OQ-012, OQ-013, OQ-014]
+assumptions:
+  - proposed-workflow-defaults-are-not-approved
+design_source:
+  name: CrisGen UI
+  repository_url: https://github.com/crismag/development_design_systems
+  package_subdirectory: crisgen-ui
+  requested_ref: main
+  resolved_commit: null
+  access_status: unresolved
+  inspected_paths: []
+modules: []
+interfaces: []
+entities: []
+tasks: []
+acceptance_tests: []
+traces:
+  - requirements: [REQ-014, REQ-015, REQ-016, REQ-017]
+    artifact: 04_requirements/WORKFLOWS_v0.1.md
+  - requirements: [REQ-018, REQ-019, REQ-020, REQ-021, REQ-023]
+    artifact: 04_requirements/WORKFLOWS_v0.1.md
+artifacts:
+  - 04_requirements/CRM_Requirements_Baseline_v0.1.md
+  - 04_requirements/WORKFLOWS_v0.1.md
+  - 04_requirements/OPEN_DECISIONS.md
+  - CLAUDE_HANDOFF.md
+id_register_additions:
+  - {id: ART-002, status: active, type: repository-context}
+  - {id: PROP-030, status: proposed, type: workflow-policy}
+  - {id: OQ-009, status: active, type: pool-policy}
+  - {id: OQ-010, status: active, type: integrations}
+  - {id: OQ-011, status: active, type: metrics}
+  - {id: OQ-012, status: active, type: operational-constraints}
+  - {id: OQ-013, status: active, type: special-groups}
+  - {id: OQ-014, status: active, type: support-scope}
+undefined:
+  - handover-accountability-and-pool-policy
+  - lifecycle-and-automation-policy
+  - stack-and-operating-constraints
+  - inspected-reference-interfaces-and-CrisGen-catalog
+  - architecture-contracts-checkpoints-checklist-skills-and-task-bundles
+next: review-OQ-006_while-independent-reference-research-proceeds
