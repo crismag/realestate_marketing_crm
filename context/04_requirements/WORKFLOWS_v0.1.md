@@ -1,5 +1,5 @@
 # Workflow proposal v0.1
-Classification: recommended, unapproved. Source: baseline REQ-014 through REQ-023. No production automation is authorized by this document.
+Classification: mixed. ADR-001 handover accountability is approved; other workflow details remain proposed. Source: baseline REQ-014 through REQ-023. No production automation is authorized by this document.
 
 ## 1. Ownership and task responsibility
 A contact is a durable customer identity. Relationship responsibility is either a named person or a named shared pool. A separate task can belong to a different person without changing the relationship owner. Referral attribution remains independent.
@@ -16,7 +16,7 @@ Acceptance scenario: two agents claim the same pool record simultaneously; exact
 ## 2. Handover proposal
 Recommended states: requested → accepted, declined or cancelled. A requested handover does not itself change the existing owner. Acceptance transfers responsibility atomically and records sender/recipient/context. Decline/cancellation retains the current owner. A request becomes stale if responsibility changes before acceptance; require review instead of overwriting newer assignment.
 
-The sender-until-acceptance rule is PROPOSED under OQ-006, not approved. Timing/escalation and whether supervisors may force transfer remain open.
+**ADR-001 — Approved 13 November 2026:** The sender remains responsible until the recipient explicitly accepts the handover. OQ-006 is resolved. Pending-handover responsibility-based reminders continue to target the sender; the recipient may receive acceptance-request notifications. Acceptance changes accountability; merely requesting a transfer does not. Timing/escalation and whether supervisors may force transfer remain open.
 
 Separate task handover from client handover. Do not implicitly transfer all tasks. Show outstanding tasks during client transfer and require an explicit disposition for each affected task.
 
@@ -63,6 +63,11 @@ Proposed operational filters: person, team/pool, date range, source and attentio
 ## 6. Workflow choices
 A. Direct reassignment: simpler, but recipients can receive unexpected responsibility.
 B. Acceptance-based handover: explicit accountability, but creates pending work to monitor.
-Recommendation: B for client handovers, while retaining explicit supervisor override as a separate future decision. User selection remains open.
+Selected: acceptance-based accountability for client handovers (ADR-001). Explicit supervisor override remains a separate open policy; this approval does not approve unrelated workflow defaults.
 
-Next decision: OQ-006 — should the sender retain responsibility until acceptance?
+Approved-rule acceptance checks:
+- Requesting a handover leaves the sender responsible.
+- Explicit recipient acceptance transfers responsibility.
+- Decline or cancellation leaves sender responsibility unchanged.
+
+Next: define lifecycle terminology and shared-pool rules.

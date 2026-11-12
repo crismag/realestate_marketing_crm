@@ -4,7 +4,6 @@ These are unresolved, not blockers on unrelated documentation or research.
 
 | ID | Question | Proposed default | Impacts |
 |---|---|---|---|
-| OQ-006 | Who is accountable during pending handover? | Sender until explicit acceptance | REQ-015, REQ-019, REQ-020 |
 | OQ-002 | What differentiates lead, prospect and client? | One contact identity with separate lifecycle and opportunities | Capture, reporting, sales process |
 | OQ-008 | What event is onboarding; who receives emails; what timing/channels/stop policies apply? | Explicit configurable event and bounded enabled rules | REQ-018–023 |
 | OQ-009 | Can pool records be claimed and when released? | Atomic exclusive claim; no automatic release without policy | REQ-014 |
@@ -13,6 +12,8 @@ These are unresolved, not blockers on unrelated documentation or research.
 | OQ-012 | Hosting, scale, authentication, recovery, retention, currency and timezone constraints? | Unknown; do not select stack prematurely | Architecture |
 | OQ-013 | Are special groups beyond the five named groups required? | Existing groups only until clarified | User/module context |
 | OQ-014 | Is support full case management or client follow-up coordination? | Keep support linked to customer history; no full helpdesk assumed | Engagement scope |
+
+Resolved 13 November 2026: OQ-006 — user approved sender accountability until recipient acceptance (ADR-001). Impacts REQ-015, REQ-019 and REQ-020; workflow and model updated. Baseline v0.1 remains an unchanged historical snapshot; this decision supersedes its statement that the policy is unapproved. No implementation exists to invalidate.
 
 Previously resolved: OQ-001 initial business boundary, OQ-004 customer profile boundary, OQ-005 meaning of usage priority, OQ-007 business rather than church scope. OQ-003 public access is deferred.
 

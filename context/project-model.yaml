@@ -1,6 +1,6 @@
 model:
-  version: 18
-  last_commit: 18
+  version: 19
+  last_commit: 19
   generated: 2026-11-13
 project:
   name: Realstate CRM
@@ -30,14 +30,20 @@ decisions:
   customer_portal: deferred
   industry: real-estate-first_reusable-sales-foundation
   reference_patterns: adopted-not-wholesale-product-cloning
+  handover_accountability:
+    id: ADR-001
+    status: accepted
+    rule: sender-retains-responsibility-until-recipient-accepts
+    source: user-approval-commit-19
+    requirements: [REQ-015, REQ-019, REQ-020]
 actors: [USER-001, USER-002, USER-003, USER-004, USER-005]
 sources:
-  - user-conversation-through-commit-18
+  - user-conversation-through-commit-19
   - baseline-v0.1
   - official-product-documentation-researched-in-conversation
-open_questions: [OQ-002, OQ-006, OQ-008, OQ-009, OQ-010, OQ-011, OQ-012, OQ-013, OQ-014]
+open_questions: [OQ-002, OQ-008, OQ-009, OQ-010, OQ-011, OQ-012, OQ-013, OQ-014]
 assumptions:
-  - proposed-workflow-defaults-are-not-approved
+  - workflow-defaults-other-than-ADR-001-remain-proposed
 design_source:
   name: CrisGen UI
   repository_url: https://github.com/crismag/development_design_systems
@@ -71,9 +77,11 @@ id_register_additions:
   - {id: OQ-013, status: active, type: special-groups}
   - {id: OQ-014, status: active, type: support-scope}
 undefined:
-  - handover-accountability-and-pool-policy
+  - pool-claim-and-release-policy
   - lifecycle-and-automation-policy
   - stack-and-operating-constraints
   - inspected-reference-interfaces-and-CrisGen-catalog
   - architecture-contracts-checkpoints-checklist-skills-and-task-bundles
-next: review-OQ-006_while-independent-reference-research-proceeds
+resolved_questions:
+  - {id: OQ-006, resolution: ADR-001, status: resolved}
+next: define-lifecycle-and-pool-rules_while-reference-research-proceeds
