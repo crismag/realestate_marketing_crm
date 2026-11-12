@@ -1,0 +1,20 @@
+{
+  "run_id": "autonomous-build-2026-11-12",
+  "original_start_utc": "2026-11-12T19:08:03Z",
+  "fixed_deadline_utc": "2026-11-13T07:08:03Z",
+  "deadline_rule": "Fixed at start. Restarts, resumes and context resets never reset or extend it.",
+  "branch": "claude/project-thread-2p04se",
+  "base_commit": "96c10c9",
+  "stack": "Python 3.13 / Django 5.2 LTS / SQLite (WAL) / server-rendered templates with vendored CrisGen UI 1.1 vanilla target",
+  "current_stage": "A",
+  "stages": {
+    "A": "in_progress", "B": "pending", "C": "pending", "D": "pending", "E": "pending",
+    "F": "pending", "G": "pending", "H": "pending", "I": "pending", "J": "pending"
+  },
+  "last_checkpoint_utc": "2026-11-12T19:20:00Z",
+  "last_commit": null,
+  "checks": [],
+  "blockers": [],
+  "running_services": [],
+  "next_action": "Scaffold Django project, settings, SQLite configuration and test tooling (stage B)."
+}

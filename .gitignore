@@ -1,0 +1,14 @@
+# Runtime state, databases, secrets and caches never go into git
+.venv/
+var/
+*.sqlite3
+*.sqlite3-*
+.env
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+e2e/node_modules/
+e2e/test-results/
+e2e/playwright-report/
+.autonomous/
