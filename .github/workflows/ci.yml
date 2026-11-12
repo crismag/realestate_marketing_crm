@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [main, "claude/**"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: requirements*.txt
+      - name: Install
+        run: |
+          python -m venv .venv
+          .venv/bin/pip install -r requirements-dev.txt
+      - name: Lint
+        run: .venv/bin/ruff check .
+      - name: Django checks and migrations
+        run: |
+          .venv/bin/python manage.py check --fail-level WARNING
+          .venv/bin/python manage.py makemigrations --check --dry-run
+      - name: Unit, integration, concurrency, worker, security and operations tests
+        run: .venv/bin/python -m pytest -p no:logging
+      - name: Dependency audit
+        run: .venv/bin/pip-audit -r requirements.txt
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install browser
+        working-directory: e2e
+        run: |
+          npm install --no-audit --no-fund
+          npx playwright install --with-deps chromium
+      - name: Production-like smoke and browser journey (desktop + 390px)
+        env:
+          NODE_PATH: ${{ github.workspace }}/e2e/node_modules
+        run: scripts/e2e.sh
+      - name: Keep screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-screenshots
+          path: var/e2e-artifacts/
+          if-no-files-found: ignore

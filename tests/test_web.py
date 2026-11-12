@@ -302,3 +302,22 @@ def test_templates_have_no_inline_styles_or_scripts():
         if re.search(r"\sstyle=|<script(?![^>]*\bsrc=)|\son[a-z]+=", text):
             offenders.append(str(path.relative_to(root)))
     assert offenders == []
+
+
+@pytest.mark.django_db
+def test_deactivating_a_user_ends_their_sessions(users):
+    ana_client, admin = Client(), Client()
+    login(ana_client, users["ana"])
+    login(admin, users["admin"])
+    assert ana_client.get("/contacts/").status_code == 200
+    resp = admin.post(f"/accounts/users/{users['ana'].pk}/", {"full_name": "Ana Agent", "title": "", "is_staff": ""})
+    assert resp.status_code == 302
+    assert ana_client.get("/contacts/").status_code == 302
+
+
+@pytest.mark.django_db
+def test_admin_cannot_lock_themselves_out(client, users):
+    login(client, users["admin"])
+    resp = client.post(f"/accounts/users/{users['admin'].pk}/", {"full_name": "Ada Admin", "is_active": "on"})
+    users["admin"].refresh_from_db()
+    assert resp.status_code == 200 and users["admin"].is_staff

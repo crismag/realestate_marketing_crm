@@ -97,3 +97,38 @@ def test_seed_demo_refuses_in_production(settings):
 @pytest.mark.django_db
 def test_no_missing_migrations():
     call_command("makemigrations", "--check", "--dry-run", verbosity=0)
+
+
+def test_logs_redact_secrets_and_emails():
+    import logging
+
+    from crm.core.logging import RedactingFilter, StructuredFormatter
+
+    record = logging.LogRecord("crm", logging.INFO, __file__, 1, "login for %s", ("carla@example.test",), None)
+    record.password = "hunter2-hunter2"
+    record.session_key = "abc123"
+    record.detail = {"to": "noah@example.test", "api_key": "k-123"}
+    assert RedactingFilter().filter(record)
+    line = StructuredFormatter().format(record)
+    for secret in ("hunter2", "abc123", "k-123", "carla@example.test", "noah@example.test"):
+        assert secret not in line
+    assert "c***@example.test" in line
+
+
+def test_fresh_database_migrates_from_zero(tmp_path):
+    """Migrations apply cleanly to an empty file and leave nothing unapplied (no shared test DB involved)."""
+    import subprocess
+    import sys
+
+    env = {**os.environ, "CRM_ENV": "development", "CRM_VAR_DIR": str(tmp_path), "CRM_DB_PATH": str(tmp_path / "fresh.sqlite3")}
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    subprocess.run([sys.executable, "manage.py", "migrate", "-v0"], cwd=root, env=env, check=True)
+    subprocess.run([sys.executable, "manage.py", "migrate", "--check", "-v0"], cwd=root, env=env, check=True)
+    subprocess.run([sys.executable, "manage.py", "check", "--fail-level", "WARNING"], cwd=root, env=env, check=True,
+                   capture_output=True)
+    import sqlite3
+
+    conn = sqlite3.connect(tmp_path / "fresh.sqlite3")
+    assert conn.execute("PRAGMA journal_mode").fetchone()[0] == "wal"
+    assert conn.execute("SELECT count(*) FROM automation_rule").fetchone()[0] >= 10  # reference data migration
+    assert conn.execute("PRAGMA foreign_key_check").fetchall() == []
