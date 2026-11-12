@@ -1,7 +1,7 @@
 model_version: 24
 revision: 2
-run_id: context-generation-24
-current_item: CHK-005
+run_id: autonomous-build-2026-11-12
+current_item: CHK-016
 planning_items:
   - {id: CHK-001, status: in_review, title: Resolve lifecycle and automation policy}
   - {id: CHK-002, status: in_progress, title: Inspect selected CrisGen target and reference UI patterns}
@@ -33,110 +33,110 @@ items:
   - id: CHK-007
     task_id: TASK-003
     title: "Establish contracts and isolated project foundation"
-    status: pending
+    status: implemented_local_evidence
     dependencies: [CHK-005]
     task_status: draft
     allowed_files: "context contracts/runtime/environment files; application foundation paths must be explicitly enumerated in discovery before eligibility"
     prohibited_changes: [production-sends, deployment, unrelated-refactors, customer-portal, upstream-CrisGen-edits]
     entry_conditions: "OQ-012; adopted stack; actual allowed application paths"
-    completion_evidence: []
-    next_action: "Resolve dependencies and concrete contracts/paths before implementation"
+    completion_evidence: ["tests/test_operations.py::test_fresh_database_migrates_from_zero; tests/test_web.py::test_anonymous_users_are_sent_to_login; README commands", "commit: see git log on claude/project-thread-2p04se"]
+    next_action: "Owner confirms hosting/auth constraints (OQ-012)"
   - id: CHK-008
     task_id: TASK-004
     title: "Capture and search one customer identity"
-    status: pending
+    status: implemented_local_evidence
     dependencies: [CHK-007]
     task_status: draft
     allowed_files: "Customer capture/search UI, operation, schema and tests; exact paths unresolved until TASK-003 discovery"
     prohibited_changes: [production-sends, deployment, unrelated-refactors, customer-portal, upstream-CrisGen-edits]
     entry_conditions: "Minimum fields and duplicate matching"
-    completion_evidence: []
-    next_action: "Resolve dependencies and concrete contracts/paths before implementation"
+    completion_evidence: ["tests/test_capture_reporting.py (AT-006); tests/test_intake.py; e2e/journey.cjs steps 1-3", "commit: see git log on claude/project-thread-2p04se"]
+    next_action: "Owner confirms minimum fields and duplicate rule"
   - id: CHK-009
     task_id: TASK-005
     title: "Claim shared clients and accept handovers"
-    status: pending
+    status: implemented_local_evidence
     dependencies: [CHK-008]
     task_status: draft
     allowed_files: "Assignment/pool/handover UI and operations/tests; exact paths unresolved"
     prohibited_changes: [production-sends, deployment, unrelated-refactors, customer-portal, upstream-CrisGen-edits]
     entry_conditions: "Coordinator coverage; emergency overrides not in scope"
-    completion_evidence: []
-    next_action: "Resolve dependencies and concrete contracts/paths before implementation"
+    completion_evidence: ["tests/test_responsibility.py; tests/test_concurrency.py (AT-001/002); e2e steps 2,7,8", "commit: see git log on claude/project-thread-2p04se"]
+    next_action: "Usability check with agents and coordinator"
   - id: CHK-010
     task_id: TASK-006
     title: "Record interactions and next actions"
-    status: pending
+    status: implemented_local_evidence
     dependencies: [CHK-008, CHK-009]
     task_status: draft
     allowed_files: "Interaction/task operations and affected profile UI/tests; exact paths unresolved"
     prohibited_changes: [production-sends, deployment, unrelated-refactors, customer-portal, upstream-CrisGen-edits]
     entry_conditions: "Eligible activity/reset rules and timezones"
-    completion_evidence: []
-    next_action: "Resolve dependencies and concrete contracts/paths before implementation"
+    completion_evidence: ["tests/test_responsibility.py (tasks); tests/test_capture_reporting.py::test_future_interaction_rejected_and_recording_time_kept", "commit: see git log on claude/project-thread-2p04se"]
+    next_action: "Owner confirms backdating policy and reset types"
   - id: CHK-011
     task_id: TASK-007
     title: "Surface forgotten clients and attention coverage"
-    status: pending
+    status: implemented_local_evidence
     dependencies: [CHK-010]
     task_status: draft
     allowed_files: "Attention evaluator/projection, Today UI and tests; exact paths unresolved"
     prohibited_changes: [production-sends, deployment, unrelated-refactors, customer-portal, upstream-CrisGen-edits]
     entry_conditions: "OQ-008 cadence/exclusions/snooze"
-    completion_evidence: []
-    next_action: "Resolve dependencies and concrete contracts/paths before implementation"
+    completion_evidence: ["tests/test_attention.py (AT-003/005); e2e step 5", "commit: see git log on claude/project-thread-2p04se"]
+    next_action: "Owner confirms cadence/snooze defaults (OQ-008)"
   - id: CHK-012
     task_id: TASK-008
     title: "Execute bounded internal reminders and digest"
-    status: pending
+    status: implemented_local_evidence
     dependencies: [CHK-011]
     task_status: draft
     allowed_files: "Rule/schedule/execution/notification paths and affected UI/tests; exact paths unresolved"
     prohibited_changes: [production-sends, deployment, unrelated-refactors, customer-portal, upstream-CrisGen-edits]
     entry_conditions: "Digest schedule/channel/disable semantics"
-    completion_evidence: []
-    next_action: "Resolve dependencies and concrete contracts/paths before implementation"
+    completion_evidence: ["tests/test_automation.py (AT-004/009/011); e2e step 6", "commit: see git log on claude/project-thread-2p04se"]
+    next_action: "Owner confirms digest timing/channel"
   - id: CHK-013
     task_id: TASK-009
     title: "Add configured onboarding and customer follow-up"
-    status: pending
+    status: implemented_sandbox_only
     dependencies: [CHK-012]
     task_status: draft
     allowed_files: "Selected email adapter, templates/preferences, related automation/tests; exact paths unresolved"
     prohibited_changes: [production-sends, deployment, unrelated-refactors, customer-portal, upstream-CrisGen-edits]
     entry_conditions: "OQ-008/010 sender/provider/template/stop policy"
-    completion_evidence: []
-    next_action: "Resolve dependencies and concrete contracts/paths before implementation"
+    completion_evidence: ["tests/test_automation.py stop-policy, timeout, failure tests; sandbox transport only", "commit: see git log on claude/project-thread-2p04se"]
+    next_action: "Select real provider (OQ-010); real sandbox-account delivery not_run"
   - id: CHK-014
     task_id: TASK-010
     title: "Report workload and sourced sales/marketing outcomes"
-    status: pending
+    status: implemented_local_evidence
     dependencies: [CHK-011]
     task_status: draft
     allowed_files: "Report definitions/projections/UI/tests; exact paths unresolved"
     prohibited_changes: [production-sends, deployment, unrelated-refactors, customer-portal, upstream-CrisGen-edits]
     entry_conditions: "OQ-011 and financial/source availability"
-    completion_evidence: []
-    next_action: "Resolve dependencies and concrete contracts/paths before implementation"
+    completion_evidence: ["tests/test_capture_reporting.py report tests (AT-005); e2e step 9", "commit: see git log on claude/project-thread-2p04se"]
+    next_action: "Owner confirms metric definitions (OQ-011); earnings unavailable"
   - id: CHK-015
     task_id: TASK-011
     title: "Enforce agreed automated checks in CI"
-    status: pending
+    status: implemented_not_observed
     dependencies: [CHK-007]
     task_status: draft
     allowed_files: "CI configuration paths enumerated after host/toolchain discovery; context verification plan/checklist/log"
     prohibited_changes: [production-sends, deployment, unrelated-refactors, customer-portal, upstream-CrisGen-edits]
     entry_conditions: "Actual CI conventions, commands and credentials"
-    completion_evidence: []
-    next_action: "Resolve dependencies and concrete contracts/paths before implementation"
+    completion_evidence: [".github/workflows/ci.yml mirrors README commands", "commit: see git log on claude/project-thread-2p04se"]
+    next_action: "Observe first hosted CI run"
   - id: CHK-016
     task_id: TASK-012
     title: "Verify release candidate and pilot handoff"
-    status: pending
+    status: in_progress
     dependencies: [CHK-009, CHK-011, CHK-012, CHK-014, CHK-015]
     task_status: draft
     allowed_files: "Validation evidence and operations/handoff docs; code fixes only separately scoped"
     prohibited_changes: [production-sends, deployment, unrelated-refactors, customer-portal, upstream-CrisGen-edits]
     entry_conditions: "Pilot scope, hosting, recovery targets; production deployment separately authorized"
-    completion_evidence: []
-    next_action: "Resolve dependencies and concrete contracts/paths before implementation"
+    completion_evidence: ["docs/REQUIREMENTS_MATRIX.md; tests/test_operations.py backup/restore; scripts/e2e.sh", "commit: see git log on claude/project-thread-2p04se"]
+    next_action: "Pilot scope, hosting and owner acceptance"

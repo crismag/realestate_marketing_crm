@@ -64,8 +64,16 @@ def rule_detail(request, key):
     preview = []
     if rule.key in engine.SWEEP_RULES:
         preview = [a for a in engine.planned_sweep_actions(clock.now(), get_policy()) if a["rule"] == rule.key][:50]
+    from crm.core.policy import INTERACTION_TYPES
+    from crm.core.services import get_policy as _get_policy
+
+    ap = _get_policy()["attention"]
+    timing = {
+        "reset_labels": [label for code, label in INTERACTION_TYPES if code in ap["contact_reset_types"]],
+        "cadence": ap["inactivity_days"], "after_tour_hours": ap["after_tour_hours"],
+    }
     return render(request, "automation/rule.html", {
-        "rule": rule, "form": form, "versions": rule.versions.select_related("changed_by")[:10],
+        "rule": rule, "form": form, "timing": timing, "versions": rule.versions.select_related("changed_by")[:10],
         "runs": rule.runs.all()[:15], "preview": preview,
         "recent": Notification.objects.filter(rule=rule).select_related("recipient", "contact")[:15],
     })

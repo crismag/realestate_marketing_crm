@@ -4,6 +4,9 @@
 <div class="grid grid--2">
 <section class="cg-card"><div class="card-title"><h2>Definition</h2></div><div class="card-pad"><dl class="facts">
 <dt>Trigger</dt><dd>{{ rule.trigger }}</dd><dt>Conditions</dt><dd>{{ rule.conditions }}</dd><dt>Action</dt><dd>{{ rule.action }}</dd><dt>Stop policy</dt><dd>{{ rule.stop_policy }}</dd>
+{% if rule.key == "inactivity" or rule.key == "after-tour" or rule.key == "missing-next" %}<dt>Counts as contact</dt><dd>{{ timing.reset_labels|join:", " }}. Profile views, notes and automated emails never count.</dd>{% endif %}
+{% if rule.key == "inactivity" %}<dt>Cadence</dt><dd>{% for k, v in timing.cadence.items %}{{ k }}: {% if v %}{{ v }} days{% else %}off{% endif %}{% if not forloop.last %}; {% endif %}{% endfor %}</dd>{% endif %}
+{% if rule.key == "after-tour" %}<dt>Window</dt><dd>{{ timing.after_tour_hours }} hours after a tour</dd>{% endif %}
 <dt>Config</dt><dd>{% if rule.config %}{% for k, v in rule.config.items %}{{ k }} = {{ v }}{% if not forloop.last %}; {% endif %}{% endfor %}{% else %}Thresholds come from <a href="{% url 'core:settings' %}">workspace settings</a>{% endif %}</dd></dl>
 {% if rule.audience == 'customer' %}<div class="alert-soft alert-soft--info small">Customer messages use the local sandbox transport: they are stored under var/sandbox_mail and never sent. No real provider is configured.</div>{% endif %}</div></section>
 <section class="cg-card"><div class="card-title"><h2>Change</h2></div><form method="post" class="card-pad stack-sm" novalidate>{% csrf_token %}{% include "partials/form_errors.html" %}

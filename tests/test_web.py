@@ -321,3 +321,10 @@ def test_admin_cannot_lock_themselves_out(client, users):
     resp = client.post(f"/accounts/users/{users['admin'].pk}/", {"full_name": "Ada Admin", "is_active": "on"})
     users["admin"].refresh_from_db()
     assert resp.status_code == 200 and users["admin"].is_staff
+
+
+@pytest.mark.django_db
+def test_inactivity_rule_shows_what_resets_its_clock(client, users):
+    login(client, users["ana"])
+    body = client.get("/automation/rules/inactivity/").content.decode()
+    assert "Counts as contact" in body and "Tour / viewing / consultation" in body and "never count" in body
