@@ -1,0 +1,52 @@
+model_version: 23
+status: proposed
+interfaces:
+  - id: INT-001
+    operation: claim_client
+    provider: MOD-002
+    consumers: [shared-work-ui]
+    requirements: [REQ-014]
+    inputs: [operation_id, contact_id, expected_assignment_version, authenticated_actor]
+    outputs: [current_assignment, new_version]
+    errors: [unauthenticated, invalid_target, stale_assignment, persistence_unavailable]
+    rules: atomic-version-check_idempotent-operation
+    contract_location: null
+    hooks: [HOK-001]
+  - id: INT-002
+    operation: accept_handover
+    provider: MOD-002
+    consumers: [handover-ui]
+    requirements: [REQ-015]
+    inputs: [operation_id, handover_id, expected_assignment_version, authenticated_recipient]
+    outputs: [handover_state, current_assignment, task_disposition]
+    errors: [unauthenticated, wrong_accepting_identity, stale_request, invalid_transition]
+    rules: ADR-001_and_ADR-002
+    contract_location: null
+    hooks: [HOK-002]
+  - id: INT-003
+    operation: evaluate_attention
+    provider: MOD-004
+    consumers: [today-ui, MOD-005, MOD-007]
+    requirements: [REQ-016, REQ-026]
+    inputs: [scope, as_of, policy_version]
+    outputs: [distinct_client_count, reason_items, freshness, exclusions]
+    errors: [unavailable_facts, invalid_policy]
+    contract_location: null
+    hooks: [HOK-003]
+  - id: INT-004
+    operation: execute_notification
+    provider: MOD-006
+    consumers: [MOD-005]
+    requirements: [REQ-018, REQ-019, REQ-020]
+    inputs: [logical_action_key, rule_version, subject, recipient_resolution_policy]
+    outputs: [delivery_status, provider_reference, reason]
+    errors: [invalid_recipient, provider_unavailable, delivery_uncertain, suppressed]
+    rules: recheck-state_deduplicate_no-false-success
+    contract_location: null
+    hooks: [HOK-004]
+hooks:
+  - {id: HOK-001, interface: INT-001, owner: MOD-002, location: null, status: proposed, trigger: claim-action, checkpoint: ICP-001}
+  - {id: HOK-002, interface: INT-002, owner: MOD-002, location: null, status: proposed, trigger: acceptance-action, checkpoint: ICP-002}
+  - {id: HOK-003, interface: INT-003, owner: MOD-004, location: null, status: proposed, trigger: queue-or-scheduler-evaluation, checkpoint: ICP-003}
+  - {id: HOK-004, interface: INT-004, owner: MOD-006, location: null, status: proposed, trigger: due-action, checkpoint: ICP-004}
+# No route, selector, endpoint or symbol is verified; choose protocol and schemas later.

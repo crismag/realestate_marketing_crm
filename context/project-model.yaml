@@ -1,6 +1,6 @@
 model:
-  version: 22
-  last_commit: 22
+  version: 23
+  last_commit: 23
   generated: 2026-11-13
 project:
   name: Realstate CRM
@@ -44,7 +44,7 @@ decisions:
     requirements: [REQ-015, REQ-019, REQ-020]
 actors: [USER-001, USER-002, USER-003, USER-004, USER-005]
 sources:
-  - user-conversation-through-commit-22
+  - user-conversation-through-commit-23
   - baseline-v0.1
   - official-product-documentation-researched-in-conversation
 open_questions: [OQ-002, OQ-008, OQ-010, OQ-011, OQ-012, OQ-013, OQ-014]
@@ -55,14 +55,30 @@ design_source:
   repository_url: https://github.com/crismag/development_design_systems
   package_subdirectory: crisgen-ui
   requested_ref: main
-  resolved_commit: null
-  access_status: unresolved
-  inspected_paths: []
-modules: []
-interfaces: []
+  resolved_commit: e1c1a4f1e98ecc4dec9ae4eb16fa646069e94278
+  access_status: partially_inspected
+  inspected_paths:
+    - crisgen-ui/README.md
+    - crisgen-ui/package.json
+    - crisgen-ui/llms.txt
+    - crisgen-ui/patterns/dashboard-shell/spec.json
+    - crisgen-ui/patterns/dashboard-shell/README.md
+    - crisgen-ui/patterns/data-table/spec.json
+    - crisgen-ui/patterns/data-table/README.md
+    - crisgen-ui/components/Timeline/README.md
+modules:
+  - {id: MOD-001, status: proposed, artifact: 06_architecture/MODULE_BOUNDARIES.md}
+  - {id: MOD-002, status: proposed, artifact: 06_architecture/MODULE_BOUNDARIES.md}
+  - {id: MOD-003, status: proposed, artifact: 06_architecture/MODULE_BOUNDARIES.md}
+  - {id: MOD-004, status: proposed, artifact: 06_architecture/MODULE_BOUNDARIES.md}
+  - {id: MOD-005, status: proposed, artifact: 06_architecture/MODULE_BOUNDARIES.md}
+  - {id: MOD-006, status: proposed, artifact: 06_architecture/MODULE_BOUNDARIES.md}
+  - {id: MOD-007, status: proposed, artifact: 06_architecture/MODULE_BOUNDARIES.md}
+  - {id: MOD-008, status: proposed, artifact: 06_architecture/MODULE_BOUNDARIES.md}
+interfaces: [INT-001, INT-002, INT-003, INT-004]
 entities: []
 tasks: []
-acceptance_tests: []
+acceptance_tests: [AT-001, AT-002, AT-003, AT-004, AT-005]
 traces:
   - requirements: [REQ-014, REQ-015, REQ-016, REQ-017]
     artifact: 04_requirements/WORKFLOWS_v0.1.md
@@ -99,4 +115,27 @@ undefined:
 resolved_questions:
   - {id: OQ-009, resolution: ADR-002, status: resolved}
   - {id: OQ-006, resolution: ADR-001, status: resolved}
-next: define-attention-cadence-and-lifecycle_while-design-research-proceeds
+next: resolve-policy-and-stack_then-finalize-contracts-and-scoped-tasks
+
+context_package:
+  revision: 23
+  manifest: PACKAGE_MANIFEST.yaml
+  authority: requirements-baseline-plus-approved-decisions-and-model
+  architecture_status: proposed
+  application_code: absent
+  application_tests: not_run
+execution_contract: {path: 09_development/AGENT_RUNTIME_CONTRACT.md, runtime: unresolved}
+data_contracts: {path: 06_architecture/DATA_CONTRACTS.md, status: proposed}
+verification_checks: {path: 09_development/VERIFICATION_PLAN.yaml, status: not_run}
+test_environments: {path: 09_development/TEST_ENVIRONMENT.md, status: unresolved}
+security_checks: {path: 09_development/SECURITY_VERIFICATION_MATRIX.md, status: not_run}
+recovery_policy: {path: 09_development/CHECKPOINT_AND_RECOVERY.md, status: proposed}
+checklist: {path: 09_development/DEVELOPMENT_CHECKLIST.yaml, revision: 1}
+new_identifiers_commit_23:
+  proposals: [PROP-034, PROP-035]
+  modules: [MOD-001, MOD-002, MOD-003, MOD-004, MOD-005, MOD-006, MOD-007, MOD-008]
+  interfaces: [INT-001, INT-002, INT-003, INT-004]
+  hooks: [HOK-001, HOK-002, HOK-003, HOK-004]
+  checkpoints: [ICP-001, ICP-002, ICP-003, ICP-004, ICP-005]
+  acceptance_tests: [AT-001, AT-002, AT-003, AT-004, AT-005]
+  checklist_items: [CHK-001, CHK-002, CHK-003, CHK-004]

@@ -1,0 +1,37 @@
+# Context index — model 23
+
+Read README and project-model.yaml first. Requirements baseline is a historical snapshot; approved ADR-001/002 in current workflow/pool files supersede their historical pending status. All new design records are proposed.
+
+- [README.md](README.md)
+- [CLAUDE_HANDOFF.md](CLAUDE_HANDOFF.md)
+- [04_requirements/CRM_Requirements_Baseline_v0.1.md](04_requirements/CRM_Requirements_Baseline_v0.1.md)
+- [04_requirements/WORKFLOWS_v0.1.md](04_requirements/WORKFLOWS_v0.1.md)
+- [04_requirements/OPEN_DECISIONS.md](04_requirements/OPEN_DECISIONS.md)
+- [04_requirements/SHARED_POOL_POLICY_v0.1.md](04_requirements/SHARED_POOL_POLICY_v0.1.md)
+- [04_requirements/LIFECYCLE_AND_SCREENS_v0.1.md](04_requirements/LIFECYCLE_AND_SCREENS_v0.1.md)
+- [04_requirements/CLIENT_ATTENTION_AND_FOLLOWUP_v0.1.md](04_requirements/CLIENT_ATTENTION_AND_FOLLOWUP_v0.1.md)
+- [06_architecture/MODULE_BOUNDARIES.md](06_architecture/MODULE_BOUNDARIES.md)
+- [04_requirements/AUTOMATION_CATALOG.md](04_requirements/AUTOMATION_CATALOG.md)
+- [01_discovery/TARGET_USERS.md](01_discovery/TARGET_USERS.md)
+- [04_requirements/USER_MODULE_MATRIX.md](04_requirements/USER_MODULE_MATRIX.md)
+- [06_architecture/DATA_CONTRACTS.md](06_architecture/DATA_CONTRACTS.md)
+- [08_interfaces/INTERFACE_TARGETS.yaml](08_interfaces/INTERFACE_TARGETS.yaml)
+- [08_interfaces/INTERFACE_CHECKPOINTS.md](08_interfaces/INTERFACE_CHECKPOINTS.md)
+- [09_development/AGENT_RUNTIME_CONTRACT.md](09_development/AGENT_RUNTIME_CONTRACT.md)
+- [09_development/TEST_ENVIRONMENT.md](09_development/TEST_ENVIRONMENT.md)
+- [09_development/SECURITY_VERIFICATION_MATRIX.md](09_development/SECURITY_VERIFICATION_MATRIX.md)
+- [09_development/CHECKPOINT_AND_RECOVERY.md](09_development/CHECKPOINT_AND_RECOVERY.md)
+- [09_development/VERIFICATION_PLAN.yaml](09_development/VERIFICATION_PLAN.yaml)
+- [06_architecture/design_system/DESIGN_SOURCE.yaml](06_architecture/design_system/DESIGN_SOURCE.yaml)
+- [06_architecture/design_system/CRISGEN_TEMPLATE_CATALOG.md](06_architecture/design_system/CRISGEN_TEMPLATE_CATALOG.md)
+- [06_architecture/design_system/CRISGEN_COMPONENT_CATALOG.md](06_architecture/design_system/CRISGEN_COMPONENT_CATALOG.md)
+- [06_architecture/design_system/UI_REUSE_MAP.md](06_architecture/design_system/UI_REUSE_MAP.md)
+- [06_architecture/design_system/DESIGN_REUSE_RULES.md](06_architecture/design_system/DESIGN_REUSE_RULES.md)
+- [09_development/DEVELOPMENT_CHECKLIST.yaml](09_development/DEVELOPMENT_CHECKLIST.yaml)
+- [09_development/DEVELOPMENT_CHECKLIST.md](09_development/DEVELOPMENT_CHECKLIST.md)
+- [09_development/RUN_LOG.md](09_development/RUN_LOG.md)
+- [12_agent_skills/SKILL_INDEX.md](12_agent_skills/SKILL_INDEX.md)
+- [project-model.yaml](project-model.yaml)
+- [traceability.json](traceability.json)
+
+Routing: contact/work slice loads module/data contracts and its user matrix row; claim/handover loads INT-001/002 and ICP-001/002; attention loads CLIENT_ATTENTION, INT-003/ICP-003/005; delivery loads automation catalog, INT-004/ICP-004. Every implementation slice also loads runtime, isolated environment, security and recovery context. UI slices additionally load scoped design-source/catalog/reuse records. No single implementation task should load the full folder indiscriminately.

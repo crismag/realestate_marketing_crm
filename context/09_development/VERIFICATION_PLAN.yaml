@@ -1,0 +1,69 @@
+model_version: 23
+repository_commit: 570abfc13bc02123b5459bda22dce2423d1bc95c
+status: proposed
+environments:
+  - key: isolated-crm
+    prerequisites: [selected-runtime, synthetic-storage, fixed-clock]
+    isolation: dedicated-test-data_no-production
+    services: unresolved
+    teardown: unresolved-command_target-must-be-verified
+checks:
+  - key: atomic-claim
+    requirement_ids: [REQ-014]
+    acceptance_test_ids: [AT-001]
+    checkpoint_ids: [ICP-001]
+    category: integration
+    required_for_completion: true
+    triggers: [slice_complete, contract_change, pre_merge]
+    command: null
+    command_source: unresolved-no-application-toolchain
+    environment_key: isolated-crm
+    expected_assertions: [one-concurrent-winner, conflict-no-overwrite, replay-idempotent]
+    status: not_run
+  - key: handover
+    requirement_ids: [REQ-015]
+    acceptance_test_ids: [AT-002]
+    checkpoint_ids: [ICP-002]
+    category: integration
+    required_for_completion: true
+    command: null
+    environment_key: isolated-crm
+    expected_assertions: [sender-until-acceptance, correct-accepter, stale-no-write]
+    status: not_run
+  - key: attention-clock
+    requirement_ids: [REQ-016, REQ-026]
+    acceptance_test_ids: [AT-003]
+    checkpoint_ids: [ICP-003]
+    category: unit
+    required_for_completion: true
+    command: null
+    environment_key: isolated-crm
+    expected_assertions: [no-task-client-found, profile-view-not-contact, overlap-deduplicated]
+    status: not_run
+  - key: communication-replay
+    requirement_ids: [REQ-018, REQ-019, REQ-020]
+    acceptance_test_ids: [AT-004]
+    checkpoint_ids: [ICP-004]
+    category: integration
+    required_for_completion: true
+    command: null
+    environment_key: isolated-crm
+    prerequisites: [provider-stub]
+    expected_assertions: [current-state-rechecked, no-duplicate-action, timeout-not-false-success]
+    limitation: provider-stub-does-not-prove-real-delivery
+    status: not_run
+  - key: queue-report-browser
+    requirement_ids: [REQ-017, REQ-022, REQ-026]
+    acceptance_test_ids: [AT-005]
+    checkpoint_ids: [ICP-005]
+    category: e2e
+    required_for_completion: true
+    command: null
+    environment_key: isolated-crm
+    prerequisites: [running-app, readiness-url, browser-tool, approved-viewport-fixtures]
+    expected_assertions: [counts-match-drilldown, unknown-not-zero, keyboard-actions, error-states]
+    status: not_run
+execution_results: []
+# Each run must record exact command/cwd, commit AND patch identity, clock,
+# environment, assertion result and evidence. No application checks executed.
+# Formatting/lint/types/build/migration/security commands await inspected stack.

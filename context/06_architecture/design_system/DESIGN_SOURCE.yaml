@@ -1,0 +1,26 @@
+model_version: 23
+design_source:
+  name: CrisGen UI
+  repository_url: https://github.com/crismag/development_design_systems
+  package_subdirectory: crisgen-ui
+  requested_ref: main
+  resolved_commit: e1c1a4f1e98ecc4dec9ae4eb16fa646069e94278
+  access_status: partially_inspected
+  package: "@crisgen/ui"
+  package_version: 1.1.0
+  private: true
+  installation_method: documented-checkout-or-npm-pack_not-executed
+  target_project_framework: unresolved
+  inspected_paths:
+    - crisgen-ui/README.md
+    - crisgen-ui/package.json
+    - crisgen-ui/llms.txt
+    - crisgen-ui/patterns/dashboard-shell/spec.json
+    - crisgen-ui/patterns/dashboard-shell/README.md
+    - crisgen-ui/patterns/data-table/spec.json
+    - crisgen-ui/patterns/data-table/README.md
+    - crisgen-ui/components/Timeline/README.md
+  unresolved:
+    - selected-target-implementation-and-types
+    - runtime-integration-and-actual-app-theme-verification
+    - selected-component-specs-and-behavior-contracts

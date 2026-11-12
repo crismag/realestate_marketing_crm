@@ -1,0 +1,145 @@
+{
+  "model_version": 23,
+  "status": "proposed-design-links",
+  "module_links": [
+    {
+      "module": "MOD-001",
+      "requirements": [
+        "REQ-003",
+        "REQ-004",
+        "REQ-005",
+        "REQ-006",
+        "REQ-024",
+        "FR-001"
+      ],
+      "source": "06_architecture/MODULE_BOUNDARIES.md"
+    },
+    {
+      "module": "MOD-002",
+      "requirements": [
+        "REQ-014",
+        "REQ-015",
+        "REQ-017"
+      ],
+      "source": "06_architecture/MODULE_BOUNDARIES.md"
+    },
+    {
+      "module": "MOD-003",
+      "requirements": [
+        "REQ-016",
+        "REQ-020",
+        "REQ-026"
+      ],
+      "source": "06_architecture/MODULE_BOUNDARIES.md"
+    },
+    {
+      "module": "MOD-004",
+      "requirements": [
+        "REQ-016",
+        "REQ-017",
+        "REQ-026"
+      ],
+      "source": "06_architecture/MODULE_BOUNDARIES.md"
+    },
+    {
+      "module": "MOD-005",
+      "requirements": [
+        "REQ-018",
+        "REQ-019",
+        "REQ-020",
+        "REQ-021",
+        "REQ-023"
+      ],
+      "source": "06_architecture/MODULE_BOUNDARIES.md"
+    },
+    {
+      "module": "MOD-006",
+      "requirements": [
+        "REQ-018",
+        "REQ-019",
+        "REQ-020"
+      ],
+      "source": "06_architecture/MODULE_BOUNDARIES.md"
+    },
+    {
+      "module": "MOD-007",
+      "requirements": [
+        "REQ-017",
+        "REQ-022"
+      ],
+      "source": "06_architecture/MODULE_BOUNDARIES.md"
+    },
+    {
+      "module": "MOD-008",
+      "requirements": [
+        "REQ-001",
+        "REQ-002",
+        "REQ-024"
+      ],
+      "source": "06_architecture/MODULE_BOUNDARIES.md"
+    }
+  ],
+  "acceptance_links": [
+    {
+      "test": "AT-001",
+      "checkpoint": "ICP-001",
+      "interface_id": "INT-001",
+      "hook": "HOK-001",
+      "requirements": [
+        "REQ-014"
+      ],
+      "status": "not_run"
+    },
+    {
+      "test": "AT-002",
+      "checkpoint": "ICP-002",
+      "interface_id": "INT-002",
+      "hook": "HOK-002",
+      "requirements": [
+        "REQ-015"
+      ],
+      "status": "not_run"
+    },
+    {
+      "test": "AT-003",
+      "checkpoint": "ICP-003",
+      "interface_id": "INT-003",
+      "hook": "HOK-003",
+      "requirements": [
+        "REQ-016",
+        "REQ-026"
+      ],
+      "status": "not_run"
+    },
+    {
+      "test": "AT-004",
+      "checkpoint": "ICP-004",
+      "interface_id": "INT-004",
+      "hook": "HOK-004",
+      "requirements": [
+        "REQ-018",
+        "REQ-019",
+        "REQ-020"
+      ],
+      "status": "not_run"
+    },
+    {
+      "test": "AT-005",
+      "checkpoint": "ICP-005",
+      "interface_id": null,
+      "hook": null,
+      "requirements": [
+        "REQ-017",
+        "REQ-022",
+        "REQ-026"
+      ],
+      "status": "not_run"
+    }
+  ],
+  "gaps": [
+    "No executable tasks or concrete hooks yet",
+    "Partial acceptance coverage; baseline criteria not all assigned AT identifiers",
+    "NFR implementation links incomplete",
+    "Selected UI target APIs not inspected"
+  ]
+}

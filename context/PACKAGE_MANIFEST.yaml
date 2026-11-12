@@ -1,0 +1,110 @@
+model_version: 23
+status: draft-design-context
+source_application_commit: 570abfc13bc02123b5459bda22dce2423d1bc95c
+files:
+  - path: 01_discovery/TARGET_USERS.md
+    status: current-context
+    stale: false
+  - path: 04_requirements/AUTOMATION_CATALOG.md
+    status: current-context
+    stale: false
+  - path: 04_requirements/CLIENT_ATTENTION_AND_FOLLOWUP_v0.1.md
+    status: current-context
+    stale: false
+  - path: 04_requirements/CRM_Requirements_Baseline_v0.1.md
+    status: historical-draft-snapshot
+    stale: false
+  - path: 04_requirements/LIFECYCLE_AND_SCREENS_v0.1.md
+    status: current-context
+    stale: false
+  - path: 04_requirements/OPEN_DECISIONS.md
+    status: current-context
+    stale: false
+  - path: 04_requirements/SHARED_POOL_POLICY_v0.1.md
+    status: current-context
+    stale: false
+  - path: 04_requirements/USER_MODULE_MATRIX.md
+    status: current-context
+    stale: false
+  - path: 04_requirements/WORKFLOWS_v0.1.md
+    status: current-context
+    stale: false
+  - path: 06_architecture/DATA_CONTRACTS.md
+    status: current-context
+    stale: false
+  - path: 06_architecture/MODULE_BOUNDARIES.md
+    status: current-context
+    stale: false
+  - path: 06_architecture/design_system/CRISGEN_COMPONENT_CATALOG.md
+    status: current-context
+    stale: false
+  - path: 06_architecture/design_system/CRISGEN_TEMPLATE_CATALOG.md
+    status: current-context
+    stale: false
+  - path: 06_architecture/design_system/DESIGN_REUSE_RULES.md
+    status: current-context
+    stale: false
+  - path: 06_architecture/design_system/DESIGN_SOURCE.yaml
+    status: current-context
+    stale: false
+  - path: 06_architecture/design_system/UI_REUSE_MAP.md
+    status: current-context
+    stale: false
+  - path: 08_interfaces/INTERFACE_CHECKPOINTS.md
+    status: current-context
+    stale: false
+  - path: 08_interfaces/INTERFACE_TARGETS.yaml
+    status: current-context
+    stale: false
+  - path: 09_development/AGENT_RUNTIME_CONTRACT.md
+    status: current-context
+    stale: false
+  - path: 09_development/CHECKPOINT_AND_RECOVERY.md
+    status: current-context
+    stale: false
+  - path: 09_development/DEVELOPMENT_CHECKLIST.md
+    status: current-context
+    stale: false
+  - path: 09_development/DEVELOPMENT_CHECKLIST.yaml
+    status: current-context
+    stale: false
+  - path: 09_development/READINESS_REVIEW.md
+    status: current-context
+    stale: false
+  - path: 09_development/RUN_LOG.md
+    status: current-context
+    stale: false
+  - path: 09_development/SECURITY_VERIFICATION_MATRIX.md
+    status: current-context
+    stale: false
+  - path: 09_development/TEST_ENVIRONMENT.md
+    status: current-context
+    stale: false
+  - path: 09_development/VERIFICATION_PLAN.yaml
+    status: current-context
+    stale: false
+  - path: 12_agent_skills/SKILL_INDEX.md
+    status: current-context
+    stale: false
+  - path: CLAUDE_HANDOFF.md
+    status: current-context
+    stale: false
+  - path: CONTEXT_INDEX.md
+    status: current-context
+    stale: false
+  - path: PACKAGE_MANIFEST.yaml
+    status: current-context
+    stale: false
+  - path: README.md
+    status: current-context
+    stale: false
+  - path: project-model.yaml
+    status: current-context
+    stale: false
+  - path: traceability.json
+    status: current-context
+    stale: false
+omissions:
+  - Project-specific skills deferred until contract/target/task scopes are stable; SKILL_INDEX records this.
+  - Concrete task bundles and CI implementation deferred until stack and workflows are sufficiently specified.
+  - Complete component/API catalog deferred until selected target implementation is inspected.

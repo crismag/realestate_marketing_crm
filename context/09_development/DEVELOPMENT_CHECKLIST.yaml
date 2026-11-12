@@ -1,0 +1,34 @@
+model_version: 23
+revision: 1
+run_id: context-generation-23
+current_item: CHK-001
+items:
+  - id: CHK-001
+    title: Resolve lifecycle and automation policy
+    status: in_review
+    owner: product-owner
+    requirements: [REQ-020, REQ-024, REQ-026]
+    dependencies: []
+    evidence: [../04_requirements/LIFECYCLE_AND_SCREENS_v0.1.md, ../04_requirements/CLIENT_ATTENTION_AND_FOLLOWUP_v0.1.md]
+    next_action: define-conversion-and-cadence
+  - id: CHK-002
+    title: Inspect selected CrisGen target and reference UI patterns
+    status: in_progress
+    owner: design-agent
+    dependencies: []
+    evidence: [../06_architecture/design_system/DESIGN_SOURCE.yaml]
+    next_action: choose-target-after-stack-constraints_then-inspect-types
+  - id: CHK-003
+    title: Finalize module contracts and isolated toolchain
+    status: pending
+    owner: design-agent
+    dependencies: [CHK-001]
+    next_action: resolve-stack-and-integration-constraints
+  - id: CHK-004
+    title: Generate bounded implementation tasks and project skills
+    status: pending
+    owner: planning-agent
+    dependencies: [CHK-003]
+    next_action: derive-task-slices-from-reviewed-contracts
+# Planning checklist only. No implementation task is declared ready or done.
+# Concrete TASK links, allowed app paths and skills await scoped design.

@@ -24,3 +24,6 @@ This is an initial context folder, not a complete execution package. Architectur
 
 ## Portfolio attention requirement
 [Client attention and follow-up coverage](04_requirements/CLIENT_ATTENTION_AND_FOLLOWUP_v0.1.md) captures REQ-026: proactively resurface forgotten clients, including toured clients with no follow-up task. Queue, digest, metrics and detailed rule behavior are proposed under PROP-033; timing and channels remain open.
+
+## Design and execution context — revision 23
+Start with [Context index](CONTEXT_INDEX.md) and [Readiness review](09_development/READINESS_REVIEW.md). Added proposed module boundaries, automation catalog, user coverage, data/interface contracts, verification companions, planning checklist and fixed-revision CrisGen source records. No application code or live automation has been created. Remaining policies are not silently approved.
