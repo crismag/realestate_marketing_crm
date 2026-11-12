@@ -1,7 +1,7 @@
 # Shared client pool policy v0.1
 Date: 13 November 2026
 ID: PROP-031
-Classification: recommended; approval pending under OQ-009.
+Classification: approved operating policy (ADR-002), adopted by the product owner on 13 November 2026. Detailed technical contracts and unspecified policies remain proposed.
 Related requirements: REQ-014, REQ-015, REQ-016, REQ-017, REQ-019, REQ-020.
 Approved constraint: ADR-001 — sender retains responsibility until recipient explicitly accepts a handover.
 
@@ -29,7 +29,7 @@ Pool coordinator selection, absence coverage and whether new pool items notify a
 ## Release is a handover, not an accountability escape
 To preserve ADR-001, recommend treating release from an individual to a pool as a handover accepted by that pool's coordinator. Until acceptance, the current agent remains responsible and the client is not claimable as a free pool item. After acceptance, the coordinator covers pool-level attention until an agent claims it.
 
-An alternative is immediate self-release to a pool; it is simpler but creates a gap unless pool accountability is established. Recommendation: coordinator-accepted release. This extra pool acceptance policy is NOT yet approved by approval of ADR-001.
+An alternative is immediate self-release to a pool; it is simpler but creates a gap unless pool accountability is established. Recommendation: coordinator-accepted release. Coordinator-accepted release is now approved under ADR-002; it was approved separately from ADR-001.
 
 No blanket supervisor force-transfer exception is assumed. Emergency override behavior is a separate unresolved decision, not a hidden bypass.
 
@@ -71,7 +71,7 @@ Mutations use atomic version checks. Retry the same operation ID without produci
 11. A successful assignment with failed notification remains assigned and exposes delivery failure.
 12. Referral/commission attribution is unaffected by claim, release or assistance.
 
-Cases 5–6 depend on acceptance of the proposed coordinator-release model. Escalation periods, response targets and inactivity definitions remain open under OQ-008; no numerical defaults are specified.
+Cases 5–6 are required by the approved coordinator-release model. Escalation periods, response targets and inactivity definitions remain open under OQ-008; no numerical defaults are specified.
 
 ## Priority and fairness
 Initial recommendation: transparent manual claiming, with waiting-since and attention indicators. Queue order prioritizes explicitly flagged urgent work, then longest waiting within the same priority; final sorting and priority levels need review. Client value should not silently overrule overdue attention.
@@ -79,5 +79,5 @@ Initial recommendation: transparent manual claiming, with waiting-since and atte
 Round-robin routing, availability/capacity limits and recycling can follow after real workload is understood. Do not implement them merely because reference products offer them.
 
 ## Review decision
-Approve or revise: manual exclusive claim, coordinator-accepted release, overdue alerts without automatic ownership removal.
+Approved under ADR-002: manual exclusive claim, coordinator-accepted release, overdue alerts without automatic ownership removal. Queue sorting, capacity, timing, emergency overrides and technical contract details remain proposed/open.
 Next independent design work: lifecycle terminology and a screen/module map; preserve unresolved rules locally in affected context.

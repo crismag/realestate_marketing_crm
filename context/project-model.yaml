@@ -1,6 +1,6 @@
 model:
-  version: 20
-  last_commit: 20
+  version: 21
+  last_commit: 21
   generated: 2026-11-13
 project:
   name: Realstate CRM
@@ -30,6 +30,12 @@ decisions:
   customer_portal: deferred
   industry: real-estate-first_reusable-sales-foundation
   reference_patterns: adopted-not-wholesale-product-cloning
+  shared_pool_policy:
+    id: ADR-002
+    status: accepted
+    source: user-approval-commit-21
+    rules: [manual-exclusive-claim, coordinator-accepted-release, no-automatic-removal-on-overdue]
+    requirements: [REQ-014, REQ-015, REQ-016, REQ-017]
   handover_accountability:
     id: ADR-001
     status: accepted
@@ -38,10 +44,10 @@ decisions:
     requirements: [REQ-015, REQ-019, REQ-020]
 actors: [USER-001, USER-002, USER-003, USER-004, USER-005]
 sources:
-  - user-conversation-through-commit-20
+  - user-conversation-through-commit-21
   - baseline-v0.1
   - official-product-documentation-researched-in-conversation
-open_questions: [OQ-002, OQ-008, OQ-009, OQ-010, OQ-011, OQ-012, OQ-013, OQ-014]
+open_questions: [OQ-002, OQ-008, OQ-010, OQ-011, OQ-012, OQ-013, OQ-014]
 assumptions:
   - workflow-defaults-other-than-ADR-001-remain-proposed
 design_source:
@@ -68,22 +74,26 @@ artifacts:
   - 04_requirements/OPEN_DECISIONS.md
   - CLAUDE_HANDOFF.md
   - 04_requirements/SHARED_POOL_POLICY_v0.1.md
+  - 04_requirements/LIFECYCLE_AND_SCREENS_v0.1.md
 id_register_additions:
-  - {id: PROP-031, status: proposed, type: shared-pool-policy}
+  - {id: ADR-002, status: accepted, type: shared-pool-policy}
+  - {id: PROP-032, status: proposed, type: lifecycle-and-screen-map}
+  - {id: PROP-031, status: approved, type: shared-pool-policy}
   - {id: ART-002, status: active, type: repository-context}
   - {id: PROP-030, status: proposed, type: workflow-policy}
-  - {id: OQ-009, status: active, type: pool-policy}
+  - {id: OQ-009, status: resolved, type: pool-policy}
   - {id: OQ-010, status: active, type: integrations}
   - {id: OQ-011, status: active, type: metrics}
   - {id: OQ-012, status: active, type: operational-constraints}
   - {id: OQ-013, status: active, type: special-groups}
   - {id: OQ-014, status: active, type: support-scope}
 undefined:
-  - pool-claim-and-release-policy
+  - pool-timing-capacity-and-exception-policies
   - lifecycle-and-automation-policy
   - stack-and-operating-constraints
   - inspected-reference-interfaces-and-CrisGen-catalog
   - architecture-contracts-checkpoints-checklist-skills-and-task-bundles
 resolved_questions:
+  - {id: OQ-009, resolution: ADR-002, status: resolved}
   - {id: OQ-006, resolution: ADR-001, status: resolved}
-next: review-PROP-031_then-define-lifecycle-and-screen-map
+next: review-PROP-032_and-resolve-conversion-milestone
