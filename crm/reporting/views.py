@@ -12,11 +12,12 @@ from django.shortcuts import redirect, render
 from crm.attention import services as attention
 from crm.contacts.models import Contact, Inquiry, Source
 from crm.core import clock
+from crm.core.errors import DomainError
 from crm.core.forms import Form
-from crm.core.services import audit, get_policy
+from crm.core.services import get_policy
 from crm.work.models import Assignment, Task
 
-from . import metrics
+from . import metrics, services
 from .models import SpendEntry
 
 User = get_user_model()
@@ -160,11 +161,14 @@ def spend(request):
     form = SpendForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
         d = form.cleaned_data
-        entry = SpendEntry.objects.create(source=d["source"], kind=d["kind"], period_start=d["period_start"],
-                                          period_end=d["period_end"], amount_minor=int((d["amount"] * 100).quantize(Decimal("1"))),
-                                          currency=policy["currency"], note=d["note"], created_by=request.user)
-        audit("spend.created", entry, f"{d['kind']} spend recorded for {d['source']}", actor=request.user)
-        messages.success(request, "Spend recorded.")
-        return redirect("reporting:spend")
+        try:
+            services.create_spend(actor=request.user, source=d["source"], kind=d["kind"], period_start=d["period_start"],
+                                  period_end=d["period_end"], amount_minor=int((d["amount"] * 100).quantize(Decimal("1"))),
+                                  currency=policy["currency"], note=d["note"])
+        except DomainError as exc:
+            form.add_error(None, exc.message)
+        else:
+            messages.success(request, "Spend recorded.")
+            return redirect("reporting:spend")
     return render(request, "reporting/spend.html", {"form": form, "entries": SpendEntry.objects.select_related("source", "created_by")[:100],
                                                     "currency": policy["currency"]})

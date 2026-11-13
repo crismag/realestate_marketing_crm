@@ -171,6 +171,8 @@ def record_inquiry(contact: Contact, *, actor, message: str, channel: str, sourc
             if existing:
                 return existing
         now = clock.now()
+        if received_at is not None and received_at > now:
+            raise DomainError("An inquiry cannot be received in the future.", code="future_inquiry")
         inquiry = Inquiry.objects.create(
             contact=contact, source=source or contact.source, channel=channel, message=message.strip(),
             received_at=received_at or now, recorded_at=now, recorded_by=actor, external_key=external_key,
@@ -215,6 +217,8 @@ def record_interaction(contact: Contact, *, actor, kind: str, channel: str, summ
         raise DomainError("An interaction cannot be in the future. Create a task for planned work.", code="future_interaction")
     if inquiry is not None and inquiry.contact_id != contact.pk:
         raise DomainError("That inquiry belongs to another contact.", code="inquiry_mismatch")
+    if inquiry is not None and kind in HUMAN_RESPONSE_KINDS and occurred_at < inquiry.received_at:
+        raise DomainError("A response cannot occur before the inquiry was received.", code="response_before_inquiry")
 
     def run():
         interaction = Interaction.objects.create(

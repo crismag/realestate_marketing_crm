@@ -40,3 +40,10 @@ until the items marked *Before pilot* are done and the product owner has reviewe
   should be measured before tens of thousands.
 - MySQL is documented, not tested.
 - Timezone is per workspace, not per user.
+
+## Hardening follow-up (13 November 2026)
+
+- Inbound reply response matching uses contact-level chronological human-response evidence, not a reply-thread identifier. Staff must still log responses accurately.
+- Daily digest change counts compare with the previous delivered digest snapshot, not every transient state between digests. Reassignment can count as resolved for the old handler.
+- Run normal migrations before starting the upgraded web/worker; `automation.0003_digest_snapshots` adds the durable comparison baseline. The first post-upgrade digest establishes the baseline.
+- Current environment cannot launch Chromium (socket permission denied); fresh browser verification remains pending despite passing historical journeys. See current run report for exact checks.

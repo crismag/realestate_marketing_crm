@@ -1,6 +1,8 @@
-# Context index — revision 24
+# Context index — current execution and historical design
 
-Authority: project-model.yaml plus current requirement records and accepted decisions. Baseline v0.1 is preserved historical draft; current ADR-001/002 supersede its pending-policy wording. New design/task/playbook records remain proposed/draft where labeled.
+Current execution: [development plan](09_development/DEVELOPMENT_EXECUTION.md), [current run report](09_development/CURRENT_RUN_REPORT.md), root README and CLAUDE.md. Revision 24 planning statuses below are historical.
+
+Product authority: project-model.yaml plus current requirement records and accepted decisions. Baseline v0.1 is preserved historical draft; current ADR-001/002 supersede its pending-policy wording. New design/task/playbook records remain proposed/draft where labeled.
 
 - [01_discovery/PRODUCT_CONCEPT.md](01_discovery/PRODUCT_CONCEPT.md)
 - [01_discovery/TARGET_USERS.md](01_discovery/TARGET_USERS.md)

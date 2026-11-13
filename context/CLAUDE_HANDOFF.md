@@ -1,15 +1,9 @@
-# Claude handoff — revision 24
-## Entry
-Read [context index](CONTEXT_INDEX.md), model and current checklist/log. This package supplies a full first-pass documentation set, not a validated implementation-ready specification.
-## Next eligible assignment
-[TASK-001](07_tasks/TASK-001_CONTEXT.md) for decisions, or the independent reference-only portion of [TASK-002](07_tasks/TASK-002_CONTEXT.md). Load one task's routed context rather than the entire folder.
-## Current decisions
-ADR-001 sender until accepted handover; ADR-002 exclusive claim, coordinator-accepted release and no automatic ownership loss for overdue work. Other lifecycle/cadence/module/technology choices remain proposed.
-## Application boundary
-Internal sales/marketing, one company, shared internal functions; no public portal, tenancy, restrictive roles, payout accounting or inventory expansion.
-## Source
-CrisGen pinned revision e1c1a4f1e98ecc4dec9ae4eb16fa646069e94278 is partially inspected. Read exact selected target types/implementations before executable imports. Competitor references are documentation observations, not signed-in tests.
-## Work discipline
-Read scoped user/module rows, contracts/checkpoints, acceptance catalog, runtime/environment/security/recovery companions and relevant exported playbooks. Confirm allowed physical paths and actual manifest commands before a draft application task becomes eligible.
-## Persist outcomes
-Update model/traceability/checklist and append run evidence after each step. Report commit+patch, changed files, actual checks, failures, deviations, stale dependencies and next action. No production sends/deploys arise from documentation generation.
+# Autonomous development handoff
+
+The user authorizes continued implementation and multi-agent execution. Start with root CLAUDE.md, context/README.md, 09_development/DEVELOPMENT_EXECUTION.md and 09_development/CURRENT_RUN_REPORT.md. Continue the actual Django/SQLite implementation; do not restart from historical documentation-only tasks.
+
+Use disjoint file ownership for parallel agents, regression tests before fixes and one integrated verification pass. Preserve ADR-001/002, shared internal visibility and sandbox-only customer email. Business defaults remain unapproved where listed in docs/IMPLEMENTATION_DEFAULTS.md.
+
+Run pytest, ruff and Django migration checks; run scripts/e2e.sh for flow/template changes. Use a separate CRM_TEST_DB_PATH for each concurrently running suite. Update requirement evidence, current run report and append-only run log. State precisely what passed, failed or was unavailable. Keep changes on a reviewable branch; do not force-push or overwrite others' work.
+
+Continue unfinished required coverage before optional backlog. Hosting, provider credentials, production policy acceptance and usability sessions remain distinct pilot work. Earlier fixed deadlines apply only to the historical named run; this user assignment is a new run.
