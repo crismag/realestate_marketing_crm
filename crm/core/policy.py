@@ -25,6 +25,9 @@ CHANNELS = [
 
 DEFAULT_POLICY: dict = {
     "workspace_name": "Real Estate CRM",
+    # Company profile for this install (one install per customer company). Shown to staff and
+    # available to customer email templates as {{ company_* }} placeholders.
+    "company": {"legal_name": "", "phone": "", "email": "", "website": "", "address": ""},
     "timezone": "Asia/Shanghai",
     "currency": "USD",
     "lifecycle_labels": {"lead": "Lead", "prospect": "Prospect", "client": "Client"},

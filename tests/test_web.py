@@ -145,7 +145,7 @@ def test_every_page_renders_for_admin_with_data(client, users, pool, make_contac
     run_worker()
     login(client, users["admin"])
     pages = PAGES + [f"/contacts/{c.pk}/", f"/contacts/{c.pk}/edit/",
-                     f"/settings/pools/{pool.pk}/", f"/accounts/users/{users['ana'].pk}/"]
+                     f"/settings/pools/{pool.pk}/", "/settings/company/", f"/accounts/users/{users['ana'].pk}/"]
     from crm.automation.models import Job, Rule
     from crm.comms.models import MessageTemplate
 

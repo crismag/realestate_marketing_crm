@@ -14,7 +14,6 @@ HOURS = [(h, f"{h:02d}:00") for h in range(24)]
 
 
 class PolicyForm(Form):
-    workspace_name = forms.CharField(max_length=80)
     timezone = forms.CharField(max_length=64, help_text="IANA name, e.g. Asia/Shanghai, Asia/Manila, UTC")
     currency = forms.RegexField(regex=r"^[A-Z]{3}$", max_length=3, help_text="ISO 4217 code, e.g. USD, PHP")
     label_lead = forms.CharField(max_length=40, label="Label for lead")
@@ -79,7 +78,7 @@ class PolicyForm(Form):
     def initial_from(cls, policy, version):
         a, n, labels = policy["attention"], policy["notifications"], policy["lifecycle_labels"]
         return {
-            "workspace_name": policy["workspace_name"], "timezone": policy["timezone"], "currency": policy["currency"],
+            "timezone": policy["timezone"], "currency": policy["currency"],
             "label_lead": labels["lead"], "label_prospect": labels["prospect"], "label_client": labels["client"],
             "stages": "\n".join(f"{s['code']}:{s['label']}" for s in policy["opportunity_stages"]),
             "after_tour_hours": a["after_tour_hours"], "inactivity_lead": a["inactivity_days"].get("lead", 0),
@@ -100,7 +99,7 @@ class PolicyForm(Form):
     def to_policy(self, current):
         d = self.cleaned_data
         policy = dict(current)
-        policy.update({"workspace_name": d["workspace_name"], "timezone": d["timezone"], "currency": d["currency"],
+        policy.update({"timezone": d["timezone"], "currency": d["currency"],
                        "lifecycle_labels": {"lead": d["label_lead"], "prospect": d["label_prospect"], "client": d["label_client"]},
                        "opportunity_stages": d["stages"]})
         policy["attention"] = {**current["attention"],
@@ -115,6 +114,7 @@ class PolicyForm(Form):
                                "flag_past_expected_close": d["flag_past_expected_close"],
                                "contact_reset_types": list(d["contact_reset_types"]),
                                "followup_types": list(d["contact_reset_types"])}
+        policy["setup"] = {**current.get("setup", {}), "settings_reviewed": True}
         policy["followup_suggestions"] = {**current.get("followup_suggestions", {}),
                                           "enabled": d["followup_suggestions_enabled"]}
         policy["duplicate_matching"] = {**current.get("duplicate_matching", {}),
@@ -157,3 +157,60 @@ class SourceForm(Form):
         if not data.get("code"):
             self.add_error("code", "Enter a code or a label.")
         return data
+
+
+LOGO_MAX_BYTES = 512 * 1024
+LOGO_SIGNATURES = (
+    (b"\x89PNG\r\n\x1a\n", "image/png"),
+    (b"\xff\xd8\xff", "image/jpeg"),
+)
+
+
+def sniff_logo(data: bytes) -> str | None:
+    """Accept PNG, JPEG and WebP by their magic bytes. SVG is refused (it can carry script)."""
+    for magic, ctype in LOGO_SIGNATURES:
+        if data.startswith(magic):
+            return ctype
+    if data[:4] == b"RIFF" and data[8:12] == b"WEBP":
+        return "image/webp"
+    return None
+
+
+class CompanyForm(Form):
+    workspace_name = forms.CharField(max_length=80, label="Name shown in the app",
+                                     help_text="Appears in the menu, the sign-in page and customer emails.")
+    legal_name = forms.CharField(max_length=160, required=False, label="Registered company name")
+    phone = forms.CharField(max_length=40, required=False, label="Office phone")
+    email = forms.EmailField(max_length=160, required=False, label="Office email")
+    website = forms.URLField(max_length=200, required=False, assume_scheme="https", label="Website")
+    address = forms.CharField(max_length=300, required=False, widget=forms.Textarea(attrs={"rows": 2}), label="Office address")
+    logo = forms.FileField(required=False, label="Logo", help_text="PNG, JPEG or WebP, up to 512 KB. Shown in the menu and sign-in page.")
+    remove_logo = forms.BooleanField(required=False, label="Remove the current logo")
+    note = forms.CharField(max_length=200, required=False, label="Change note")
+    version = forms.IntegerField(widget=forms.HiddenInput)
+
+    def clean_logo(self):
+        f = self.cleaned_data.get("logo")
+        if not f:
+            return None
+        if f.size > LOGO_MAX_BYTES:
+            raise forms.ValidationError("The logo must be 512 KB or smaller.")
+        data = f.read(LOGO_MAX_BYTES + 1)
+        ctype = sniff_logo(data)
+        if ctype is None:
+            raise forms.ValidationError("Upload a PNG, JPEG or WebP image.")
+        return {"data": data, "content_type": ctype}
+
+    @classmethod
+    def initial_from(cls, policy, version):
+        c = policy.get("company") or {}
+        return {"workspace_name": policy["workspace_name"], **{k: c.get(k, "") for k in ("legal_name", "phone", "email",
+                                                                                           "website", "address")},
+                "version": version}
+
+    def to_policy(self, current):
+        d = self.cleaned_data
+        policy = dict(current)
+        policy["workspace_name"] = d["workspace_name"]
+        policy["company"] = {k: d[k].strip() for k in ("legal_name", "phone", "email", "website", "address")}
+        return policy

@@ -54,3 +54,6 @@ Approved rules that the build enforces as written (not defaults):
 | Notifications | In-app only; reading or dismissing never completes the underlying work | REQ-019 |
 | Deactivated colleague | Their clients show as "Responsible colleague deactivated" in every administrator's attention queue; an administrator may request the handover on their behalf; the recipient must still accept | Code (`crm/work/services.py`) |
 | Source codes | Derived from the label when left empty | Code (`crm/core/settings_forms.py`) |
+| Company profile | Name, registered name, phone, email, website, address on *Settings → Company profile*; versioned with the other settings; usable in customer emails as `{{ company_phone }}`, `{{ company_email }}`, `{{ company_website }}`, `{{ company_address }}` | Settings |
+| Logo | PNG, JPEG or WebP up to 512 KB, stored in the database (so backups include it), served publicly at `/brand/logo` for the sign-in page; SVG refused | Code (`crm/core/settings_forms.py`) |
+| First-run checklist | Administrators see "Set up your CRM" on Today until company profile, settings review, people, a pool with a coordinator and a first contact exist | Code (`crm/core/views.py` `setup_steps`) |

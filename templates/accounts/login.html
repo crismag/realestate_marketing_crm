@@ -1,6 +1,7 @@
 {% extends "base.html" %}{% block title %}Sign in{% endblock %}
 {% block auth_content %}
 <div class="cg-card auth-card" data-shadow="lg">
+  {% if logo_version %}<div class="card-pad auth-logo"><img class="brand-logo brand-logo--auth" src="{% url 'core:brand_logo' %}?v={{ logo_version|slice:':12' }}" alt="{{ workspace_name }}"></div>{% endif %}
   <div class="card-title"><h1 class="cg-typography" data-variant="h5" data-color="inherit">Sign in to {{ workspace_name }}</h1></div>
   <form method="post" class="card-pad stack-sm" novalidate>
     {% csrf_token %}

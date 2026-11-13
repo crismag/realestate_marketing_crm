@@ -16,7 +16,7 @@
 <div class="shell">
   <aside class="shell__sidebar" aria-label="Main navigation">
     <div class="cg-card" data-shadow="sm">
-      <a class="brand" href="{% url 'core:today' %}">{{ workspace_name }}</a>
+      <a class="brand" href="{% url 'core:today' %}">{% if logo_version %}<img class="brand-logo" src="{% url 'core:brand_logo' %}?v={{ logo_version|slice:':12' }}" alt="">{% endif %}<span>{{ workspace_name }}</span></a>
       {% include "partials/nav.html" %}
     </div>
   </aside>
