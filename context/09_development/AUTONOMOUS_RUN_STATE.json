@@ -20,7 +20,7 @@
   },
   "last_checkpoint_utc": "2026-11-13T03:54:20Z",
   "checks": [
-    {"name": "pytest", "command": ".venv/bin/python -m pytest -p no:logging", "result": "239 passed", "at_utc": "2026-11-13T03:58:00Z"},
+    {"name": "pytest", "command": ".venv/bin/python -m pytest -p no:logging", "result": "241 passed", "at_utc": "2026-11-13T04:05:00Z"},
     {"name": "ruff", "command": ".venv/bin/ruff check .", "result": "passed", "at_utc": "2026-11-13T03:53:40Z"},
     {"name": "isolated backup_db/restore_db", "result": "throwaway file only; restore returned Restore Marker; safety restore returned both contacts; workspace var/crm.sqlite3 unchanged", "at_utc": "2026-11-13T03:10:20Z"},
     {"name": "scripts/e2e.sh", "result": "19 checks passed, including the filter drawer, stage move, attention queue, and 390px", "at_utc": "2026-11-13T03:54:10Z", "browser": "Google Chrome via CRM_CHROMIUM_PATH"},

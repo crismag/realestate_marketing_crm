@@ -159,6 +159,7 @@ def update_contact(contact: Contact, *, actor, data: dict, expected_version: int
 
 
 def set_lifecycle(contact: Contact, *, actor, lifecycle: str, disposition: str, reason: str, expected_version: int) -> Contact:
+    _require_version(expected_version)
     if lifecycle not in dict(Contact._meta.get_field("lifecycle").choices):
         raise DomainError("Unknown lifecycle.", code="invalid_lifecycle")
     if disposition not in dict(Contact._meta.get_field("disposition").choices):

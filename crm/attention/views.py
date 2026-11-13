@@ -21,15 +21,32 @@ User = get_user_model()
 _SNOOZE_DAYS = {1, 3, 7, 14, 30}
 
 
+def _optional_id(raw: str):
+    """An omitted filter is None. A nonempty value that is not a version is refused."""
+    if raw == "":
+        return None, False
+    parsed = parse_version(raw)
+    return parsed, parsed is None
+
+
 def queue(request):
     policy = get_policy()
     now = clock.now()
     scope = request.GET.get("scope", "mine")
     reason = request.GET.get("reason", "")
     include_snoozed = request.GET.get("snoozed") == "1"
-    pool_id = parse_version(request.GET.get("pool", ""))
-    team_id = parse_version(request.GET.get("team", ""))
-    person_id = parse_version(request.GET.get("person", ""))
+    pool_id, pool_invalid = _optional_id(request.GET.get("pool", ""))
+    team_id, team_invalid = _optional_id(request.GET.get("team", ""))
+    person_id, person_invalid = _optional_id(request.GET.get("person", ""))
+    if pool_invalid or team_invalid or person_invalid:
+        messages.error(request, "That person, team, or pool filter is not valid.")
+        return render(request, "attention/queue.html", {
+            "items": [], "total": 0, "summary": {"unique_contacts": 0, "per_reason": {}}, "reasons": services.REASONS,
+            "scope": scope, "reason": reason, "include_snoozed": include_snoozed, "now": now, "person": "",
+            "pools": Pool.objects.filter(active=True), "teams": Team.objects.filter(active=True), "pool_id": None,
+            "team_id": None, "users": User.objects.filter(is_active=True).order_by("full_name"),
+            "evaluated_at": now,
+        }, status=400)
     items = services.evaluate(now=now, policy=policy)
     if person_id is not None:
         target = User.objects.filter(pk=person_id).first()

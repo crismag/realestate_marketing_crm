@@ -83,11 +83,34 @@ def test_merge_rejects_oversized_versions(client, users, make_contact):
     assert Contact.objects.filter(pk=duplicate.pk, archived_at__isnull=True).exists()
 
 
-def test_attention_filters_ignore_oversized_ids(client, users, make_contact):
-    make_contact("Visible", email="visible@example.test")
+def test_attention_rejects_an_invalid_filter_instead_of_broadening(client, users, make_contact):
+    make_contact("Visible Queue", email="visible-queue@example.test", inquiry="Still waiting")
     client.force_login(users["ana"])
-    resp = client.get("/attention/", {"pool": HUGE, "team": HUGE, "person": HUGE})
+    resp = client.get("/attention/", {"person": HUGE})
+    assert resp.status_code == 400
+    body = resp.content.decode()
+    assert "That person, team, or pool filter is not valid." in body
+    assert "0 client(s)" in body
+    assert "Visible Queue" not in body
+
+
+def test_maximum_version_is_rejected_before_increment(client, users, make_contact):
+    from crm.contacts import services as contacts
+    from crm.core.errors import DomainError
+
+    contact = make_contact("Max Version", email="maxver@example.test")
+    with pytest.raises(DomainError):
+        contacts.update_contact(
+            contact, actor=users["ana"], data={"display_name": "Changed"}, expected_version=2**63 - 1,
+        )
+    contact.refresh_from_db()
+    assert contact.display_name == "Max Version"
+    client.force_login(users["ana"])
+    resp = client.post(f"/contacts/{contact.pk}/edit/", {"display_name": "Changed", "version": str(2**63 - 1)})
     assert resp.status_code == 200
+    assert "The page version was not valid." in resp.content.decode()
+    contact.refresh_from_db()
+    assert contact.display_name == "Max Version"
 
 
 def test_snooze_rejects_a_day_count_outside_the_form(client, users, make_contact):
@@ -110,4 +133,15 @@ def test_intake_rejects_a_non_numeric_content_length(client, monkeypatch, pool):
     )
     assert resp.status_code == 400
     assert resp.json()["error"] == "Content-Length is not a number."
+    assert not Contact.objects.exists()
+
+
+def test_intake_rejects_a_content_length_python_would_accept(client, monkeypatch, pool):
+    monkeypatch.setenv("CRM_INTAKE_TOKEN", "test-intake-token-0123456789abcdef")
+    payload = json.dumps({"external_id": "bound-2", "name": "Len", "email": "len2@example.test", "message": "Hi"})
+    headers = {"content_type": "application/json", "HTTP_AUTHORIZATION": "Bearer test-intake-token-0123456789abcdef"}
+    underscored = client.post("/api/intake/inquiries", data=payload, CONTENT_LENGTH="1_000", **headers)
+    signed = client.post("/api/intake/inquiries", data=payload, CONTENT_LENGTH="+16", **headers)
+    assert underscored.status_code == 400 and signed.status_code == 400
+    assert underscored.json()["error"] == "Content-Length is not a number."
     assert not Contact.objects.exists()
