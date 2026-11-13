@@ -121,7 +121,14 @@ def recover_expired_leases(now: dt.datetime) -> int:
             if updated:
                 JobAttempt.objects.filter(job=job, attempt_no=job.attempts, worker_id=job.lease_owner,
                                           finished_at__isnull=True).update(finished_at=now, outcome="lease_expired")
+                if exhausted and job.kind == "comms.send":
+                    from crm.comms.services import mark_uncertain_after_crash
+
+                    mark_uncertain_after_crash(job.payload.get("message_id"))
             count += updated
+        if updated:
+            log.warning("job lease expired", extra={"job_id": job.pk, "kind": job.kind, "attempt": job.attempts,
+                                                    "worker": job.lease_owner, "exhausted": exhausted})
     return count
 
 
@@ -154,6 +161,8 @@ def execute(job: Job, worker_id: str) -> str:
             updated = Job.objects.filter(pk=job.pk, status="running", lease_owner=worker_id,
                                          attempts=job.attempts).update(**changes)
             if not updated:
+                log.warning("stale job result discarded", extra={"job_id": job.pk, "kind": job.kind,
+                                                                 "attempt": job.attempts, "outcome": outcome})
                 return "stale"
             JobAttempt.objects.filter(job=job, attempt_no=job.attempts, worker_id=worker_id,
                                       finished_at__isnull=True).update(
@@ -206,6 +215,12 @@ def retry_job(job: Job, *, actor) -> Job:
 
     if job.status not in ("dead", "failed"):
         raise DomainError("Only failed jobs can be retried.", code="not_retryable")
+    if job.kind == "comms.send":
+        from crm.comms.models import OutboundMessage
+
+        if OutboundMessage.objects.filter(pk=job.payload.get("message_id"), status="uncertain").exists():
+            raise DomainError("This email may already have gone out. Resolve it on the Customer messages page "
+                              "instead of retrying the job.", code="message_uncertain")
     with transaction.atomic():
         Job.objects.filter(pk=job.pk, status__in=("dead", "failed")).update(
             status="queued", run_at=clock.now(), max_attempts=F("attempts") + 1, finished_at=None, updated_at=clock.now()
