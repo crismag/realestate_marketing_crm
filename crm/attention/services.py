@@ -16,10 +16,9 @@ from django.db import transaction
 from django.db.models import Max, Q
 from django.utils import timezone
 
-from crm.contacts.models import Contact, Inquiry, Interaction
-from crm.contacts.services import HUMAN_RESPONSE_KINDS
 from crm.accounts.models import User
 from crm.contacts.models import Contact, Inquiry, Interaction, Opportunity
+from crm.contacts.services import HUMAN_RESPONSE_KINDS
 from crm.core import clock
 from crm.core.errors import DomainError
 from crm.core.services import audit
