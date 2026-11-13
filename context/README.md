@@ -1,6 +1,9 @@
 # CRM development context
 Updated: 13 November 2026. Stage: implementation hardening and pilot preparation.
 
+## Cursor Cloud continuation
+Use [Cursor Cloud handoff](cursor-cloud/README.md) for the current cloud launch package, updated feature inventory and continuation queue. The older hardening report is historical; main now includes later product-readiness features.
+
 ## Start here
 1. Read the root [README](../README.md) and [CLAUDE.md](../CLAUDE.md) for the implemented stack and commands.
 2. Read [Development execution](09_development/DEVELOPMENT_EXECUTION.md) for current scope, agent ownership and remaining stages.

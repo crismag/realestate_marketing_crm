@@ -1,0 +1,5 @@
+---
+description: Realstate CRM cloud continuation, project context and verification
+alwaysApply: true
+---
+Follow root AGENTS.md and CLAUDE.md. Start with context/cursor-cloud/README.md and the current RUN_STATE.json. Continue the implemented Django/SQLite system from the remote branch; do not restart from historical documentation-only statuses. Use the cloud VM, not the owner's local checkout. Check actual source and tests before changing behavior. Complete one verified task, checkpoint, push, and select the next ready task. Use disjoint ownership for parallel agents and isolated test databases. Preserve sandbox messaging and accepted accountability rules. Record actual verification and blockers; never reuse old test counts as a new pass.

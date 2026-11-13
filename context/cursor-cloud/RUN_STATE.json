@@ -1,0 +1,154 @@
+{
+  "schema_version": 1,
+  "project": "Realstate CRM",
+  "execution_target": "Cursor-hosted cloud agent",
+  "repository": "https://github.com/crismag/realestate_marketing_crm",
+  "prepared_client_date": "2026-11-13",
+  "prepared_from_main_commit": "fda56b35a3ecfcfb32dae41ee2b91030e8371b32",
+  "handoff_branch": "codex/cursor-cloud-handoff-20261113",
+  "status": "prepared_not_launched_in_cursor",
+  "active_task": "CC-000",
+  "next_action": "Connect GitHub in Cursor Cloud, select the handoff branch (or main after merge), verify environment Build, read MASTER_PROMPT.md and rerun current-source baseline.",
+  "tasks": [
+    {
+      "id": "CC-000",
+      "status": "ready",
+      "owner": null,
+      "branch": null,
+      "commit": null,
+      "evidence": []
+    },
+    {
+      "id": "CC-010",
+      "status": "pending",
+      "owner": null,
+      "branch": null,
+      "commit": null,
+      "evidence": []
+    },
+    {
+      "id": "CC-020",
+      "status": "pending",
+      "owner": null,
+      "branch": null,
+      "commit": null,
+      "evidence": []
+    },
+    {
+      "id": "CC-030",
+      "status": "pending",
+      "owner": null,
+      "branch": null,
+      "commit": null,
+      "evidence": []
+    },
+    {
+      "id": "CC-040",
+      "status": "pending",
+      "owner": null,
+      "branch": null,
+      "commit": null,
+      "evidence": []
+    },
+    {
+      "id": "CC-050",
+      "status": "pending",
+      "owner": null,
+      "branch": null,
+      "commit": null,
+      "evidence": []
+    },
+    {
+      "id": "CC-060",
+      "status": "pending",
+      "owner": null,
+      "branch": null,
+      "commit": null,
+      "evidence": []
+    },
+    {
+      "id": "CC-070",
+      "status": "pending",
+      "owner": null,
+      "branch": null,
+      "commit": null,
+      "evidence": []
+    },
+    {
+      "id": "CC-080",
+      "status": "pending",
+      "owner": null,
+      "branch": null,
+      "commit": null,
+      "evidence": []
+    },
+    {
+      "id": "CC-090",
+      "status": "pending",
+      "owner": null,
+      "branch": null,
+      "commit": null,
+      "evidence": []
+    }
+  ],
+  "checks": [],
+  "blockers": [],
+  "running_services": [],
+  "last_pushed_commit": null,
+  "pull_request": null,
+  "runtime_policy": {
+    "continuous_within_supported_run": true,
+    "unlimited_runtime_guaranteed": false,
+    "bypass_usage_limits": false,
+    "auto_restart_configured": false,
+    "checkpoint_after_verified_task": true
+  },
+  "constraints": {
+    "database": "SQLite now; MySQL deferred",
+    "customer_transport": "sandbox",
+    "production_deployment": false,
+    "auto_merge_main": false,
+    "external_AI_customer_data": false
+  },
+  "checkpoint_fields_to_update": [
+    "actual_start_commit",
+    "last_checkpoint_utc",
+    "active_task",
+    "tasks",
+    "checks",
+    "blockers",
+    "running_services",
+    "last_pushed_commit",
+    "pull_request",
+    "next_action"
+  ],
+  "preparation_verification": {
+    "execution_environment": "ChatGPT workspace; not a Cursor cloud run",
+    "source_commit": "fda56b35a3ecfcfb32dae41ee2b91030e8371b32",
+    "at_utc": "2026-11-13T02:23:24.696357+00:00",
+    "checks": [
+      {
+        "command": "CRM_TEST_DB_PATH=/tmp/cursor-handoff-baseline.sqlite3 .venv/bin/python -m pytest -p no:logging",
+        "result": "195 passed in 8.07s"
+      },
+      {
+        "command": ".venv/bin/ruff check .",
+        "result": "passed"
+      },
+      {
+        "command": ".venv/bin/python manage.py check",
+        "result": "no issues"
+      },
+      {
+        "command": ".venv/bin/python manage.py makemigrations --check --dry-run",
+        "result": "no changes detected"
+      },
+      {
+        "command": "bash -n scripts/cursor-cloud-setup.sh",
+        "result": "passed"
+      }
+    ],
+    "cursor_environment_build": "not_run",
+    "fresh_browser_journey": "not_run_for_this_documentation_handoff"
+  }
+}

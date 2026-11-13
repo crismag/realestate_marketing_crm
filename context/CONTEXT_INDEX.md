@@ -1,3 +1,5 @@
+Current cloud entry: [Cursor Cloud handoff](cursor-cloud/README.md) and [full prompt](cursor-cloud/MASTER_PROMPT.md).
+
 # Context index — current execution and historical design
 
 Current execution: [development plan](09_development/DEVELOPMENT_EXECUTION.md), [current run report](09_development/CURRENT_RUN_REPORT.md), root README and CLAUDE.md. Revision 24 planning statuses below are historical.
