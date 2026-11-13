@@ -34,7 +34,9 @@ def test_board_groups_stages_and_ships_real_overlay_controls(client, users, make
     assert 'data-cg="tabs"' in body and 'data-cg="drawer"' in body and 'data-cg="modal"' in body
     assert "crm/behaviors.js" in body
     assert 'data-stage="new"' in body and "Park 2-bedroom" in body
-    assert 'data-stage="other"' in body and "Old file" in body
+    assert 'data-stage="not-configured"' in body and "Old file" in body
+    assert 'value="legacy" selected' in body
+    assert "If the page script does not load" in body
     assert 'aria-label="Move stage for Park 2-bedroom"' in body
     assert 'aria-label="Move stage for Old file"' in body
     list_body = client.get("/contacts/opportunities/?view=list").content.decode()
@@ -80,6 +82,122 @@ def test_same_stage_is_a_noop(client, users, make_contact, frozen):
     assert opp.version == 1 and opp.stage == "new"
     assert "already in this stage" in resp.content.decode()
     assert not AuditEvent.objects.filter(action="opportunity.stage_changed", object_id=str(opp.pk)).exists()
+
+
+@pytest.mark.django_db
+def test_same_stage_with_a_stale_version_is_refused(client, users, make_contact, frozen):
+    from crm.contacts.models import Opportunity
+
+    contact = make_contact("Board Bea")
+    opp = _open(contact, users["ana"], "Park 2-bedroom")
+    Opportunity.objects.filter(pk=opp.pk).update(version=opp.version + 1)
+    login(client, users["ana"])
+    resp = client.post(
+        f"/contacts/opportunities/{opp.pk}/stage/", {"stage": "new", "version": opp.version}, follow=True,
+    )
+    body = resp.content.decode()
+    assert "changed by someone else" in body
+    assert "already in this stage" not in body
+    opp.refresh_from_db()
+    assert opp.stage == "new" and opp.version == 2
+
+
+@pytest.mark.django_db
+def test_stage_move_keeps_posted_outcome_all(client, users, make_contact, frozen, policy):
+    contact = make_contact("Board Bea")
+    closed = _open(contact, users["ana"], "Closed file", stage="decision")
+    services.close_opportunity(
+        closed, actor=users["ana"], outcome="lost", reason="Budget", expected_version=closed.version, policy=policy,
+    )
+    opp = _open(contact, users["ana"], "Park 2-bedroom")
+    login(client, users["ana"])
+    resp = client.post(f"/contacts/opportunities/{opp.pk}/stage/", {
+        "stage": "viewing", "version": opp.version, "view": "board", "outcome": "all", "filter_stage": "",
+    }, follow=True)
+    location = resp.redirect_chain[-1][0]
+    assert "view=board" in location and "outcome=all" in location
+    assert "outcome=open" not in location
+    body = resp.content.decode()
+    assert "Stage updated." in body
+    assert "Park 2-bedroom" in body and "Closed file" in body
+
+
+@pytest.mark.django_db
+def test_keeping_an_unconfigured_stage_does_not_replace_it(client, users, make_contact, frozen):
+    contact = make_contact("Board Bea")
+    opp = _open(contact, users["ana"], "Old file", stage="legacy")
+    login(client, users["ana"])
+    body = client.get("/contacts/opportunities/?view=board&outcome=all&stage=legacy").content.decode()
+    assert 'value="legacy" selected' in body
+    resp = client.post(f"/contacts/opportunities/{opp.pk}/stage/", {
+        "stage": "legacy", "version": opp.version, "view": "board", "outcome": "all", "filter_stage": "legacy",
+    }, follow=True)
+    opp.refresh_from_db()
+    assert opp.stage == "legacy" and opp.version == 1
+    assert "already in this stage" in resp.content.decode()
+    assert "stage=legacy" in resp.redirect_chain[-1][0]
+    assert "outcome=all" in resp.redirect_chain[-1][0]
+
+
+@pytest.mark.django_db
+def test_configured_other_stage_does_not_share_the_fallback_column(client, users, make_contact, frozen):
+    contact = make_contact("Board Bea")
+    row = get_settings_row()
+    policy = get_policy()
+    policy["opportunity_stages"] = [{"code": "other", "label": "Other"}, {"code": "new", "label": "New"}]
+    update_policy(policy, actor=users["admin"], expected_version=row.version, note="stage named other")
+    _open(contact, users["ana"], "Named other", stage="other")
+    _open(contact, users["ana"], "Old file", stage="legacy")
+    login(client, users["ana"])
+    body = client.get("/contacts/opportunities/?view=board&outcome=all").content.decode()
+    assert body.count('data-stage="other"') == 1
+    assert 'data-stage="not-configured"' in body
+    assert "Named other" in body and "Old file" in body
+
+
+@pytest.mark.django_db
+def test_oversized_version_is_refused_without_a_server_error(client, users, make_contact, frozen):
+    contact = make_contact("Board Bea")
+    opp = _open(contact, users["ana"], "Park 2-bedroom")
+    login(client, users["ana"])
+    resp = client.post(
+        f"/contacts/opportunities/{opp.pk}/stage/",
+        {"stage": "viewing", "version": "9" * 40},
+        follow=True,
+    )
+    assert resp.status_code == 200
+    assert "Reload the page and try again." in resp.content.decode()
+    opp.refresh_from_db()
+    assert opp.stage == "new" and opp.version == 1
+
+
+@pytest.mark.django_db
+def test_stage_audit_follows_the_contact_after_a_merge(client, users, make_contact, frozen):
+    from crm.contacts import merging
+
+    keep = make_contact("Keep Kia")
+    duplicate = make_contact("Dup Dee")
+    opp = _open(duplicate, users["ana"], "Park 2-bedroom")
+    stale_version = opp.version
+    keep.refresh_from_db()
+    duplicate.refresh_from_db()
+    merging.merge_contacts(
+        keep, duplicate, actor=users["ana"], keep_version=keep.version, duplicate_version=duplicate.version,
+    )
+    opp.refresh_from_db()
+    assert opp.contact_id == keep.pk and opp.version == stale_version + 1
+    login(client, users["ana"])
+    refused = client.post(
+        f"/contacts/opportunities/{opp.pk}/stage/", {"stage": "viewing", "version": stale_version}, follow=True,
+    )
+    assert "changed by someone else" in refused.content.decode()
+    opp.refresh_from_db()
+    assert opp.stage == "new"
+    client.post(
+        f"/contacts/opportunities/{opp.pk}/stage/", {"stage": "viewing", "version": opp.version}, follow=True,
+    )
+    event = AuditEvent.objects.get(action="opportunity.stage_changed", object_id=str(opp.pk))
+    assert event.contact_id == keep.pk
 
 
 @pytest.mark.django_db
@@ -131,7 +249,7 @@ def test_board_limit_is_configurable_and_reported(client, users, make_contact, f
 
 
 @pytest.mark.django_db
-def test_settings_form_saves_board_limit(users):
+def test_settings_form_saves_board_limit(client, users):
     policy = get_policy()
     initial = PolicyForm.initial_from(policy, get_settings_row().version)
     data = {}
@@ -147,9 +265,11 @@ def test_settings_form_saves_board_limit(users):
             data[key] = value
     data["sales_board_limit"] = "40"
     data["note"] = "board size"
-    form = PolicyForm(data)
-    assert form.is_valid(), form.errors
-    assert form.to_policy(policy)["sales_board_limit"] == 40
+    login(client, users["admin"])
+    resp = client.post("/settings/", data, follow=True)
+    assert resp.status_code == 200
+    assert "Settings saved" in resp.content.decode()
+    assert get_policy()["sales_board_limit"] == 40
 
 
 def test_behavior_script_does_not_set_inline_styles():

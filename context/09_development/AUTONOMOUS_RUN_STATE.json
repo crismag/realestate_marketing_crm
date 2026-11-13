@@ -6,22 +6,21 @@
   "branch": "cursor/sales-board-crisgen-behaviors-77d9",
   "base_commit": "fda56b35a3ecfcfb32dae41ee2b91030e8371b32",
   "stack": "Python 3.12 (this container) / Django 5.2.19 LTS / SQLite WAL / server-rendered CrisGen UI 1.1 / waitress + whitenoise",
-  "current_stage": "design fidelity: sales board, drawer, modal, tabs",
+  "current_stage": "sales board review fixes, then staff digest email",
   "stages": {
     "baseline_TASK-003_to_011": "already on main (fda56b3); not regenerated",
-    "sales_board_and_crisgen_behaviors": "done_locally"
+    "sales_board_and_crisgen_behaviors": "done_locally",
+    "sales_board_review_fixes": "done_locally"
   },
-  "last_checkpoint_utc": "2026-11-13T02:49:00Z",
+  "last_checkpoint_utc": "2026-11-13T02:59:22Z",
   "checks": [
-    {"name": "pytest", "command": ".venv/bin/python -m pytest -p no:logging", "result": "203 passed", "at_utc": "2026-11-13T02:49:00Z"},
-    {"name": "ruff", "command": ".venv/bin/ruff check .", "result": "passed", "at_utc": "2026-11-13T02:48:51Z"},
-    {"name": "makemigrations --check --dry-run", "result": "no changes", "at_utc": "2026-11-13T02:49:00Z"},
-    {"name": "manage.py check", "result": "no issues", "at_utc": "2026-11-13T02:49:00Z"},
-    {"name": "scripts/e2e.sh", "result": "19 checks passed (desktop 1280px including filter drawer, tab switch and stage move; 390px including the sales board)", "at_utc": "2026-11-13T02:47:52Z", "browser": "Google Chrome via CRM_CHROMIUM_PATH"}
+    {"name": "pytest", "command": ".venv/bin/python -m pytest -p no:logging", "result": "209 passed", "at_utc": "2026-11-13T02:59:00Z"},
+    {"name": "ruff", "command": ".venv/bin/ruff check .", "result": "passed", "at_utc": "2026-11-13T02:59:00Z"},
+    {"name": "scripts/e2e.sh", "result": "19 checks passed (desktop stage move and 390px board)", "at_utc": "2026-11-13T02:59:22Z", "browser": "Google Chrome via CRM_CHROMIUM_PATH"}
   ],
   "blockers": [],
   "running_services": [],
-  "next_action": "Hosted CI on this branch. Then the next in-scope gap: staff digest email via the existing staff-mail path (never a customer send), or a retention/deletion workflow. Do not treat pilot hosting, a real email provider, or MySQL as done.",
+  "next_action": "Staff digest email via the existing staff-mail path (never a customer send). Do not treat pilot hosting, a real email provider, or MySQL as done. Do not wait on review.",
   "historical_run": {
     "run_id": "autonomous-build-2026-11-12",
     "original_start_utc": "2026-11-12T19:08:03Z",

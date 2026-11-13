@@ -7,6 +7,9 @@
 (function () {
   "use strict";
 
+  var pending = document.getElementById("behaviors-note");
+  if (pending) pending.setAttribute("hidden", "");
+
   var OVERLAY = "[data-cg='drawer'], [data-cg='modal']";
 
   function parseCall(value) {

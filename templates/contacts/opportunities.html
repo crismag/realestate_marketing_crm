@@ -4,6 +4,7 @@
   <div>
     <h1 class="cg-typography" data-variant="h4">Sales opportunities</h1>
     <p class="small muted">Stages are the steps of one deal. Won and lost are outcomes. Moving a stage does not change who is responsible or the contact's lifecycle.</p>
+    <p class="small muted" id="behaviors-note">If the page script does not load, the filter button and Move stage buttons stay inactive. The List and Board links still work, and a stage can be changed from the opportunity page.</p>
   </div>
   <button type="button" class="cg-button" data-variant="outline" data-color="secondary" data-size="md" data-shape="rounded" data-full-width="false" data-cg-on-click='{"call":"drawer.open","args":["sales-filters"]}'>Filters</button>
 </div>
@@ -71,7 +72,7 @@
       <input type="hidden" name="outcome" value="{{ outcome }}">
       <input type="hidden" name="filter_stage" value="{{ stage }}">
       <div class="field"><label for="mv-{{ o.pk }}">Stage</label>
-        <select class="cg-select" id="mv-{{ o.pk }}" name="stage">{% for s in stages %}<option value="{{ s.code }}" {% if o.stage == s.code %}selected{% endif %}>{{ s.label }}</option>{% endfor %}</select>
+        <select class="cg-select" id="mv-{{ o.pk }}" name="stage">{% for s in stages %}<option value="{{ s.code }}" {% if o.stage == s.code %}selected{% endif %}>{{ s.label }}</option>{% endfor %}{% if o.stage not in stage_codes %}<option value="{{ o.stage }}" selected>{{ o.stage }} (not in the stage list)</option>{% endif %}</select>
       </div>
       <div class="row">
         <button class="cg-button" data-variant="solid" data-color="primary" data-size="sm" data-shape="rounded" data-full-width="false">Save stage</button>

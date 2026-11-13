@@ -21,6 +21,15 @@ CONTACT_EDITABLE_FIELDS = (
     "preferred_channel", "next_contact_agreed_at",
 )
 HUMAN_RESPONSE_KINDS = ("outbound_attempt", "conversation", "meeting_tour")
+# SQLite binds integers as signed 64-bit. A larger Python int becomes a database error.
+_SQL_INT_MAX = 2**63 - 1
+
+
+def _require_version(version) -> int:
+    """Reject a missing or out-of-range expected version before it reaches the database."""
+    if type(version) is not int or version < 0 or version > _SQL_INT_MAX:
+        raise DomainError("Reload the page and try again.", code="version_required")
+    return version
 
 
 def _email_variants(email: str) -> set[str]:
@@ -295,22 +304,26 @@ def save_opportunity(contact: Contact, *, actor, opportunity: Opportunity | None
             opp = Opportunity.objects.create(contact=contact, created_by=actor, created_at=now, stage_changed_at=now, **fields)
             audit("opportunity.created", opp, f"Opportunity '{opp.title}' created", actor=actor, contact=contact)
             return opp
-        if opportunity.outcome != "open":
+        _require_version(expected_version)
+        current = Opportunity.objects.select_related("contact").get(pk=opportunity.pk)
+        if current.outcome != "open":
             raise DomainError("Closed opportunities cannot be edited. Reopen it first.", code="closed")
-        stage_changed = "stage" in fields and fields["stage"] != opportunity.stage
+        stage_changed = "stage" in fields and fields["stage"] != current.stage
         if stage_changed:
             # Only a real stage change moves the clock used by the stalled-opportunity reason (C-R2).
             fields["stage_changed_at"] = clock.now()
-        updated = Opportunity.objects.filter(pk=opportunity.pk, version=expected_version).update(
+        updated = Opportunity.objects.filter(pk=current.pk, version=expected_version).update(
             version=expected_version + 1, **fields
         )
         if updated != 1:
             raise ConflictError("This opportunity was changed by someone else. Reload and try again.")
-        opp = Opportunity.objects.get(pk=opportunity.pk)
-        audit("opportunity.updated", opp, f"Opportunity '{opp.title}' updated (stage {opp.stage})", actor=actor, contact=contact)
+        opp = Opportunity.objects.select_related("contact").get(pk=current.pk)
+        # Use the contact on the row after the write. A merge can move the deal
+        # between the page load and this transaction.
+        audit("opportunity.updated", opp, f"Opportunity '{opp.title}' updated (stage {opp.stage})", actor=actor, contact=opp.contact)
         if stage_changed:
-            audit("opportunity.stage_changed", opp, f"Opportunity '{opp.title}' stage {opportunity.stage} -> {opp.stage}",
-                  actor=actor, contact=contact, data={"from": opportunity.stage, "to": opp.stage})
+            audit("opportunity.stage_changed", opp, f"Opportunity '{opp.title}' stage {current.stage} -> {opp.stage}",
+                  actor=actor, contact=opp.contact, data={"from": current.stage, "to": opp.stage})
         return opp
 
     return write_transaction(run)
@@ -321,24 +334,33 @@ def move_opportunity_stage(opportunity: Opportunity, *, actor, stage: str, expec
 
     A stage change does not transfer responsibility (ADR-001/002) and does not change lifecycle.
     Repeating the current stage is a no-op so a double submit does not bump the version.
+    The version is checked before that no-op, so a stale request is not reported as success.
+    Keeping a stage that is no longer in the settings list is also a no-op.
     """
+    _require_version(expected_version)
     codes = [item["code"] for item in policy.get("opportunity_stages") or []]
-    if stage not in codes:
-        raise DomainError("Unknown stage.", code="invalid_stage")
-    if opportunity.outcome != "open":
-        raise DomainError("Closed opportunities stay in their stage until reopened.", code="closed")
-    if expected_version is None:
-        raise DomainError("Reload the page and try again.", code="version_required")
-    if opportunity.stage == stage:
-        return opportunity
-    return save_opportunity(
-        opportunity.contact, actor=actor, opportunity=opportunity, expected_version=expected_version, data={"stage": stage},
-    )
+
+    def run():
+        current = Opportunity.objects.select_related("contact").get(pk=opportunity.pk)
+        if current.outcome != "open":
+            raise DomainError("Closed opportunities stay in their stage until reopened.", code="closed")
+        if current.version != expected_version:
+            raise ConflictError("This opportunity was changed by someone else. Reload and try again.")
+        if current.stage == stage:
+            return current
+        if stage not in codes:
+            raise DomainError("Unknown stage.", code="invalid_stage")
+        return save_opportunity(
+            current.contact, actor=actor, opportunity=current, expected_version=expected_version, data={"stage": stage},
+        )
+
+    return write_transaction(run)
 
 
 def close_opportunity(opportunity: Opportunity, *, actor, outcome: str, reason: str, expected_version: int, policy: dict):
     if outcome not in ("won", "lost", "open"):
         raise DomainError("Unknown outcome.", code="invalid_outcome")
+    _require_version(expected_version)
 
     def run():
         now = clock.now()

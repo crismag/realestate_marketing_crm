@@ -355,8 +355,25 @@ def opportunity_outcome(request, pk, opp_id):
 _SALES_OUTCOMES = {"open": "Open", "won": "Won", "lost": "Lost", "all": "All outcomes"}
 
 
+_SQL_INT_MAX = 2**63 - 1
+
+
+def _posted_version(request):
+    """Parse a posted optimistic version. Oversized values never reach SQLite."""
+    raw = request.POST.get("version", "")
+    if not isinstance(raw, str) or not raw.isdigit() or len(raw) > 19:
+        return None
+    value = int(raw)
+    if value > _SQL_INT_MAX:
+        return None
+    return value
+
+
 def _sales_filters(request):
-    outcome = request.GET.get("outcome", "open")
+    if request.method == "POST":
+        outcome = request.POST.get("outcome") or request.GET.get("outcome", "open")
+    else:
+        outcome = request.GET.get("outcome", "open")
     if outcome not in _SALES_OUTCOMES:
         outcome = "open"
     view = request.POST.get("view") or request.GET.get("view", "list")
@@ -408,10 +425,16 @@ def opportunities(request):
             other.append(opp)
     columns = [{"code": item["code"], "label": item["label"], "items": grouped[item["code"]]} for item in stages]
     if other:
-        columns.append({"code": "other", "label": "Other stage", "items": other})
+        # A configured stage may already be named "other". The fallback code uses a
+        # hyphen, which Settings rejects, and is lengthened if that code is in use.
+        fallback = "not-configured"
+        while fallback in grouped:
+            fallback += "-x"
+        columns.append({"code": fallback, "label": "Other stage", "items": other})
     return render(request, "contacts/opportunities.html", {
         "page": page, "querystring": urlencode(list_params), "outcome": outcome, "stage": stage, "view": view,
-        "stages": stages, "stage_labels": {item["code"]: item["label"] for item in stages},
+        "stages": stages, "stage_codes": [item["code"] for item in stages],
+        "stage_labels": {item["code"]: item["label"] for item in stages},
         "currency": policy["currency"], "columns": columns, "board_rows": board_rows,
         "board_total": board_total, "board_truncated": board_total > len(board_rows),
         "outcome_label": _SALES_OUTCOMES[outcome],
@@ -426,10 +449,7 @@ def opportunity_stage(request, opp_id):
     view, outcome, stage_filter = _sales_filters(request)
     back = _sales_location(view, outcome, stage_filter)
     posted = request.POST.get("stage", "")
-    try:
-        version = int(request.POST.get("version", ""))
-    except (TypeError, ValueError):
-        version = None
+    version = _posted_version(request)
     previous = opp.stage
     response, result = run_action(
         request,
