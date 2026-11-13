@@ -10,6 +10,7 @@ urlpatterns = [
     path("import/template.csv", views.import_template, name="import_template"),
     path("import/<int:pk>/", views.import_detail, name="import_detail"),
     path("opportunities/", views.opportunities, name="opportunities"),
+    path("opportunities/<int:opp_id>/stage/", views.opportunity_stage, name="opportunity_stage"),
     path("<int:pk>/", views.contact_detail, name="detail"),
     path("<int:pk>/edit/", views.contact_edit, name="edit"),
     path("<int:pk>/merge/<int:duplicate_pk>/", views.contact_merge, name="merge"),

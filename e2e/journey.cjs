@@ -109,6 +109,39 @@ async function desktopJourney(browser) {
   await page.getByText("Next action created.").waitFor();
   step("agent creates the next action");
 
+  // Sales board: tabs, filter drawer and a real stage move (does not change the handler).
+  const oppForm = page.locator("details").filter({ hasText: "Add opportunity" });
+  await oppForm.locator("summary").click();
+  await oppForm.getByLabel("Title").fill("Park 2-bedroom");
+  await oppForm.getByLabel("Stage").selectOption({ label: "New" });
+  await oppForm.getByRole("button", { name: "Add" }).click();
+  await page.getByText("Opportunity added.").waitFor();
+  step("agent adds an opportunity");
+
+  await page.goto(`${BASE}/contacts/opportunities/?view=board`);
+  await page.getByRole("tab", { name: "Board", selected: true }).waitFor();
+  await page.getByRole("button", { name: "Filters" }).click();
+  const filters = page.getByRole("dialog", { name: "Filters" });
+  await filters.waitFor();
+  await filters.getByLabel("Outcome").selectOption("all");
+  await filters.getByRole("button", { name: "Apply" }).click();
+  await page.waitForURL(/outcome=all/);
+  step("filter drawer applies");
+
+  await page.getByRole("tab", { name: "List" }).click();
+  await page.getByRole("columnheader", { name: "Opportunity" }).waitFor();
+  await page.getByRole("tab", { name: "Board" }).click();
+  await page.getByRole("tab", { name: "Board", selected: true }).waitFor();
+  const card = page.locator(".board-card").filter({ hasText: "Park 2-bedroom" });
+  await card.getByRole("button", { name: "Move stage for Park 2-bedroom" }).click();
+  const move = page.getByRole("dialog", { name: "Move stage for Park 2-bedroom" });
+  await move.waitFor();
+  await move.getByLabel("Stage").selectOption({ label: "Viewing" });
+  await move.getByRole("button", { name: "Save stage" }).click();
+  await page.getByText("Stage updated.").waitFor();
+  await page.locator("[data-stage='viewing']").getByText("Park 2-bedroom").waitFor();
+  step("board moves the opportunity stage");
+
   // 5. Attention shows it as due.
   await page.goto(`${BASE}/attention/?scope=mine`);
   await page.getByText(name).first().waitFor();
@@ -166,14 +199,14 @@ async function narrowChecks(browser) {
   const errors = [];
   consoleGuard(page, errors);
   await login(page, "ana@demo.example.test");
-  for (const path of ["/", "/attention/", "/contacts/", "/work/shared/", "/work/tasks/", "/reports/", "/messages/"]) {
+  for (const path of ["/", "/attention/", "/contacts/", "/contacts/opportunities/?view=board", "/work/shared/", "/work/tasks/", "/reports/", "/messages/"]) {
     await page.goto(`${BASE}${path}`);
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     if (overflow > 1) {
       const culprits = await page.evaluate(() => {
         const w = document.documentElement.clientWidth;
         return [...document.querySelectorAll("body *")]
-          .filter((el) => el.getBoundingClientRect().right > w + 1 && !(el.parentElement && el.parentElement.closest(".table-scroll")))
+          .filter((el) => el.getBoundingClientRect().right > w + 1 && !(el.parentElement && (el.parentElement.closest(".table-scroll") || el.parentElement.closest(".board-scroll"))))
           .slice(-5).map((el) => `${el.tagName.toLowerCase()}.${[...el.classList].join(".")} right=${Math.round(el.getBoundingClientRect().right)}`);
       });
       assert.fail(`${path} scrolls sideways by ${overflow}px at 390px: ${culprits.join(" | ")}`);

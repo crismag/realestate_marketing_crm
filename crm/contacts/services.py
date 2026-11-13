@@ -316,6 +316,26 @@ def save_opportunity(contact: Contact, *, actor, opportunity: Opportunity | None
     return write_transaction(run)
 
 
+def move_opportunity_stage(opportunity: Opportunity, *, actor, stage: str, expected_version: int | None, policy: dict) -> Opportunity:
+    """Move an open opportunity to a configured stage.
+
+    A stage change does not transfer responsibility (ADR-001/002) and does not change lifecycle.
+    Repeating the current stage is a no-op so a double submit does not bump the version.
+    """
+    codes = [item["code"] for item in policy.get("opportunity_stages") or []]
+    if stage not in codes:
+        raise DomainError("Unknown stage.", code="invalid_stage")
+    if opportunity.outcome != "open":
+        raise DomainError("Closed opportunities stay in their stage until reopened.", code="closed")
+    if expected_version is None:
+        raise DomainError("Reload the page and try again.", code="version_required")
+    if opportunity.stage == stage:
+        return opportunity
+    return save_opportunity(
+        opportunity.contact, actor=actor, opportunity=opportunity, expected_version=expected_version, data={"stage": stage},
+    )
+
+
 def close_opportunity(opportunity: Opportunity, *, actor, outcome: str, reason: str, expected_version: int, policy: dict):
     if outcome not in ("won", "lost", "open"):
         raise DomainError("Unknown outcome.", code="invalid_outcome")

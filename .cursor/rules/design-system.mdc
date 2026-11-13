@@ -1,0 +1,60 @@
+---
+description: CrisGen UI is the CRM design system. Reuse it for every screen.
+globs:
+  - templates/**/*.html
+  - static/crm/**/*
+  - crm/**/*.py
+alwaysApply: true
+---
+
+# CRM design system
+
+Primary source: CrisGen UI 1.1 (`@crisgen/ui`), vanilla target, pinned at
+`e1c1a4f1e98ecc4dec9ae4eb16fa646069e94278` in
+https://github.com/crismag/development_design_systems (`crisgen-ui/`).
+Vendored, unmodified, at `crm/core/static/vendor/crisgen-ui/` (`tokens.css`, `base.css`,
+`components.css`, `themes/crisgen-light.css`, `themes/crisgen-dark.css`). See `PROVENANCE.md`.
+Licence: MIT. The notice copied with the package is Copyright (c) 2020-2025 Creative Tim.
+Do not ship Creative Tim or Material Dashboard branding. The product name is the workspace name.
+
+Theme: `data-cg-theme="crisgen-light"` on `<html>`. Load theme CSS after tokens, base and components.
+Do not load `material-dashboard-pro` or any other global stylesheet.
+
+Secondary reference only, same repository and same commit, folder `material-dashboard-pro`:
+sidenav + top bar, stat tiles, and a column board. Adapt the arrangement into CrisGen classes and
+tokens in `static/crm/crm.css`. Never copy its CSS, class names or logo.
+
+## Reuse
+
+- Markup is `.cg-<component>` / `.cg-<component>__<part>` and `data-*` props from the component README.
+- Do not invent `cg-` classes. Layout that CrisGen does not cover goes in `static/crm/crm.css` using tokens (`var(--space-*)`, `var(--stone-*)`, `var(--radius-*)`).
+- Do not edit files under `crm/core/static/vendor/crisgen-ui/`.
+- CSP: no `style=""`, no inline scripts, no `on*` handlers. `script-src 'self'` and `style-src 'self'`.
+- Setting `element.style` from JavaScript is an inline style and is forbidden. `static/crm/behaviors.js` must not do it.
+
+## Behaviours that exist
+
+`static/crm/behaviors.js` (external, deferred) implements the CrisGen `data-cg` contract for:
+
+| Behaviour | Markup | What it does |
+|---|---|---|
+| Tabs | `data-cg="tabs"`, `data-cg-part="tab"`, `aria-controls`, panel `data-state="active\|inactive"` | Switches panels, arrow keys, updates `?view=` without a reload |
+| Drawer | `data-cg="drawer"`, `data-cg-on-click='{"call":"drawer.open","args":["id"]}'`, `data-cg-part="close"` | Opens, traps focus, closes on close control, backdrop or Escape |
+| Modal | `data-cg="modal"` and `modal.open` / `modal.toggle` the same way | Same as the drawer |
+
+The tab indicator is not slid: upstream measures it with inline styles. Selected tabs use a token underline in `crm.css`.
+
+Do not mark up Dropdown, Popover, Tooltip, Select listbox, Accordion or Collapse as if they open. Those behaviours are not loaded. Native `<select>`, `<details>` and links stay the no-JavaScript path.
+
+## Screen mapping
+
+| Screen | CrisGen | Reference pattern adapted |
+|---|---|---|
+| Shell | Navbar, List, Card, Button | Dashboard sidenav + top bar. Below 1024px the same nav is in `<details>`, not a fake drawer |
+| Today, reports | Card + `.stat` | Stat tiles |
+| Tables (contacts, tasks, shared work, messages) | Table, Select, Input, Pagination, Chip | Data table. Wide tables scroll inside `.table-scroll` |
+| Sales | Tabs, Table, Drawer, Modal, Chip, Button | List/board. Board columns scroll inside `.board-scroll`. Filters live in the drawer. Stage change is a real POST in the modal |
+| Contact profile | Card, Timeline, Breadcrumb, Chip | Fact list is `dl.facts` (no CrisGen description list) |
+| Sign-in | Card, Input, Button, Alert | Login card. Workspace logo, not a vendor logo |
+
+Pages must not scroll sideways at 390px. A scrolling region (`.table-scroll`, `.board-scroll`) may; the document must not.

@@ -9,6 +9,7 @@
 <link rel="stylesheet" href="{% static 'vendor/crisgen-ui/components.css' %}">
 <link rel="stylesheet" href="{% static 'vendor/crisgen-ui/themes/crisgen-light.css' %}">
 <link rel="stylesheet" href="{% static 'crm/crm.css' %}">
+<link rel="icon" href="{% static 'crm/favicon.svg' %}" type="image/svg+xml">
 </head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
@@ -40,5 +41,6 @@
 {% else %}
 <main id="main" class="auth-wrap">{% include "partials/messages.html" %}{% block auth_content %}{% endblock %}</main>
 {% endif %}
+<script src="{% static 'crm/behaviors.js' %}" defer></script>
 </body>
 </html>

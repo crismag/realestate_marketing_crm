@@ -29,3 +29,4 @@ Source of current execution: DEVELOPMENT_EXECUTION.md and CURRENT_RUN_REPORT.md.
 - Inquiry chronology and transactional reporting spend implemented.
 - Inbound response-needed attention, tour agreement suppression and durable digest comparisons implemented.
 - Fresh desktop/390px browser journey passed in hosted CI run 43345965197 at bd49e60; pilot acceptance remains open.
+- 2026-11-13T02:36Z run: sales board, filter drawer and stage-move modal. Local pytest 203 and e2e 19 checks. Hosted CI for that branch is separate. Pilot acceptance remains open.

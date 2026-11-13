@@ -21,6 +21,10 @@ class PolicyForm(Form):
     label_client = forms.CharField(max_length=40, label="Label for client")
     stages = forms.CharField(widget=forms.Textarea, label="Opportunity stages",
                              help_text="One per line as code:Label. Won/Lost are outcomes, not stages. Codes must stay stable.")
+    sales_board_limit = forms.IntegerField(
+        min_value=1, max_value=500, label="Sales board size",
+        help_text="How many matching opportunities the board loads at once. The list stays paginated.",
+    )
     after_tour_hours = forms.IntegerField(min_value=1, max_value=24 * 60, label="Follow up after a tour within (hours)")
     inactivity_lead = forms.IntegerField(min_value=0, max_value=3650, label="Lead contact cadence (days, 0 = off)")
     inactivity_prospect = forms.IntegerField(min_value=0, max_value=3650, label="Prospect contact cadence (days, 0 = off)")
@@ -84,6 +88,7 @@ class PolicyForm(Form):
             "timezone": policy["timezone"], "currency": policy["currency"],
             "label_lead": labels["lead"], "label_prospect": labels["prospect"], "label_client": labels["client"],
             "stages": "\n".join(f"{s['code']}:{s['label']}" for s in policy["opportunity_stages"]),
+            "sales_board_limit": policy.get("sales_board_limit", 200),
             "after_tour_hours": a["after_tour_hours"], "inactivity_lead": a["inactivity_days"].get("lead", 0),
             "inactivity_prospect": a["inactivity_days"].get("prospect", 0), "inactivity_client": a["inactivity_days"].get("client", 0),
             "inquiry_response_hours": a["inquiry_response_hours"], "handover_pending_hours": a["handover_pending_hours"],
@@ -105,7 +110,7 @@ class PolicyForm(Form):
         policy = dict(current)
         policy.update({"timezone": d["timezone"], "currency": d["currency"],
                        "lifecycle_labels": {"lead": d["label_lead"], "prospect": d["label_prospect"], "client": d["label_client"]},
-                       "opportunity_stages": d["stages"]})
+                       "opportunity_stages": d["stages"], "sales_board_limit": d["sales_board_limit"]})
         policy["attention"] = {**current["attention"],
                                "after_tour_hours": d["after_tour_hours"],
                                "inactivity_days": {"lead": d["inactivity_lead"], "prospect": d["inactivity_prospect"],

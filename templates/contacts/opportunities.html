@@ -1,12 +1,84 @@
 {% extends "base.html" %}{% load crm_ui %}{% block title %}Sales{% endblock %}
 {% block content %}
-<div class="page-head"><h1 class="cg-typography" data-variant="h4">Sales opportunities</h1></div>
-<section class="cg-card">
-<form method="get" class="card-pad filters"><div class="field"><label for="o-o">Outcome</label><select class="cg-select" id="o-o" name="outcome"><option value="open" {% if outcome == 'open' %}selected{% endif %}>Open</option><option value="won" {% if outcome == 'won' %}selected{% endif %}>Won</option><option value="lost" {% if outcome == 'lost' %}selected{% endif %}>Lost</option><option value="all" {% if outcome == 'all' %}selected{% endif %}>All</option></select></div>
-<div class="field"><label for="o-s">Stage</label><select class="cg-select" id="o-s" name="stage"><option value="">Any</option>{% for s in stages %}<option value="{{ s.code }}" {% if stage == s.code %}selected{% endif %}>{{ s.label }}</option>{% endfor %}</select></div>
-<div><button class="cg-button" data-variant="solid" data-color="primary" data-size="md" data-shape="rounded" data-full-width="false">Apply</button></div></form>
-<div class="cg-table table-scroll"><table class="cg-table__table"><thead><tr><th class="cg-table__head-cell" scope="col">Opportunity</th><th class="cg-table__head-cell" scope="col">Contact</th><th class="cg-table__head-cell" scope="col">Stage</th><th class="cg-table__head-cell" scope="col">Outcome</th><th class="cg-table__head-cell num" scope="col">Amount</th><th class="cg-table__head-cell" scope="col">Expected close</th><th class="cg-table__head-cell" scope="col">Handler</th></tr></thead>
-<tbody>{% for o in page %}<tr><td class="cg-table__cell"><a href="{% url 'contacts:opportunity' o.contact.pk o.pk %}">{{ o.title }}</a></td><td class="cg-table__cell"><a href="{% url 'contacts:detail' o.contact.pk %}">{{ o.contact.display_name }}</a></td><td class="cg-table__cell">{{ stage_labels|get_item:o.stage|default:o.stage }}</td><td class="cg-table__cell">{% chip o.get_outcome_display o.outcome %}</td><td class="cg-table__cell num">{{ o.amount_minor|money:o.currency }}</td><td class="cg-table__cell">{{ o.expected_close|default:"—" }}</td><td class="cg-table__cell">{{ o.contact.assignment.describe }}</td></tr>
-{% empty %}<tr><td class="cg-table__cell" colspan="7"><div class="empty">No opportunities match.</div></td></tr>{% endfor %}</tbody></table></div>
-{% include "partials/pagination.html" %}</section>
+<div class="page-head">
+  <div>
+    <h1 class="cg-typography" data-variant="h4">Sales opportunities</h1>
+    <p class="small muted">Stages are the steps of one deal. Won and lost are outcomes. Moving a stage does not change who is responsible or the contact's lifecycle.</p>
+  </div>
+  <button type="button" class="cg-button" data-variant="outline" data-color="secondary" data-size="md" data-shape="rounded" data-full-width="false" data-cg-on-click='{"call":"drawer.open","args":["sales-filters"]}'>Filters</button>
+</div>
+<p class="small">Showing <strong>{{ outcome_label }}</strong>{% if stage %} · {{ stage_labels|get_item:stage|default:stage }}{% else %} · any stage{% endif %}.</p>
+<noscript>
+  <section class="cg-card card-pad stack-sm" aria-label="Filters">
+    <h2 class="cg-typography" data-variant="h6">Filters</h2>
+    {% include "contacts/_sales_filters.html" with id_prefix="ns-" %}
+  </section>
+</noscript>
+
+<div class="cg-tabs" data-cg="tabs" data-variant="underline" data-orientation="horizontal" id="sales-views">
+  <div class="cg-tabs__list" role="tablist" aria-label="Sales views">
+    <a class="cg-tabs__tab" role="tab" id="sales-tab-list" href="?{{ list_query }}" data-cg-part="tab" data-view="list" aria-controls="sales-panel-list" aria-selected="{% if view != 'board' %}true{% else %}false{% endif %}" tabindex="{% if view != 'board' %}0{% else %}-1{% endif %}">List</a>
+    <a class="cg-tabs__tab" role="tab" id="sales-tab-board" href="?{{ board_query }}" data-cg-part="tab" data-view="board" aria-controls="sales-panel-board" aria-selected="{% if view == 'board' %}true{% else %}false{% endif %}" tabindex="{% if view == 'board' %}0{% else %}-1{% endif %}">Board</a>
+  </div>
+  <div class="cg-tabs__panels">
+    <div class="cg-tabs__panel" id="sales-panel-list" role="tabpanel" aria-labelledby="sales-tab-list" data-state="{% if view != 'board' %}active{% else %}inactive{% endif %}">
+      <section class="cg-card">
+        <div class="cg-table table-scroll"><table class="cg-table__table"><thead><tr><th class="cg-table__head-cell" scope="col">Opportunity</th><th class="cg-table__head-cell" scope="col">Contact</th><th class="cg-table__head-cell" scope="col">Stage</th><th class="cg-table__head-cell" scope="col">Outcome</th><th class="cg-table__head-cell num" scope="col">Amount</th><th class="cg-table__head-cell" scope="col">Expected close</th><th class="cg-table__head-cell" scope="col">Handler</th></tr></thead>
+        <tbody>{% for o in page %}<tr><td class="cg-table__cell"><a href="{% url 'contacts:opportunity' o.contact.pk o.pk %}">{{ o.title }}</a></td><td class="cg-table__cell"><a href="{% url 'contacts:detail' o.contact.pk %}">{{ o.contact.display_name }}</a></td><td class="cg-table__cell">{{ stage_labels|get_item:o.stage|default:o.stage }}</td><td class="cg-table__cell">{% chip o.get_outcome_display o.outcome %}</td><td class="cg-table__cell num">{{ o.amount_minor|money:o.currency }}</td><td class="cg-table__cell">{{ o.expected_close|default:"—" }}</td><td class="cg-table__cell">{{ o.contact.assignment.describe }}</td></tr>
+        {% empty %}<tr><td class="cg-table__cell" colspan="7"><div class="empty">No opportunities match.</div></td></tr>{% endfor %}</tbody></table></div>
+        {% include "partials/pagination.html" %}
+      </section>
+    </div>
+    <div class="cg-tabs__panel" id="sales-panel-board" role="tabpanel" aria-labelledby="sales-tab-board" data-state="{% if view == 'board' %}active{% else %}inactive{% endif %}">
+      {% if board_truncated %}<p class="small muted">Showing {{ board_rows|length }} of {{ board_total }} matches, most recently moved first. Narrow the filters, or use the list, for the rest.</p>{% endif %}
+      {% if not board_total %}<div class="empty">No opportunities match.</div>{% endif %}
+      <div class="board-scroll"><div class="board">{% for col in columns %}
+        <section class="board__column" data-stage="{{ col.code }}" aria-label="{{ col.label }}">
+          <h2>{{ col.label }} <span class="count-pill">{{ col.items|length }}</span></h2>
+          {% for o in col.items %}
+          <article class="board-card">
+            <a href="{% url 'contacts:opportunity' o.contact.pk o.pk %}">{{ o.title }}</a>
+            <div class="small"><a href="{% url 'contacts:detail' o.contact.pk %}">{{ o.contact.display_name }}</a></div>
+            <div class="small muted">{{ o.amount_minor|money:o.currency }} · {{ o.contact.assignment.describe }}</div>
+            {% if o.stage_changed_at %}<div class="small muted">In this stage {{ o.stage_changed_at|timesince }}</div>{% endif %}
+            <div>{% chip o.get_outcome_display o.outcome %}</div>
+            {% if o.outcome == 'open' %}<button type="button" class="cg-button" data-variant="outline" data-color="primary" data-size="sm" data-shape="rounded" data-full-width="false" data-cg-on-click='{"call":"modal.open","args":["move-{{ o.pk }}"]}' aria-label="Move stage for {{ o.title }}">Move stage</button>
+            {% else %}<p class="small muted">Reopen the record before changing its stage.</p>{% endif %}
+          </article>
+          {% empty %}<p class="board__empty">None</p>{% endfor %}
+        </section>
+      {% endfor %}</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="cg-drawer" id="sales-filters" data-cg="drawer" data-placement="responsive" data-state="closed" role="dialog" aria-modal="true" aria-labelledby="sales-filters-title" aria-hidden="true" inert>
+  <div class="cg-drawer__panel" data-cg-part="panel">
+    <h2 id="sales-filters-title" class="cg-typography" data-variant="h6">Filters</h2>
+    {% include "contacts/_sales_filters.html" with id_prefix="sf-" %}
+    <button type="button" class="cg-button" data-variant="ghost" data-color="secondary" data-size="sm" data-shape="rounded" data-full-width="false" data-cg-part="close">Close</button>
+  </div>
+</div>
+
+{% for o in board_rows %}{% if o.outcome == 'open' %}
+<div class="cg-modal" id="move-{{ o.pk }}" data-cg="modal" data-state="closed" role="dialog" aria-modal="true" aria-label="Move stage for {{ o.title }}" aria-hidden="true" inert>
+  <div class="cg-modal__content" data-cg-part="panel">
+    <h2 class="cg-typography" data-variant="h6">Move {{ o.title }}</h2>
+    <p class="small muted">{{ o.contact.display_name }} stays with {{ o.contact.assignment.describe }}. Lifecycle does not change.</p>
+    <form method="post" action="{% url 'contacts:opportunity_stage' o.pk %}" class="stack-sm">{% csrf_token %}
+      <input type="hidden" name="version" value="{{ o.version }}">
+      <input type="hidden" name="view" value="{{ view }}">
+      <input type="hidden" name="outcome" value="{{ outcome }}">
+      <input type="hidden" name="filter_stage" value="{{ stage }}">
+      <div class="field"><label for="mv-{{ o.pk }}">Stage</label>
+        <select class="cg-select" id="mv-{{ o.pk }}" name="stage">{% for s in stages %}<option value="{{ s.code }}" {% if o.stage == s.code %}selected{% endif %}>{{ s.label }}</option>{% endfor %}</select>
+      </div>
+      <div class="row">
+        <button class="cg-button" data-variant="solid" data-color="primary" data-size="sm" data-shape="rounded" data-full-width="false">Save stage</button>
+        <button type="button" class="cg-button" data-variant="ghost" data-color="secondary" data-size="sm" data-shape="rounded" data-full-width="false" data-cg-part="close">Close</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endif %}{% endfor %}
 {% endblock %}

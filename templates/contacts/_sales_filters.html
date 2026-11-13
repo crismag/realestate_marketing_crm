@@ -1,0 +1,6 @@
+<form method="get" class="filters">
+<input type="hidden" name="view" value="{{ view }}">
+<div class="field"><label for="{{ id_prefix }}outcome">Outcome</label><select class="cg-select" id="{{ id_prefix }}outcome" name="outcome"><option value="open" {% if outcome == 'open' %}selected{% endif %}>Open</option><option value="won" {% if outcome == 'won' %}selected{% endif %}>Won</option><option value="lost" {% if outcome == 'lost' %}selected{% endif %}>Lost</option><option value="all" {% if outcome == 'all' %}selected{% endif %}>All</option></select></div>
+<div class="field"><label for="{{ id_prefix }}stage">Stage</label><select class="cg-select" id="{{ id_prefix }}stage" name="stage"><option value="">Any</option>{% for s in stages %}<option value="{{ s.code }}" {% if stage == s.code %}selected{% endif %}>{{ s.label }}</option>{% endfor %}</select></div>
+<div><button class="cg-button" data-variant="solid" data-color="primary" data-size="md" data-shape="rounded" data-full-width="false">Apply</button></div>
+</form>

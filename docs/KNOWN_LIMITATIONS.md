@@ -21,7 +21,7 @@ until the items marked *Before pilot* are done and the product owner has reviewe
 - Earnings / recognised revenue / commissions (OQ-011; payout accounting is out of scope).
 - Engagement metrics beyond logged interactions (no website/email tracking).
 - Saved dynamic filters for watchlists (recommended, not required by REQ-021).
-- Sales pipeline board view (stages are a table column today).
+- Sales pipeline drag-and-drop. The board is columns plus an explicit "Move stage" dialog (a stage change is a saved POST).
 - Bulk reassign. (CSV import exists since 2026-11-13.)
 - Data retention and deletion workflow (only archiving).
 - SSO (password reset by email and two-step sign-in exist since 2026-11-13).
@@ -29,7 +29,7 @@ until the items marked *Before pilot* are done and the product owner has reviewe
 - Attention digest delivered by email (today it is an in-app notification).
 - Calendar for tours/viewings (tours are logged as interactions; future ones as tasks).
 - Multi-language UI.
-- Small JavaScript layer for CrisGen Drawer/Modal/Tabs (blocked today by "no JavaScript" choice, not by CSP).
+- CrisGen behaviours other than Drawer, Modal and Tabs (those three are in `static/crm/behaviors.js`). Dropdown, popover, tooltip, select listbox, accordion and collapse are not loaded.
 
 ## Technical limits
 

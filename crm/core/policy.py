@@ -43,6 +43,9 @@ DEFAULT_POLICY: dict = {
         {"code": "proposal", "label": "Proposal / offer"},
         {"code": "decision", "label": "Decision"},
     ],
+    # Sales board loads this many matching opportunities (newest stage change first). The list stays paginated.
+    # The screen clamps the value to 1–500.
+    "sales_board_limit": 200,
     "attention": {
         "after_tour_hours": 48,
         "inactivity_days": {"lead": 7, "prospect": 14, "client": 60},
