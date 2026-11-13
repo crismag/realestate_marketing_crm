@@ -44,6 +44,13 @@ def permission_denied(request, exception=None):
 
 
 @login_not_required
+def favicon(request):
+    from django.contrib.staticfiles.storage import staticfiles_storage
+
+    return redirect(staticfiles_storage.url("crm/favicon.svg"))
+
+
+@login_not_required
 def healthz(request):
     """Liveness/readiness without disclosing data: database reachable + worker heartbeat recency."""
     try:

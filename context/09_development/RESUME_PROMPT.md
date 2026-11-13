@@ -1,7 +1,15 @@
-# Resume prompt — current development
+# Resume prompt — 2026-11-13T02:36Z run
 
-Continue Realstate CRM in the current checkout. The user authorizes implementation, context maintenance and multiple agents. Read CLAUDE.md, context/README.md, context/09_development/DEVELOPMENT_EXECUTION.md and CURRENT_RUN_REPORT.md first. Preserve existing changes and inspect git status/log.
+Continue the Real Estate CRM on branch `cursor/sales-board-crisgen-behaviors-77d9` (or main after it merges).
+Read CLAUDE.md, `context/09_development/AUTONOMOUS_RUN_STATE.json` and `docs/KNOWN_LIMITATIONS.md`.
+The fixed window is 2026-11-13T02:36:00Z to 2026-11-13T14:36:00Z. Do not extend it. Do not rebuild TASK-003–011.
 
-Continue the highest-priority unfinished required item from the current report. Delegate independent tasks with disjoint file ownership and isolated CRM_TEST_DB_PATH values. Reproduce bugs before implementing fixes. Keep Django/SQLite, CrisGen UI and sandbox messages. Do not expand into deferred product scope or claim real delivery/deployment/MySQL validation without evidence.
+Verified on this branch: sales list/board with the review fixes, a staff-only daily digest copy, and an explained attention priority score (C-R1).
+226 pytest, ruff, and `scripts/e2e.sh` when the score templates were checked.
+A stage move keeps the posted outcome filter, refuses a stale version, and does not change the handler or lifecycle.
+The digest copy uses staff mail (file folder, or SMTP when configured). It is not a customer message. Sandbox customer email stays labelled not sent.
+The priority score sorts inside the existing severity groups. Turning it off restores age order. It does not rank people or change who is responsible. The weights are an implementation default.
 
-Verify with pytest, ruff, manage.py check, makemigrations --check --dry-run and browser journeys when available. Record exact evidence, update the current checkpoint, append RUN_LOG and prepare a reviewable commit/PR. Never reuse historical passed results as fresh evidence. Historical fixed deadlines belong only to their named runs.
+The isolated SQLite restore, the keyboard and contrast pass on this run's screens, and the new-slice security checks are recorded in the run log at 2026-11-13T03:18:40Z. Do not repeat them. Remaining gaps are outside this build: a real customer email provider, a live MySQL database, a public deploy, and a pass with the sales team. Do not build retention, a calendar, saved filters, or bulk handovers unless a requirement requires them. Bulk responsibility changes must stay handovers (ADR-001/002). Do not mark open decisions approved. Do not load Material Dashboard CSS. Do not edit `crm/core/static/vendor/crisgen-ui/`.
+
+Verify with pytest, ruff, `makemigrations --check --dry-run`, and `scripts/e2e.sh` when templates, CSS or flows change. Append `context/09_development/RUN_LOG.md`.

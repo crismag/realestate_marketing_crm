@@ -36,7 +36,7 @@ their documented class and `data-*` attributes; none were invented under the `cg
 | Shared work (pools, handovers) | REQ-014, REQ-015 | data-table pattern, Chip, Button (claim/accept/decline) |
 | Handover request | REQ-015, ADR-001/002 | Card, Radio, Select, Textarea, per-task disposition Selects |
 | Tasks | REQ-015, REQ-017, REQ-020 | data-table pattern, Chip (overdue/critical) |
-| Sales (opportunities) | REQ-022, REQ-024 | data-table pattern, Chip |
+| Sales (opportunities) | REQ-022, REQ-024 | Tabs (list/board), data-table, Drawer (filters), Modal (stage move), Chip, Button. Board columns use `.board` in `crm.css` |
 | Notifications | REQ-019 | List, Chip, Button |
 | Automation rules, rule detail, jobs | REQ-020, REQ-023, NFR-003 | Table, Chip, Checkbox, Textarea (config), Button (preview/retry/cancel) |
 | Customer messages, templates | REQ-018, REQ-020 | Card stat tiles, Table, Chip, Alert ("not sent" banner), Textarea + preview |
@@ -53,7 +53,9 @@ their documented class and `data-*` attributes; none were invented under the `cg
 | Count badge in navigation | `.count-pill` from amber tokens; `Badge` is absolutely positioned for avatars/icons | An inline `Badge` placement |
 | Disclosure / inline form | Native `<details>` styled with tokens | `Disclosure` (or `Drawer` usage guidance without JavaScript) |
 | Fact list (label/value) | `dl.facts` grid | `DescriptionList` |
-| Kanban/board for sales stages | Not built; stages are a table column | Board pattern, if the team wants a pipeline view |
+| Kanban/board for sales stages | Built as `.board` / `.board-scroll` (CrisGen tokens). Columns scroll inside the page | A first-party board component, if CrisGen adds one |
 
-`Drawer`, `Modal` and `Tabs` exist in CrisGen but need JavaScript behaviour; this build ships no JavaScript
-(strict CSP), so they were not used. Adding a small, CSP-compatible script for them is a reasonable next step.
+`Drawer`, `Modal` and `Tabs` are wired by `static/crm/behaviors.js` (external file, no inline style or script).
+The tab indicator is not animated: the upstream script positions it with inline styles, which this CSP forbids.
+Dropdown, popover, tooltip, select listbox, accordion and collapse are still not wired. Do not mark them up as working controls.
+A public `/favicon.ico` redirects to `static/crm/favicon.svg` so the browser does not log a 404.

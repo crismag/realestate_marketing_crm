@@ -12,6 +12,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from django.db.models import F
+
 from crm.automation.models import Notification
 from crm.comms.models import OutboundMessage
 from crm.core import clock
@@ -97,7 +99,9 @@ def merge_contacts(keep: Contact, duplicate: Contact, *, actor, keep_version: in
         Inquiry.objects.filter(contact=d).update(contact=k)
         Interaction.objects.filter(contact=d).update(contact=k)
         Task.objects.filter(contact=d).update(contact=k)
-        Opportunity.objects.filter(contact=d).update(contact=k)
+        # Bump the version so a stage form opened on the duplicate cannot commit
+        # against the moved deal, and so its audit cannot stay on the archived contact.
+        Opportunity.objects.filter(contact=d).update(contact=k, version=F("version") + 1)
         OutboundMessage.objects.filter(contact=d).update(contact=k)
         Notification.objects.filter(contact=d).update(contact=k)
         existing_watchers = set(Watch.objects.filter(contact=k).values_list("user_id", flat=True))

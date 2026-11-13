@@ -21,6 +21,10 @@ class PolicyForm(Form):
     label_client = forms.CharField(max_length=40, label="Label for client")
     stages = forms.CharField(widget=forms.Textarea, label="Opportunity stages",
                              help_text="One per line as code:Label. Won/Lost are outcomes, not stages. Codes must stay stable.")
+    sales_board_limit = forms.IntegerField(
+        min_value=1, max_value=500, label="Sales board size",
+        help_text="How many matching opportunities the board loads at once. The list stays paginated.",
+    )
     after_tour_hours = forms.IntegerField(min_value=1, max_value=24 * 60, label="Follow up after a tour within (hours)")
     inactivity_lead = forms.IntegerField(min_value=0, max_value=3650, label="Lead contact cadence (days, 0 = off)")
     inactivity_prospect = forms.IntegerField(min_value=0, max_value=3650, label="Prospect contact cadence (days, 0 = off)")
@@ -32,6 +36,11 @@ class PolicyForm(Form):
     stalled_opportunity_days = forms.IntegerField(min_value=0, max_value=3650,
                                                   label="Flag opportunities whose stage has not changed for (days, 0 = off)")
     flag_past_expected_close = forms.BooleanField(required=False, label="Flag open opportunities past their expected close date")
+    priority_score_enabled = forms.BooleanField(
+        required=False, label="Sort attention with an explained priority score",
+        help_text="A sort aid from the current rules. It does not rank people and does not change who is responsible. "
+                  "An implementation default, not an approved weighting.",
+    )
     followup_suggestions_enabled = forms.BooleanField(required=False, label="Suggest a follow-up task after logging an interaction")
     extended_duplicate_matching = forms.BooleanField(
         required=False, label="Wider duplicate check (+tag emails, names in any order)")
@@ -42,6 +51,11 @@ class PolicyForm(Form):
         choices=[c for c in INTERACTION_TYPES if c[0] != "note"], widget=forms.CheckboxSelectMultiple,
         label="Interactions that count as contact (reset inactivity and after-tour follow-up)")
     digest_hour = forms.TypedChoiceField(choices=HOURS, coerce=int, label="Daily digest time")
+    digest_email = forms.BooleanField(
+        required=False, label="Email the daily digest to each staff member",
+        help_text="Staff only. Written to the staff mail folder unless a staff mail server is configured. "
+                  "Never a customer message. An implementation default, not an approved channel.",
+    )
     attention_sweep_minutes = forms.IntegerField(min_value=1, max_value=1440, label="Attention sweep every (minutes)")
     quiet_hours_start = forms.TypedChoiceField(choices=HOURS, coerce=int, label="Customer quiet hours start")
     quiet_hours_end = forms.TypedChoiceField(choices=HOURS, coerce=int, label="Customer quiet hours end")
@@ -84,16 +98,19 @@ class PolicyForm(Form):
             "timezone": policy["timezone"], "currency": policy["currency"],
             "label_lead": labels["lead"], "label_prospect": labels["prospect"], "label_client": labels["client"],
             "stages": "\n".join(f"{s['code']}:{s['label']}" for s in policy["opportunity_stages"]),
+            "sales_board_limit": policy.get("sales_board_limit", 200),
             "after_tour_hours": a["after_tour_hours"], "inactivity_lead": a["inactivity_days"].get("lead", 0),
             "inactivity_prospect": a["inactivity_days"].get("prospect", 0), "inactivity_client": a["inactivity_days"].get("client", 0),
             "inquiry_response_hours": a["inquiry_response_hours"], "handover_pending_hours": a["handover_pending_hours"],
             "pool_waiting_hours": a["pool_waiting_hours"], "escalation_overdue_hours": a["escalation_overdue_hours"],
             "stalled_opportunity_days": a.get("stalled_opportunity_days", 0),
             "flag_past_expected_close": a.get("flag_past_expected_close", False),
+            "priority_score_enabled": a.get("priority", {}).get("enabled", True),
             "followup_suggestions_enabled": policy.get("followup_suggestions", {}).get("enabled", False),
             "extended_duplicate_matching": policy.get("duplicate_matching", {}).get("extended", False),
             "require_two_factor": policy.get("security", {}).get("require_two_factor", False),
             "contact_reset_types": a["contact_reset_types"], "digest_hour": n["digest_hour"],
+            "digest_email": n.get("digest_email", True),
             "attention_sweep_minutes": n["attention_sweep_minutes"], "quiet_hours_start": n["quiet_hours_start"],
             "quiet_hours_end": n["quiet_hours_end"], "customer_frequency_cap_hours": n["customer_frequency_cap_hours"],
             "escalation_recipients": User.objects.filter(pk__in=n.get("escalation_recipient_ids") or []),
@@ -105,7 +122,7 @@ class PolicyForm(Form):
         policy = dict(current)
         policy.update({"timezone": d["timezone"], "currency": d["currency"],
                        "lifecycle_labels": {"lead": d["label_lead"], "prospect": d["label_prospect"], "client": d["label_client"]},
-                       "opportunity_stages": d["stages"]})
+                       "opportunity_stages": d["stages"], "sales_board_limit": d["sales_board_limit"]})
         policy["attention"] = {**current["attention"],
                                "after_tour_hours": d["after_tour_hours"],
                                "inactivity_days": {"lead": d["inactivity_lead"], "prospect": d["inactivity_prospect"],
@@ -116,6 +133,8 @@ class PolicyForm(Form):
                                "escalation_overdue_hours": d["escalation_overdue_hours"],
                                "stalled_opportunity_days": d["stalled_opportunity_days"],
                                "flag_past_expected_close": d["flag_past_expected_close"],
+                               "priority": {**current.get("attention", {}).get("priority", {}),
+                                            "enabled": d["priority_score_enabled"]},
                                "contact_reset_types": list(d["contact_reset_types"]),
                                "followup_types": list(d["contact_reset_types"])}
         policy["security"] = {**current.get("security", {}), "require_two_factor": d["require_two_factor"]}
@@ -125,6 +144,7 @@ class PolicyForm(Form):
         policy["duplicate_matching"] = {**current.get("duplicate_matching", {}),
                                         "extended": d["extended_duplicate_matching"]}
         policy["notifications"] = {**current["notifications"], "digest_hour": d["digest_hour"],
+                                   "digest_email": d["digest_email"],
                                    "attention_sweep_minutes": d["attention_sweep_minutes"],
                                    "quiet_hours_start": d["quiet_hours_start"], "quiet_hours_end": d["quiet_hours_end"],
                                    "customer_frequency_cap_hours": d["customer_frequency_cap_hours"],

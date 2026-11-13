@@ -10,6 +10,7 @@ os.environ.setdefault("CRM_ENV", "test")
 def _isolated_dirs(settings, tmp_path):
     settings.VAR_DIR = tmp_path
     settings.CRM_BACKUP_DIR = tmp_path / "backups"
+    settings.EMAIL_FILE_PATH = tmp_path / "staff_mail"
     settings.STORAGES = {
         "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
         "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import csv
 from decimal import Decimal
+from urllib.parse import urlencode
 
 from django.contrib import messages
 from django.contrib.auth import get_user_model
@@ -351,20 +352,119 @@ def opportunity_outcome(request, pk, opp_id):
     return response
 
 
+_SALES_OUTCOMES = {"open": "Open", "won": "Won", "lost": "Lost", "all": "All outcomes"}
+
+
+_SQL_INT_MAX = 2**63 - 1
+
+
+def _posted_version(request):
+    """Parse a posted optimistic version. Oversized values never reach SQLite."""
+    raw = request.POST.get("version", "")
+    if not isinstance(raw, str) or not raw.isdigit() or len(raw) > 19:
+        return None
+    value = int(raw)
+    if value > _SQL_INT_MAX:
+        return None
+    return value
+
+
+def _sales_filters(request):
+    if request.method == "POST":
+        outcome = request.POST.get("outcome") or request.GET.get("outcome", "open")
+    else:
+        outcome = request.GET.get("outcome", "open")
+    if outcome not in _SALES_OUTCOMES:
+        outcome = "open"
+    view = request.POST.get("view") or request.GET.get("view", "list")
+    if view not in ("list", "board"):
+        view = "list"
+    stage = (request.POST.get("filter_stage") if request.method == "POST" else request.GET.get("stage", "")) or ""
+    stage = stage if len(stage) <= 40 and stage.replace("-", "").replace("_", "").isalnum() else ""
+    return view, outcome, stage
+
+
+def _sales_location(view: str, outcome: str, stage: str) -> str:
+    params = {"view": view, "outcome": outcome}
+    if stage:
+        params["stage"] = stage
+    return f"/contacts/opportunities/?{urlencode(params)}"
+
+
+def _board_limit(policy: dict) -> int:
+    try:
+        limit = int(policy.get("sales_board_limit", 200))
+    except (TypeError, ValueError):
+        limit = 200
+    return min(500, max(1, limit))
+
+
 def opportunities(request):
     policy = get_policy()
-    outcome = request.GET.get("outcome", "open")
-    qs = Opportunity.objects.select_related("contact__assignment__user", "contact__assignment__pool").order_by("-created_at")
+    view, outcome, stage = _sales_filters(request)
+    qs = Opportunity.objects.select_related("contact__assignment__user", "contact__assignment__pool")
     if outcome in ("open", "won", "lost"):
         qs = qs.filter(outcome=outcome)
-    stage = request.GET.get("stage", "")
     if stage:
         qs = qs.filter(stage=stage)
-    page, querystring = paginate(request, qs)
+    list_params = {"view": "list", "outcome": outcome}
+    if stage:
+        list_params["stage"] = stage
+    page, _ = paginate(request, qs.order_by("-created_at"))
+    stages = policy["opportunity_stages"]
+    limit = _board_limit(policy)
+    board_qs = qs.order_by("-stage_changed_at", "-id")
+    board_total = board_qs.count()
+    board_rows = list(board_qs[:limit])
+    grouped = {item["code"]: [] for item in stages}
+    other = []
+    for opp in board_rows:
+        if opp.stage in grouped:
+            grouped[opp.stage].append(opp)
+        else:
+            other.append(opp)
+    columns = [{"code": item["code"], "label": item["label"], "items": grouped[item["code"]]} for item in stages]
+    if other:
+        # A configured stage may already be named "other". The fallback code uses a
+        # hyphen, which Settings rejects, and is lengthened if that code is in use.
+        fallback = "not-configured"
+        while fallback in grouped:
+            fallback += "-x"
+        columns.append({"code": fallback, "label": "Other stage", "items": other})
     return render(request, "contacts/opportunities.html", {
-        "page": page, "querystring": querystring, "outcome": outcome, "stage": stage, "stages": policy["opportunity_stages"],
-        "stage_labels": {s["code"]: s["label"] for s in policy["opportunity_stages"]}, "currency": policy["currency"],
+        "page": page, "querystring": urlencode(list_params), "outcome": outcome, "stage": stage, "view": view,
+        "stages": stages, "stage_codes": [item["code"] for item in stages],
+        "stage_labels": {item["code"]: item["label"] for item in stages},
+        "currency": policy["currency"], "columns": columns, "board_rows": board_rows,
+        "board_total": board_total, "board_truncated": board_total > len(board_rows),
+        "outcome_label": _SALES_OUTCOMES[outcome],
+        "list_query": urlencode({**list_params}),
+        "board_query": urlencode({"view": "board", "outcome": outcome, **({"stage": stage} if stage else {})}),
     })
+
+
+@require_POST
+def opportunity_stage(request, opp_id):
+    opp = get_object_or_404(Opportunity.objects.select_related("contact__assignment"), pk=opp_id)
+    view, outcome, stage_filter = _sales_filters(request)
+    back = _sales_location(view, outcome, stage_filter)
+    posted = request.POST.get("stage", "")
+    version = _posted_version(request)
+    previous = opp.stage
+    response, result = run_action(
+        request,
+        lambda: services.move_opportunity_stage(
+            opp, actor=request.user, stage=posted, expected_version=version, policy=get_policy(),
+        ),
+        success="",
+        redirect_to=back,
+    )
+    if result is not None:
+        if result.stage == previous:
+            messages.info(request, "That opportunity is already in this stage.")
+        else:
+            messages.success(request, "Stage updated.")
+    return response
 
 
 

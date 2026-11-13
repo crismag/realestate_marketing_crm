@@ -1,6 +1,6 @@
 {% extends "base.html" %}{% load crm_ui %}{% block title %}Attention{% endblock %}
 {% block content %}
-<div class="page-head"><div><h1 class="cg-typography" data-variant="h4">Attention queue</h1><p class="muted">Computed from recorded facts at {{ evaluated_at|local }}. Reason counts overlap; “clients” counts each client once.</p></div></div>
+<div class="page-head"><div><h1 class="cg-typography" data-variant="h4">Attention queue</h1><p class="muted">Computed from recorded facts at {{ evaluated_at|local }}. Reason counts overlap; “clients” counts each client once.{% if crm_policy.attention.priority.enabled %} Priority is a sort aid from the current rules. It does not rank people and does not change who is responsible.{% endif %}</p></div></div>
 <section class="grid grid--stats" aria-label="Summary">
 <div class="cg-card stat"><div class="stat__value">{{ summary.unique_contacts }}</div><div class="stat__label">Clients needing attention</div></div>
 {% for code, label in reasons.items %}{% with n=summary.per_reason|get_item:code %}{% if n %}<div class="cg-card stat"><a href="?scope={{ scope }}&amp;reason={{ code }}{% if pool_id %}&amp;pool={{ pool_id }}{% endif %}{% if team_id %}&amp;team={{ team_id }}{% endif %}"><div class="stat__value">{{ n }}</div><div class="stat__label">{{ label }}</div></a></div>{% endif %}{% endwith %}{% endfor %}

@@ -177,6 +177,11 @@ Update 2026-11-13: C-R2, C-R3 and C-R6 were built as **implementation defaults**
 `docs/IMPLEMENTATION_DEFAULTS.md`, tests in `tests/test_rule_automations.py`). That is not a business approval;
 OQ-015 still decides whether they stay. No AI-assisted item has been built.
 
+Update 2026-11-13 (later): C-R1 is now an implementation default too. The weights in `attention.priority`
+are configurable starting points, not agreed business weights. The score only sorts within a severity
+group, every non-zero factor has a visible line, and turning the setting off restores age order.
+Tests: `tests/test_priority_score.py`.
+
 
 1. Rule-based, no new data: C-R2, C-R3, C-R6, then C-R1 (needs agreed weights).
 2. First AI pilot, read-only and lowest risk: C-A1 relationship summary, behind a policy switch, demo data only.

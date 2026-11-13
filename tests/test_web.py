@@ -270,6 +270,13 @@ def test_csv_export_neutralises_formulas(client, users, make_contact):
 
 
 @pytest.mark.django_db
+def test_favicon_is_public(client):
+    resp = client.get("/favicon.ico")
+    assert resp.status_code == 302
+    assert resp["Location"].endswith("crm/favicon.svg")
+
+
+@pytest.mark.django_db
 def test_security_headers_and_cookie_flags(client, users):
     resp = client.get("/accounts/login/")
     assert "script-src 'self'" in resp["Content-Security-Policy"]

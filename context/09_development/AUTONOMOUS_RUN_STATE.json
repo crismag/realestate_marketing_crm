@@ -1,29 +1,36 @@
 {
-  "run_id": "autonomous-build-2026-11-12",
-  "original_start_utc": "2026-11-12T19:08:03Z",
-  "fixed_deadline_utc": "2026-11-13T07:08:03Z",
+  "run_id": "autonomous-build-2026-11-13T02:36Z",
+  "original_start_utc": "2026-11-13T02:36:00Z",
+  "fixed_deadline_utc": "2026-11-13T14:36:00Z",
   "deadline_rule": "Fixed at start. Restarts, resumes and context resets never reset or extend it.",
-  "branch": "claude/project-thread-2p04se",
-  "base_commit": "96c10c9",
-  "stack": "Python 3.13 / Django 5.2.19 LTS / SQLite (WAL) / server-rendered templates with vendored CrisGen UI 1.1 vanilla target / waitress + whitenoise",
-  "current_stage": "J (handoff written; refinement optional)",
+  "branch": "cursor/sales-board-crisgen-behaviors-77d9",
+  "base_commit": "fda56b35a3ecfcfb32dae41ee2b91030e8371b32",
+  "stack": "Python 3.12 (this container) / Django 5.2.19 LTS / SQLite WAL / server-rendered CrisGen UI 1.1 / waitress + whitenoise",
+  "current_stage": "restore and usability checks",
   "stages": {
-    "A": "done", "B": "done", "C": "done", "D": "done", "E": "done",
-    "F": "done", "G": "done", "H": "done_sandbox_only", "I": "done", "J": "in_progress"
+    "baseline_TASK-003_to_011": "already on main (fda56b3); not regenerated",
+    "sales_board_and_crisgen_behaviors": "done_locally",
+    "sales_board_review_fixes": "done_locally",
+    "staff_digest_email": "done_locally",
+    "attention_priority_score": "done_locally",
+    "isolated_sqlite_restore": "done_locally",
+    "usability_pass_changed_screens": "done_locally",
+    "slice_security_and_clean_start": "done_locally"
   },
-  "last_checkpoint_utc": "2026-11-12T19:58:00Z",
-  "last_commit": "cca37ed",
+  "last_checkpoint_utc": "2026-11-13T03:18:40Z",
   "checks": [
-    {"name": "pytest (all suites)", "command": ".venv/bin/python -m pytest -p no:logging", "result": "94 passed", "at_utc": "2026-11-12T19:57:00Z"},
-    {"name": "ruff", "command": ".venv/bin/ruff check .", "result": "passed", "at_utc": "2026-11-12T19:55:00Z"},
-    {"name": "pip-audit", "command": ".venv/bin/pip-audit -r requirements.txt", "result": "no known vulnerabilities", "at_utc": "2026-11-12T19:48:00Z"},
-    {"name": "production smoke + browser journey", "command": "scripts/e2e.sh", "result": "15 checks passed (desktop 1280px + 390px)", "at_utc": "2026-11-12T19:54:00Z"},
-    {"name": "manage.py check --deploy", "result": "4 expected warnings with CRM_SECURE_COOKIES=0/no TLS in the loopback smoke; none with production TLS settings", "at_utc": "2026-11-12T19:54:00Z"},
-    {"name": "real email provider", "result": "not_run (no provider; sandbox only)"},
-    {"name": "MySQL", "result": "not_run (guide only)"},
-    {"name": "hosted CI run", "result": "passed on GitHub Actions (runs 43295590124, 43295644932) at head 0224dab", "at_utc": "2026-11-12T19:59:48Z"}
+    {"name": "pytest", "command": ".venv/bin/python -m pytest -p no:logging", "result": "231 passed", "at_utc": "2026-11-13T03:18:25Z"},
+    {"name": "ruff", "command": ".venv/bin/ruff check .", "result": "passed", "at_utc": "2026-11-13T03:18:25Z"},
+    {"name": "isolated backup_db/restore_db", "result": "throwaway file only; restore returned Restore Marker; safety restore returned both contacts; workspace var/crm.sqlite3 unchanged", "at_utc": "2026-11-13T03:10:20Z"},
+    {"name": "scripts/e2e.sh", "result": "19 checks passed, including the filter drawer, stage move, attention queue, and 390px", "at_utc": "2026-11-13T03:18:40Z", "browser": "Google Chrome via CRM_CHROMIUM_PATH"}
   ],
   "blockers": [],
   "running_services": [],
-  "next_action": "Owner review of PR #1 and implementation defaults; optional refinements from docs/KNOWN_LIMITATIONS.md"
+  "next_action": "The isolated restore, the usability pass on this run's screens, and the new-slice security and clean-start checks are recorded. Do not repeat them. Remaining work is outside this run: a real customer email provider, a live MySQL database, a public deploy, and a pass with the sales team. Retention, calendars, saved filters, and bulk handovers stay out. Do not wait on review.",
+  "historical_run": {
+    "run_id": "autonomous-build-2026-11-12",
+    "original_start_utc": "2026-11-12T19:08:03Z",
+    "fixed_deadline_utc": "2026-11-13T07:08:03Z",
+    "note": "That deadline applied only to that run. Baseline stages A–J are on main."
+  }
 }

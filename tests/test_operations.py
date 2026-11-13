@@ -131,4 +131,6 @@ def test_fresh_database_migrates_from_zero(tmp_path):
     conn = sqlite3.connect(tmp_path / "fresh.sqlite3")
     assert conn.execute("PRAGMA journal_mode").fetchone()[0] == "wal"
     assert conn.execute("SELECT count(*) FROM automation_rule").fetchone()[0] >= 10  # reference data migration
+    columns = {row[1] for row in conn.execute("PRAGMA table_info(automation_digestsnapshot)")}
+    assert "email_state" in columns and "email_note" in columns
     assert conn.execute("PRAGMA foreign_key_check").fetchall() == []
