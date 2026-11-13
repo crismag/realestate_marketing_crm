@@ -79,6 +79,9 @@ DEFAULT_POLICY: dict = {
     },
     "notifications": {
         "digest_hour": 8,
+        # Staff-only copy of the in-app digest. Off skips the copy, including one still waiting.
+        # This is an implementation default, not an approved channel. Never a customer message.
+        "digest_email": True,
         "attention_sweep_minutes": 15,
         "quiet_hours_start": 20,
         "quiet_hours_end": 8,

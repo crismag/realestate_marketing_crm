@@ -25,8 +25,8 @@ until the items marked *Before pilot* are done and the product owner has reviewe
 - Bulk reassign. (CSV import exists since 2026-11-13.)
 - Data retention and deletion workflow (only archiving).
 - SSO (password reset by email and two-step sign-in exist since 2026-11-13).
-- Notification channels other than in-app (email/SMS/chat to staff).
-- Attention digest delivered by email (today it is an in-app notification).
+- Notification channels other than in-app, except the daily digest's staff-mail copy (file folder, or SMTP when `CRM_STAFF_SMTP_HOST` is set). SMS and chat are still absent.
+- The digest staff copy is not a customer message and is not a general staff email channel.
 - Calendar for tours/viewings (tours are logged as interactions; future ones as tasks).
 - Multi-language UI.
 - CrisGen behaviours other than Drawer, Modal and Tabs (those three are in `static/crm/behaviors.js`). Dropdown, popover, tooltip, select listbox, accordion and collapse are not loaded.
@@ -44,5 +44,5 @@ until the items marked *Before pilot* are done and the product owner has reviewe
 
 - Inbound reply response matching uses contact-level chronological human-response evidence, not a reply-thread identifier. Staff must still log responses accurately.
 - Daily digest change counts compare with the previous delivered digest snapshot, not every transient state between digests. Reassignment can count as resolved for the old handler.
-- Run normal migrations before starting the upgraded web/worker; `automation.0003_digest_snapshots` adds the durable comparison baseline. The first post-upgrade digest establishes the baseline.
+- Run normal migrations before starting the upgraded web/worker. `automation.0003_digest_snapshots` adds the comparison baseline, and `automation.0004_digest_staff_email` records whether the staff copy was filed. The first post-upgrade digest establishes the baseline. Older digests stay in-app only.
 - Local environment cannot launch Chromium (socket permission denied), but fresh desktop/390px browser verification passed in GitHub Actions run 43345965197 at bd49e60. See current run report for exact checks.

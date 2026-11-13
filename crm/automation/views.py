@@ -111,7 +111,9 @@ def job_action(request, pk, action):
 
 def notifications(request):
     show = request.GET.get("show", "active")
-    qs = Notification.objects.filter(recipient=request.user).select_related("contact", "task", "handover", "rule")
+    qs = Notification.objects.filter(recipient=request.user).select_related(
+        "contact", "task", "handover", "rule", "digest_snapshot",
+    )
     if show == "active":
         qs = qs.filter(dismissed_at__isnull=True)
     elif show == "dismissed":

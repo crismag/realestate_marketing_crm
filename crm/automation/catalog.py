@@ -73,8 +73,8 @@ RULES = [
         "key": "digest", "name": "Daily attention digest", "audience": "internal",
         "trigger": "Daily at the configured digest hour (workspace timezone).",
         "conditions": "User has at least one active attention item routed to them.",
-        "action": "One grouped digest per user: new vs continuing items, with counts per reason.",
-        "stop_policy": "Recipients and counts are re-evaluated at send time. One digest per user per day; missed days are not back-filled.",
+        "action": "One in-app digest per user per day, plus a staff-only mail copy when that setting is on. Never a customer message.",
+        "stop_policy": "Recipients and counts are re-evaluated at send time. One digest per user per day; missed days are not back-filled. Staff digest email off skips the staff copy, including one still waiting.",
     },
     {
         "key": "escalation", "name": "Overdue escalation", "audience": "internal",

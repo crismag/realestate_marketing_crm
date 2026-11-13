@@ -4,7 +4,7 @@ import datetime as dt
 import pytest
 
 from crm.automation import engine
-from crm.automation.models import Notification
+from crm.automation.models import Job, Notification
 from crm.contacts.models import Contact
 from crm.core import clock
 
@@ -80,3 +80,4 @@ def test_snapshot_and_notification_roll_back_together(monkeypatch, users, make_c
         with pytest.raises(RuntimeError, match="snapshot write failed"):
             engine.run_digest()
     assert not Notification.objects.filter(kind="digest").exists()
+    assert not Job.objects.filter(kind="staff.digest_email").exists()

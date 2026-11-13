@@ -20,6 +20,7 @@ STATUS_COLORS = {
     "inactive": "warning", "opportunity_stalled": "warning", "next_action_missing": "secondary", "pool_waiting": "secondary",
     "handover_waiting": "warning", "critical_task": "error", "handler_inactive": "error",
     "created": "success", "ready": "secondary", "duplicate": "warning", "error": "error", "skipped": None, "preview": "secondary",
+    "filed": "secondary", "smtp": "secondary", "none": None,
 }
 
 

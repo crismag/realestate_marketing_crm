@@ -19,6 +19,7 @@ from crm.core.services import get_policy
 from crm.work.models import Assignment, Handover, Task
 
 from .models import DigestSnapshot, Notification, Rule, RuleRun
+from .queue import enqueue
 
 User = get_user_model()
 
@@ -336,14 +337,91 @@ def run_digest(now: dt.datetime | None = None, *, job=None) -> dict:
                 reason="Daily attention digest", logical_key=logical_key, rule=rule,
             )
             if created:
-                DigestSnapshot.objects.create(
+                email_on = bool(policy.get("notifications", {}).get("digest_email", True))
+                snapshot = DigestSnapshot.objects.create(
                     recipient=user, day=local_day, contact_ids=sorted(current_ids),
                     notification=Notification.objects.get(logical_key=f"{logical_key}:u{user.pk}"),
                     created_at=now,
+                    email_state="queued" if email_on else "skipped",
+                    email_note="" if email_on else "Staff digest email is off.",
                 )
+                if email_on:
+                    enqueue(
+                        "staff.digest_email", {"snapshot_id": snapshot.pk},
+                        logical_key=f"staff-digest:{user.pk}:{local_day.isoformat()}",
+                        max_attempts=4, rule=rule,
+                    )
             run.created += created
             run.suppressed += 0 if created else 1
     run.outcome = "succeeded"
     run.finished_at = clock.now()
     run.save()
     return {"digests": run.created}
+
+
+def deliver_staff_digest(job) -> dict:
+    """Prepare one staff-only copy of a digest. Never a customer message.
+
+    The mail call stays outside the database transaction. A copy already filed,
+    handed to staff mail, or skipped is not prepared again.
+    """
+    from django.conf import settings
+    from django.core.mail import send_mail
+
+    from crm.core.db import write_transaction
+    from crm.core.services import audit
+
+    snapshot = (
+        DigestSnapshot.objects.select_related("recipient", "notification")
+        .filter(pk=(job.payload or {}).get("snapshot_id"))
+        .first()
+    )
+    if snapshot is None:
+        return {"status": "missing"}
+    if snapshot.email_state in ("filed", "smtp", "skipped"):
+        return {"status": snapshot.email_state}
+
+    user = snapshot.recipient
+    note = snapshot.notification
+
+    def mark(state: str, detail: str) -> None:
+        def write():
+            updated = DigestSnapshot.objects.filter(pk=snapshot.pk).exclude(
+                email_state__in=("filed", "smtp", "skipped"),
+            ).update(email_state=state, email_note=detail[:200])
+            if not updated:
+                return
+            if state in ("filed", "smtp"):
+                audit(
+                    "staff.digest_emailed", snapshot,
+                    "Staff digest copy prepared. Not a customer message.",
+                    data={"state": state, "recipient_id": user.pk, "day": snapshot.day.isoformat()},
+                )
+            elif state == "skipped":
+                audit(
+                    "staff.digest_email_skipped", snapshot, detail[:300],
+                    data={"recipient_id": user.pk, "day": snapshot.day.isoformat()},
+                )
+
+        write_transaction(write)
+
+    if not bool(get_policy().get("notifications", {}).get("digest_email", True)):
+        mark("skipped", "Staff digest email is off.")
+        return {"status": "skipped"}
+    if not user.is_active or not user.email:
+        mark("skipped", "No active staff email address.")
+        return {"status": "skipped"}
+
+    via_smtp = settings.EMAIL_BACKEND.endswith("smtp.EmailBackend")
+    subject = f"[Staff] {note.title} — not a customer message"
+    body = (
+        "This message is for staff only. It was not sent to a customer.\n"
+        "Reading it does not complete the underlying work.\n\n"
+        f"{note.title}\n\n{note.body}\n"
+    )
+    send_mail(subject, body, settings.DEFAULT_FROM_EMAIL, [user.email], fail_silently=False)
+    if via_smtp:
+        mark("smtp", "Handed to the configured staff mail server. Not a customer message.")
+        return {"status": "smtp"}
+    mark("filed", "Written to the staff mail folder. Not a customer message.")
+    return {"status": "filed"}

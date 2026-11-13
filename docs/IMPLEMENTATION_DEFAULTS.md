@@ -42,7 +42,7 @@ Approved rules that the build enforces as written (not defaults):
 | Pool waiting / pending handover reminders | 24 h each | Settings |
 | Overdue escalation | Tasks overdue by 72 h notify the configured escalation recipients; with nobody configured a visible "routing gap" is recorded | Settings |
 | Snoozing | Allowed for after-tour, inactivity, missing next action, stalled opportunity and pool waiting, with a reason and end date. Never for unanswered inquiries, overdue tasks, promises or critical tasks | Code (`crm/attention/services.py`) |
-| Daily digest | 08:00 workspace time, in-app | Settings, Automation |
+| Daily digest | 08:00 workspace time, in-app, plus a staff-only copy when "Email the daily digest to each staff member" is on (the default). The copy is written to `var/staff_mail/` unless `CRM_STAFF_SMTP_HOST` is set. It is labelled as not a customer message. Turning the setting off skips a copy that is still waiting. One copy per person per day; missed days are not back-filled. An implementation default, not an approved channel | Settings, Automation |
 | Attention sweep | Every 15 minutes; missed runs coalesce into one | Settings |
 | Customer email rules | Inquiry acknowledgement and client onboarding, both enabled, sandbox only | Automation (enable/disable, versioned) |
 | Customer quiet hours | 20:00–08:00 workspace time; sends are deferred | Settings |
@@ -52,7 +52,7 @@ Approved rules that the build enforces as written (not defaults):
 | Provider failure | Retried with backoff (4 attempts in total), then shown as failed; a person can retry, which re-checks every stop policy | Code |
 | Reports | Definitions v`2026-11-13.1` in `crm/reporting/metrics.py`; spend counts only entries wholly inside the period (not prorated); earnings unavailable | OQ-011 |
 | Criticality | A task can be flagged critical; it always surfaces in attention | REQ-017 open issue |
-| Notifications | In-app only; reading or dismissing never completes the underlying work | REQ-019 |
+| Notifications | In-app. The daily digest can also prepare a staff-only copy (see Daily digest). Other notifications stay in-app. Reading or dismissing never completes the underlying work | REQ-019 |
 | Deactivated colleague | Their clients show as "Responsible colleague deactivated" in every administrator's attention queue; an administrator may request the handover on their behalf; the recipient must still accept | Code (`crm/work/services.py`) |
 | Source codes | Derived from the label when left empty | Code (`crm/core/settings_forms.py`) |
 | Company profile | Name, registered name, phone, email, website, address on *Settings → Company profile*; versioned with the other settings; usable in customer emails as `{{ company_phone }}`, `{{ company_email }}`, `{{ company_website }}`, `{{ company_address }}` | Settings |

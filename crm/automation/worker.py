@@ -57,6 +57,7 @@ def _handlers():
         "event.customer_replied": lambda job: engine.on_customer_replied(job.payload, job_id=job.pk),
         "sweep.attention": lambda job: engine.run_sweep(clock.now(), job=job),
         "digest.daily": lambda job: engine.run_digest(clock.now(), job=job),
+        "staff.digest_email": lambda job: engine.deliver_staff_digest(job),
         "comms.send": send,
     }
 

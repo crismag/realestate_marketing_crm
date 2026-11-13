@@ -46,6 +46,11 @@ class PolicyForm(Form):
         choices=[c for c in INTERACTION_TYPES if c[0] != "note"], widget=forms.CheckboxSelectMultiple,
         label="Interactions that count as contact (reset inactivity and after-tour follow-up)")
     digest_hour = forms.TypedChoiceField(choices=HOURS, coerce=int, label="Daily digest time")
+    digest_email = forms.BooleanField(
+        required=False, label="Email the daily digest to each staff member",
+        help_text="Staff only. Written to the staff mail folder unless a staff mail server is configured. "
+                  "Never a customer message. An implementation default, not an approved channel.",
+    )
     attention_sweep_minutes = forms.IntegerField(min_value=1, max_value=1440, label="Attention sweep every (minutes)")
     quiet_hours_start = forms.TypedChoiceField(choices=HOURS, coerce=int, label="Customer quiet hours start")
     quiet_hours_end = forms.TypedChoiceField(choices=HOURS, coerce=int, label="Customer quiet hours end")
@@ -99,6 +104,7 @@ class PolicyForm(Form):
             "extended_duplicate_matching": policy.get("duplicate_matching", {}).get("extended", False),
             "require_two_factor": policy.get("security", {}).get("require_two_factor", False),
             "contact_reset_types": a["contact_reset_types"], "digest_hour": n["digest_hour"],
+            "digest_email": n.get("digest_email", True),
             "attention_sweep_minutes": n["attention_sweep_minutes"], "quiet_hours_start": n["quiet_hours_start"],
             "quiet_hours_end": n["quiet_hours_end"], "customer_frequency_cap_hours": n["customer_frequency_cap_hours"],
             "escalation_recipients": User.objects.filter(pk__in=n.get("escalation_recipient_ids") or []),
@@ -130,6 +136,7 @@ class PolicyForm(Form):
         policy["duplicate_matching"] = {**current.get("duplicate_matching", {}),
                                         "extended": d["extended_duplicate_matching"]}
         policy["notifications"] = {**current["notifications"], "digest_hour": d["digest_hour"],
+                                   "digest_email": d["digest_email"],
                                    "attention_sweep_minutes": d["attention_sweep_minutes"],
                                    "quiet_hours_start": d["quiet_hours_start"], "quiet_hours_end": d["quiet_hours_end"],
                                    "customer_frequency_cap_hours": d["customer_frequency_cap_hours"],

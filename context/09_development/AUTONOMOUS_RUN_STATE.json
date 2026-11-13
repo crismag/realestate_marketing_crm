@@ -6,21 +6,23 @@
   "branch": "cursor/sales-board-crisgen-behaviors-77d9",
   "base_commit": "fda56b35a3ecfcfb32dae41ee2b91030e8371b32",
   "stack": "Python 3.12 (this container) / Django 5.2.19 LTS / SQLite WAL / server-rendered CrisGen UI 1.1 / waitress + whitenoise",
-  "current_stage": "sales board review fixes, then staff digest email",
+  "current_stage": "staff digest email",
   "stages": {
     "baseline_TASK-003_to_011": "already on main (fda56b3); not regenerated",
     "sales_board_and_crisgen_behaviors": "done_locally",
-    "sales_board_review_fixes": "done_locally"
+    "sales_board_review_fixes": "done_locally",
+    "staff_digest_email": "done_locally"
   },
-  "last_checkpoint_utc": "2026-11-13T02:59:22Z",
+  "last_checkpoint_utc": "2026-11-13T03:01:43Z",
   "checks": [
-    {"name": "pytest", "command": ".venv/bin/python -m pytest -p no:logging", "result": "209 passed", "at_utc": "2026-11-13T02:59:00Z"},
-    {"name": "ruff", "command": ".venv/bin/ruff check .", "result": "passed", "at_utc": "2026-11-13T02:59:00Z"},
-    {"name": "scripts/e2e.sh", "result": "19 checks passed (desktop stage move and 390px board)", "at_utc": "2026-11-13T02:59:22Z", "browser": "Google Chrome via CRM_CHROMIUM_PATH"}
+    {"name": "pytest", "command": ".venv/bin/python -m pytest -p no:logging", "result": "216 passed", "at_utc": "2026-11-13T03:01:00Z"},
+    {"name": "ruff", "command": ".venv/bin/ruff check .", "result": "passed", "at_utc": "2026-11-13T03:01:00Z"},
+    {"name": "makemigrations --check --dry-run", "result": "no changes", "at_utc": "2026-11-13T03:01:00Z"},
+    {"name": "scripts/e2e.sh", "result": "19 checks passed (desktop stage move, notifications, 390px board). Demo seed ran staff.digest_email jobs.", "at_utc": "2026-11-13T03:01:43Z", "browser": "Google Chrome via CRM_CHROMIUM_PATH"}
   ],
   "blockers": [],
   "running_services": [],
-  "next_action": "Staff digest email via the existing staff-mail path (never a customer send). Do not treat pilot hosting, a real email provider, or MySQL as done. Do not wait on review.",
+  "next_action": "Retention/deletion workflow (OQ-012; only archiving exists), or the next dependency-satisfied gap. Bulk responsibility changes stay handovers. Do not treat pilot hosting, a real email provider, or MySQL as done. Do not wait on review.",
   "historical_run": {
     "run_id": "autonomous-build-2026-11-12",
     "original_start_utc": "2026-11-12T19:08:03Z",

@@ -36,7 +36,7 @@ Commands: `pytest -p no:logging` (all `tests/`), `scripts/e2e.sh` (production-li
 | REQ-016 | Show responsibility, last activity, next action; find unattended; explain alerts; profile view is not contact | `crm/attention` evaluation with reasons and facts | AT-003: `test_toured_client_without_task…`, `test_profile_view_and_notes_do_not_count_as_contact` | Met |
 | REQ-017 | Supervisory view by person/team/period with drill-down; critical work | Attention filters (person/team/pool/reason), Reports by person, critical tasks | `tests/test_attention.py`, report tests | Met; criticality levels beyond a flag are open |
 | REQ-018 | Onboarding emails: correct event, visible failures, no duplicates | `onboard` rule on opportunity won, sandbox transport | `test_inquiry_ack_is_sandbox_captured…`, `test_replayed_intake_event_does_not_duplicate_message` | Met in sandbox; event choice is a default (OQ-008) |
-| REQ-019 | Notify handler/watchers; link and reason; read ≠ done | `Notification` with reason/links; read/dismiss separate | `test_new_inquiry_notifies_current_handler_once`, `test_pool_inquiry_routes_to_coordinator…` | Met (in-app only) |
+| REQ-019 | Notify handler/watchers; link and reason; read ≠ done | `Notification` with reason/links; read/dismiss separate | `test_new_inquiry_notifies_current_handler_once`, `test_pool_inquiry_routes_to_coordinator…` | Met in-app. The daily digest can also prepare a staff-only copy (`tests/test_staff_digest.py`); that copy is not a customer message. Other notifications stay in-app |
 | REQ-020 | Reminders with due times; inactivity reset types shown; recheck before execution; no duplicate retries | Tasks, sweep rules, stop policies, logical keys | `test_sweep_is_idempotent_and_reassignment_reroutes`, `test_customer_reply_before_send…`, `test_opt_out…`, `test_quiet_hours…` | Met |
 | REQ-021 | Watchlists; stop watching; no ownership change | `Watch`, watch rule | `test_watch_then_unwatch`, `test_watch_does_not_change_ownership` | Met |
 | REQ-022 | Reports with period, definitions, reconciliation, unknown ≠ zero | `crm/reporting/metrics.py`, drill-downs, spend | AT-005 tests | Met for acquisitions, inquiries, won count/value, spend, CPA, response time, activity. Earnings unavailable (OQ-011) |
@@ -94,9 +94,10 @@ Current execution and exact check results: `context/09_development/CURRENT_RUN_R
 | REQ-016 / REQ-026 | Agreed future contact pauses tour cadence but not urgent work | `tests/test_attention_agreement.py` |
 | REQ-019 / REQ-026 | Unanswered inbound replies surface until later human-response evidence | `tests/test_inbound_attention.py` |
 | REQ-026 | Digest counts new/continuing/resolved unique clients against prior delivered snapshot, including resolved-only digests | `tests/test_digest_changes.py`; migration `automation.0003_digest_snapshots` |
+| REQ-019 | Daily digest staff copy is filed or handed to staff mail, skipped when the setting is off, and creates no customer message | `tests/test_staff_digest.py`; migration `automation.0004_digest_staff_email` |
 
 Reply response matching uses contact chronology; there is no explicit reply-thread link. A linked awaiting inquiry avoids duplicate reply reasons. An unlinked inquiry cannot establish event identity. Digest resolution means departure from the recipient's queue, including reassignment; it does not assert task completion. Existing pre-migration digests have no snapshot; the first new digest establishes the baseline.
 
 ## 13 November 2026 sales board
 
-Local evidence: pytest 209 passed and ruff clean after the review fixes; `scripts/e2e.sh` 19 checks at 2026-11-13T02:59:22Z (desktop stage move and 390px board). Hosted CI was green on a824d13. Later commits are not claimed until GitHub Actions runs them.
+Local evidence: pytest 216 passed, ruff clean, `makemigrations --check` clean, and `scripts/e2e.sh` 19 checks at 2026-11-13T03:01:43Z. Hosted CI was green on a824d13. Later commits are not claimed until GitHub Actions runs them.

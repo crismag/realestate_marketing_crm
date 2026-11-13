@@ -165,7 +165,22 @@ class DigestSnapshot(models.Model):
     contact_ids = models.JSONField(default=list)
     notification = models.OneToOneField(Notification, on_delete=models.CASCADE, related_name="digest_snapshot")
     created_at = models.DateTimeField(default=clock.now)
+    # none: in-app only (older digests). queued/filed/smtp/skipped describe the staff copy.
+    email_state = models.CharField(max_length=12, default="none")
+    email_note = models.CharField(max_length=200, blank=True, default="")
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=["recipient", "day"], name="unique_recipient_digest_day")]
         ordering = ["-day"]
+
+    @property
+    def email_label(self) -> str:
+        if self.email_state == "skipped" and self.email_note:
+            return self.email_note
+        return {
+            "none": "In-app only",
+            "queued": "Staff copy waiting",
+            "filed": "Staff copy filed (not a customer message)",
+            "smtp": "Staff copy handed to staff mail (not a customer message)",
+            "skipped": "Staff copy skipped",
+        }.get(self.email_state, self.email_state)
