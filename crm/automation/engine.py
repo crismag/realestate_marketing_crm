@@ -298,12 +298,14 @@ def run_sweep(now: dt.datetime | None = None, *, job=None) -> dict:
 def _canonical_ids(contact_ids) -> set[int]:
     """Map contacts merged since the snapshot to the record they were merged into, so they count as continuing."""
     ids = set(contact_ids)
-    for _ in range(5):  # merge chains are short; stop on anything unexpected
-        merged = dict(Contact.objects.filter(pk__in=ids, merged_into__isnull=False).values_list("pk", "merged_into_id"))
+    seen = set()
+    while True:
+        merged = dict(Contact.objects.filter(pk__in=ids - seen, merged_into__isnull=False)
+                      .values_list("pk", "merged_into_id"))
         if not merged:
-            break
+            return ids
+        seen |= merged.keys()  # each record is followed once, so a bad cycle cannot loop forever
         ids = {merged.get(i, i) for i in ids}
-    return ids
 
 
 def run_digest(now: dt.datetime | None = None, *, job=None) -> dict:

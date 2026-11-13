@@ -6,11 +6,13 @@ import pytest
 from crm.attention import services as attention
 from crm.automation import engine, worker
 from crm.automation.models import Job, Notification
+from crm.comms.models import OutboundMessage
 from crm.comms.services import schedule_customer_message
 from crm.contacts import services as contacts
 from crm.contacts.merging import merge_contacts
 from crm.contacts.models import Contact
 from crm.core import clock
+from crm.core.errors import DomainError
 
 pytestmark = pytest.mark.django_db
 H = dt.timedelta(hours=1)
@@ -50,17 +52,34 @@ def test_reply_on_inquiry_closed_without_response_stays_closed(users, make_conta
     assert len(awaiting(contact, policy, now)) == 1
 
 
-def test_send_job_that_keeps_crashing_ends_uncertain_not_scheduled(frozen, make_contact):
+def crash_send_job(make_contact, *, reached_transport):
     contact = make_contact(email="test@example.test")
     msg = schedule_customer_message(contact, template_key="inquiry-ack", rule=None, logical_key="crash-message")
     job = worker.lease_next("worker-a", clock.now())
     assert job.kind == "comms.send"
+    if reached_transport:
+        OutboundMessage.objects.filter(pk=msg.pk).update(attempted_at=clock.now())
     Job.objects.filter(pk=job.pk).update(max_attempts=1, lease_expires_at=clock.now() - dt.timedelta(seconds=1))
     assert worker.recover_expired_leases(clock.now()) == 1
     job.refresh_from_db()
     msg.refresh_from_db()
     assert job.status == "dead"
+    return job, msg
+
+
+def test_send_job_that_crashes_after_reaching_transport_ends_uncertain(frozen, make_contact, users):
+    job, msg = crash_send_job(make_contact, reached_transport=True)
     assert msg.status == "uncertain"  # never failed: a manual retry could send it twice
+    with pytest.raises(DomainError, match="may already have gone out"):
+        worker.retry_job(job, actor=users["ana"])
+
+
+def test_send_job_that_crashes_before_sending_fails_and_can_be_retried(frozen, make_contact, users):
+    job, msg = crash_send_job(make_contact, reached_transport=False)
+    assert msg.status == "failed"
+    worker.retry_job(job, actor=users["ana"])
+    msg.refresh_from_db()
+    assert msg.status == "scheduled"
 
 
 def test_merged_client_counts_as_continuing_in_next_digest(users, make_contact):
@@ -76,3 +95,12 @@ def test_merged_client_counts_as_continuing_in_next_digest(users, make_contact):
         engine.run_digest()
     note = Notification.objects.filter(kind="digest", recipient=users["ana"]).latest("created_at", "id")
     assert "0 new" in note.title and "1 continuing" in note.title and "0 resolved" in note.title
+
+
+def test_merge_chain_maps_to_the_final_record(frozen, make_contact):
+    from crm.automation.engine import _canonical_ids
+
+    ids = [make_contact(f"Chain Person {i}", email=f"chain{i}@example.test").pk for i in range(8)]
+    for older, newer in zip(ids, ids[1:], strict=False):
+        Contact.objects.filter(pk=older).update(merged_into_id=newer)
+    assert _canonical_ids([ids[0]]) == {ids[-1]}

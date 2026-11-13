@@ -215,6 +215,12 @@ def retry_job(job: Job, *, actor) -> Job:
 
     if job.status not in ("dead", "failed"):
         raise DomainError("Only failed jobs can be retried.", code="not_retryable")
+    if job.kind == "comms.send":
+        from crm.comms.models import OutboundMessage
+
+        if OutboundMessage.objects.filter(pk=job.payload.get("message_id"), status="uncertain").exists():
+            raise DomainError("This email may already have gone out. Resolve it on the Customer messages page "
+                              "instead of retrying the job.", code="message_uncertain")
     with transaction.atomic():
         Job.objects.filter(pk=job.pk, status__in=("dead", "failed")).update(
             status="queued", run_at=clock.now(), max_attempts=F("attempts") + 1, finished_at=None, updated_at=clock.now()
