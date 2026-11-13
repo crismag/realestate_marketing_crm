@@ -43,3 +43,9 @@ Back up and stop web/worker before normal upgrade. Run `.venv/bin/python manage.
 
 ## Continuation
 Read DEVELOPMENT_EXECUTION.md, CLAUDE.md and this report. Prioritize fresh browser/pilot validation, remediate observed defects, then implement only in-scope backlog. Use isolated test database paths for concurrent agents. Historical autonomous-run deadlines do not constrain this new assignment. No unattended runtime is left running by this run.
+
+## Hosted verification and publication
+
+Published code commit: `bd49e603bc976547cc7a5b27485d9906000cad1a` (tree exactly matched the locally verified tree). Draft PR: https://github.com/crismag/realestate_marketing_crm/pull/4. GitHub CI run https://github.com/crismag/realestate_marketing_crm/actions/runs/43345965197 completed successfully, including lint, Django/migration checks, automated tests, dependency audit and the production-like browser journey at desktop and 390px. This closes the fresh browser verification gap above; only the local environment remains unable to launch Chromium. This evidence applies to the code commit; the subsequent checkpoint commit changes documentation only.
+
+Pilot acceptance, hosting, actual provider integration, team usability/accessibility and scale validation remain open as described above.

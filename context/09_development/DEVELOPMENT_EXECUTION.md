@@ -24,7 +24,7 @@ Continue the existing implementation with independent audit and regression-led h
 - [x] Apply minimal fixes and run focused tests.
 - [x] Review integrated diff and run pytest, ruff, migration drift and browser smoke where available.
 - [x] Record actual evidence, outstanding gaps and runnable continuation instructions.
-- [ ] Commit changes and prepare a reviewable repository branch/PR if remote writes are available.
+- [x] Commit changes and prepare a reviewable repository branch/PR if remote writes are available.
 
 ## Review focus
 Lease expiry during success/failure/defer; stale repeated manual actions; retry context after customer response; historical timestamps vs future input; audit failure rollback. Never report old test evidence as current execution.
@@ -41,3 +41,5 @@ Inbound reply attention and durable digest snapshots are implemented in this run
 
 ## Checkpoint protocol
 Update RUN_LOG and a current run report after integration. Keep historical reports intact. Record commit, commands/results and exact remaining work. New sessions read this file, CLAUDE.md, current run report and known limitations before selecting the highest priority unfinished item. Do not launch unattended sessions or manufacture a twelve-hour keepalive promise.
+
+Hosted GitHub CI, including fresh desktop/mobile browser journeys, passed for code commit bd49e60 in run 43345965197. Draft PR #4 is published. See CURRENT_RUN_REPORT.md.

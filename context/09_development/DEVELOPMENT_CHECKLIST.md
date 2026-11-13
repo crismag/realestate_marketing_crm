@@ -28,4 +28,4 @@ Source of current execution: DEVELOPMENT_EXECUTION.md and CURRENT_RUN_REPORT.md.
 - Message retry context, stale transition and retry generation regressions implemented.
 - Inquiry chronology and transactional reporting spend implemented.
 - Inbound response-needed attention, tour agreement suppression and durable digest comparisons implemented.
-- Fresh browser acceptance remains blocked by environment launch permissions; pilot acceptance remains open.
+- Fresh desktop/390px browser journey passed in hosted CI run 43345965197 at bd49e60; pilot acceptance remains open.
