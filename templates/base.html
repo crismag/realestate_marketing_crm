@@ -28,7 +28,7 @@
       </details>
       <div class="topbar__title"><span class="muted small">Signed in as</span> <strong>{{ user.full_name }}</strong></div>
       <a class="cg-button" data-variant="ghost" data-color="secondary" data-size="sm" data-shape="rounded" data-full-width="false" href="{% url 'automation:notifications' %}">Notifications{% if unread_notifications %} ({{ unread_notifications }}){% endif %}</a>
-      <a class="cg-button" data-variant="ghost" data-color="secondary" data-size="sm" data-shape="rounded" data-full-width="false" href="{% url 'accounts:password_change' %}">Password</a>
+      <a class="cg-button" data-variant="ghost" data-color="secondary" data-size="sm" data-shape="rounded" data-full-width="false" href="{% url 'accounts:password_change' %}">Security</a>
       <form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}<button class="cg-button" data-variant="outline" data-color="secondary" data-size="sm" data-shape="rounded" data-full-width="false" type="submit">Sign out</button></form>
     </nav>
     <main id="main" tabindex="-1">

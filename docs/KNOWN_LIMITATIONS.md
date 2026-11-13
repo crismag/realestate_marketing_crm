@@ -22,10 +22,9 @@ until the items marked *Before pilot* are done and the product owner has reviewe
 - Engagement metrics beyond logged interactions (no website/email tracking).
 - Saved dynamic filters for watchlists (recommended, not required by REQ-021).
 - Sales pipeline board view (stages are a table column today).
-- Bulk actions (bulk reassign, bulk import from spreadsheet). Only CSV **export** exists.
-- Contact merge tool: duplicates are surfaced but merging must be done by hand.
+- Bulk reassign. (CSV import exists since 2026-11-13.)
 - Data retention and deletion workflow (only archiving).
-- Password reset by email, MFA, SSO.
+- SSO (password reset by email and two-step sign-in exist since 2026-11-13).
 - Notification channels other than in-app (email/SMS/chat to staff).
 - Attention digest delivered by email (today it is an in-app notification).
 - Calendar for tours/viewings (tours are logged as interactions; future ones as tasks).

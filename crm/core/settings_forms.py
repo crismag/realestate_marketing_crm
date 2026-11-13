@@ -35,6 +35,9 @@ class PolicyForm(Form):
     followup_suggestions_enabled = forms.BooleanField(required=False, label="Suggest a follow-up task after logging an interaction")
     extended_duplicate_matching = forms.BooleanField(
         required=False, label="Wider duplicate check (+tag emails, names in any order)")
+    require_two_factor = forms.BooleanField(
+        required=False, label="Require two-step sign-in (authenticator app) for everyone",
+        help_text="People without it are asked to set it up at their next page view.")
     contact_reset_types = forms.MultipleChoiceField(
         choices=[c for c in INTERACTION_TYPES if c[0] != "note"], widget=forms.CheckboxSelectMultiple,
         label="Interactions that count as contact (reset inactivity and after-tour follow-up)")
@@ -89,6 +92,7 @@ class PolicyForm(Form):
             "flag_past_expected_close": a.get("flag_past_expected_close", False),
             "followup_suggestions_enabled": policy.get("followup_suggestions", {}).get("enabled", False),
             "extended_duplicate_matching": policy.get("duplicate_matching", {}).get("extended", False),
+            "require_two_factor": policy.get("security", {}).get("require_two_factor", False),
             "contact_reset_types": a["contact_reset_types"], "digest_hour": n["digest_hour"],
             "attention_sweep_minutes": n["attention_sweep_minutes"], "quiet_hours_start": n["quiet_hours_start"],
             "quiet_hours_end": n["quiet_hours_end"], "customer_frequency_cap_hours": n["customer_frequency_cap_hours"],
@@ -114,6 +118,7 @@ class PolicyForm(Form):
                                "flag_past_expected_close": d["flag_past_expected_close"],
                                "contact_reset_types": list(d["contact_reset_types"]),
                                "followup_types": list(d["contact_reset_types"])}
+        policy["security"] = {**current.get("security", {}), "require_two_factor": d["require_two_factor"]}
         policy["setup"] = {**current.get("setup", {}), "settings_reviewed": True}
         policy["followup_suggestions"] = {**current.get("followup_suggestions", {}),
                                           "enabled": d["followup_suggestions_enabled"]}

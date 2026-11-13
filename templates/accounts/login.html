@@ -9,7 +9,7 @@
     {% for field in form %}{% include "partials/field.html" %}{% endfor %}
     <input type="hidden" name="next" value="{{ next }}">
     <button class="cg-button" data-variant="gradient" data-color="primary" data-size="md" data-shape="rounded" data-full-width="true" type="submit">Sign in</button>
-    <p class="muted small">Internal staff only. Accounts are created by a workspace administrator.</p>
+    <p class="muted small"><a href="{% url 'accounts:password_reset' %}">Forgot your password?</a> Internal staff only. Accounts are created by a workspace administrator.</p>
   </form>
 </div>
 {% endblock %}

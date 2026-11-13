@@ -11,6 +11,17 @@ class LoginForm(Form):
     password = forms.CharField(strip=False, widget=forms.PasswordInput(attrs={"autocomplete": "current-password"}))
 
 
+class SecondFactorForm(Form):
+    code = forms.CharField(max_length=20, label="Code", widget=forms.TextInput(attrs={
+        "autocomplete": "one-time-code", "inputmode": "numeric", "autofocus": True}),
+        help_text="The 6-digit code from your authenticator app, or one of your recovery codes.")
+
+
+class PasswordConfirmForm(Form):
+    password = forms.CharField(strip=False, widget=forms.PasswordInput(attrs={"autocomplete": "current-password"}),
+                               label="Your password")
+
+
 class UserCreateForm(Form):
     email = forms.EmailField(max_length=254)
     full_name = forms.CharField(max_length=150)

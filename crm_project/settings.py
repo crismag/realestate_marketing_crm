@@ -82,8 +82,8 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.auth.middleware.LoginRequiredMiddleware",
-    "crm.accounts.middleware.ForcePasswordChangeMiddleware",
     "crm.core.middleware.WorkspaceTimezoneMiddleware",
+    "crm.accounts.middleware.ForcePasswordChangeMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "crm.core.middleware.SecurityHeadersMiddleware",
@@ -199,6 +199,22 @@ STORAGES = {
 # --- CRM runtime ----------------------------------------------------------------
 CRM_BACKUP_DIR = Path(os.environ.get("CRM_BACKUP_DIR", VAR_DIR / "backups"))
 CRM_EMAIL_TRANSPORT = os.environ.get("CRM_EMAIL_TRANSPORT", "sandbox")  # only 'sandbox' is implemented
+# Staff email (password reset links to employees, never customer messages). Nothing is sent unless an
+# SMTP server is configured; otherwise each message is written to var/staff_mail/ for the administrator.
+CRM_STAFF_SMTP_HOST = os.environ.get("CRM_STAFF_SMTP_HOST", "")
+if CRM_STAFF_SMTP_HOST:
+    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+    EMAIL_HOST = CRM_STAFF_SMTP_HOST
+    EMAIL_PORT = int(os.environ.get("CRM_STAFF_SMTP_PORT", "587"))
+    EMAIL_HOST_USER = os.environ.get("CRM_STAFF_SMTP_USER", "")
+    EMAIL_HOST_PASSWORD = os.environ.get("CRM_STAFF_SMTP_PASSWORD", "")
+    EMAIL_USE_TLS = env_bool("CRM_STAFF_SMTP_TLS", True)
+    EMAIL_TIMEOUT = 15
+else:
+    EMAIL_BACKEND = "django.core.mail.backends.filebased.EmailBackend"
+    EMAIL_FILE_PATH = VAR_DIR / "staff_mail"
+DEFAULT_FROM_EMAIL = os.environ.get("CRM_STAFF_FROM_EMAIL", "crm@localhost")
+PASSWORD_RESET_TIMEOUT = 60 * 60  # reset links work for one hour
 CRM_WORKER_LEASE_SECONDS = int(os.environ.get("CRM_WORKER_LEASE_SECONDS", "120"))
 CRM_WORKER_POLL_SECONDS = float(os.environ.get("CRM_WORKER_POLL_SECONDS", "5"))
 

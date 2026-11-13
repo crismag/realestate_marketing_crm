@@ -19,6 +19,7 @@ STATUS_COLORS = {
     "inquiry_awaiting": "warning", "task_overdue": "error", "promise_due": "error", "toured_no_followup": "warning",
     "inactive": "warning", "opportunity_stalled": "warning", "next_action_missing": "secondary", "pool_waiting": "secondary",
     "handover_waiting": "warning", "critical_task": "error", "handler_inactive": "error",
+    "created": "success", "ready": "secondary", "duplicate": "warning", "error": "error", "skipped": None, "preview": "secondary",
 }
 
 

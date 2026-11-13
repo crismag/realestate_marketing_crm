@@ -160,3 +160,10 @@ input.cg-radio:checked { box-shadow: inset 0 0 0 3px var(--white); }
 .brand-logo--preview { max-height: 3rem; max-width: 10rem; }
 .auth-logo { display: flex; justify-content: center; padding-bottom: 0; }
 .brand-logo--auth { max-height: 3.5rem; max-width: 12rem; }
+
+/* Two-step sign-in */
+.totp-qr-wrap { display: flex; justify-content: center; }
+.totp-qr { background: var(--white); max-width: 100%; height: auto; }
+.totp-qr path { stroke: var(--stone-900); }
+.totp-key { word-break: break-all; letter-spacing: 0.05em; }
+.recovery-codes { display: grid; grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr)); gap: var(--space-2); list-style: none; padding: 0; }

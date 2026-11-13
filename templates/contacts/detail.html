@@ -14,6 +14,9 @@
   </div>
 </div>
 
+{% if contact.merged_into %}<div class="alert-soft" role="status">This record was merged into <a href="{% url 'contacts:detail' contact.merged_into.pk %}">{{ contact.merged_into.display_name }}</a> and archived. Its history moved there.</div>{% endif %}
+{% if possible_duplicates %}<section class="cg-card" aria-labelledby="dups"><div class="card-title"><h2 id="dups">Possible duplicates</h2></div>
+<ul class="cg-list">{% for d in possible_duplicates %}<li class="cg-list__item" data-color="default"><span><a href="{% url 'contacts:detail' d.pk %}">{{ d.display_name }}</a> <span class="small muted">{{ d.email|default:"no email" }} · {{ d.phone|default:"no phone" }} · {{ d.assignment.describe }}</span></span>{% if can_merge %}<a class="cg-button" data-variant="outline" data-color="secondary" data-size="sm" data-shape="rounded" data-full-width="false" href="{% url 'contacts:merge' contact.pk d.pk %}">Merge into this contact</a>{% endif %}</li>{% endfor %}</ul></section>{% endif %}
 <div class="grid grid--main-side">
 <div class="stack">
   <section class="cg-card" aria-labelledby="attn"><div class="card-title"><h2 id="attn">Attention</h2><span class="small muted">Evaluated {{ now|local }}</span></div>
