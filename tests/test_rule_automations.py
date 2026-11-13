@@ -176,3 +176,44 @@ def test_capture_screen_explains_match_and_still_never_merges(client, users, mak
     assert resp.status_code == 200 and f"/contacts/{existing.pk}/" in page
     assert "Matched on same name, different order or spelling marks" in page
     assert Contact.objects.count() == 1
+
+
+# --- review follow-ups ---------------------------------------------------------------------
+
+def test_two_stalled_opportunities_share_one_reason_and_one_snooze(users, make_contact, policy, now):
+    with clock.frozen(now - 30 * D):
+        c = make_contact("Two Deals")
+        make_opp(c, users["ana"], title="Unit 4B")
+        make_opp(c, users["ana"], title="Unit 9C")
+    items = attention.evaluate(now=now, policy=policy, contact_ids=[c.pk])
+    stalled = [r for r in items[0].active_reasons if r.code == "opportunity_stalled"]
+    assert len(stalled) == 1 and "Unit 4B" in stalled[0].detail and "Unit 9C" in stalled[0].detail
+
+
+def test_stage_change_shows_in_profile_history(client, users, make_contact):
+    c = make_contact("History Hal")
+    opp = make_opp(c, users["ana"])
+    contacts.save_opportunity(c, actor=users["ana"], opportunity=opp, expected_version=opp.version,
+                              data={"title": opp.title, "stage": "viewing"})
+    client.force_login(users["ana"])
+    assert "stage new -&gt; viewing" in client.get(f"/contacts/{c.pk}/").content.decode()
+
+
+def test_oversized_suggest_parameter_is_ignored(client, users, make_contact):
+    c = make_contact("Big Number")
+    client.force_login(users["ana"])
+    for value in ("9" * 19, "9" * 40):
+        resp = client.get(f"/contacts/{c.pk}/?suggest={value}")
+        assert resp.status_code == 200 and "Suggested next action" not in resp.content.decode()
+
+
+def test_non_latin_names_match_in_any_order(make_contact):
+    existing = make_contact("王 小明")
+    assert list(contacts.duplicate_candidates(name="小明 王")) == [existing]
+
+
+def test_overlong_name_gets_no_key_rather_than_a_truncated_one():
+    from crm.contacts.models import name_key
+
+    assert name_key("a" * 300 + " b") == ""
+    assert name_key("Smith, John") == "john smith"

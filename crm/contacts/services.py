@@ -1,6 +1,7 @@
 """Customer capture, search and relationship services (MOD-001, MOD-003)."""
 from __future__ import annotations
 
+import datetime as dt
 from dataclasses import dataclass
 
 from django.db import IntegrityError
@@ -375,3 +376,30 @@ def search_contacts(*, q: str = "", lifecycle: str = "", responsibility: str = "
         "-updated": ["-updated_at", "-id"],
     }.get(sort, ["display_name", "id"])
     return qs.order_by(*order)
+
+
+MAX_ID = 2**63 - 1
+
+
+def followup_suggestion(contact: Contact, *, user, interaction_ref: str, policy: dict) -> dict | None:
+    """C-R3: a pre-filled follow-up task after `user` logs an interaction. Nothing is created here.
+
+    Offered only for the interaction this user just logged (by id, within an hour), for interaction types
+    configured in policy, and when the contact has no open task due in the future.
+    """
+    config = policy.get("followup_suggestions") or {}
+    if not config.get("enabled") or not interaction_ref.isdigit() or len(interaction_ref) > 19:
+        return None
+    interaction_id = int(interaction_ref)
+    if interaction_id > MAX_ID:
+        return None
+    now = clock.now()
+    interaction = Interaction.objects.filter(pk=interaction_id, contact=contact, actor=user,
+                                             recorded_at__gte=now - dt.timedelta(hours=1)).first()
+    rule = (config.get("by_kind") or {}).get(interaction.kind) if interaction else None
+    if not rule:
+        return None
+    if contact.tasks.filter(status="open", due_at__gte=now).exists():
+        return None
+    return {"interaction": interaction, "title": str(rule["title"])[:200],
+            "due_at": now + dt.timedelta(hours=int(rule.get("hours", 24)))}

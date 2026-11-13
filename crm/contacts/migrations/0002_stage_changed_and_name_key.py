@@ -15,10 +15,11 @@ class Migration(migrations.Migration):
             name="name_key",
             field=models.CharField(
                 blank=True,
+                db_default="",
                 db_index=True,
                 editable=False,
                 help_text="Lowercased, accent-free, word-sorted name for duplicate matching",
-                max_length=150,
+                max_length=255,
             ),
         ),
         migrations.AddField(
@@ -38,8 +39,11 @@ def backfill(apps, schema_editor):
     Opportunity = apps.get_model("contacts", "Opportunity")
     for contact in Contact.objects.only("pk", "display_name").iterator():
         Contact.objects.filter(pk=contact.pk).update(name_key=name_key(contact.display_name))
-    # No stage history existed before this migration: treat creation as the last stage change.
-    Opportunity.objects.filter(stage_changed_at__isnull=True).update(stage_changed_at=models.F("created_at"))
+    # No stage history existed before this migration, so we cannot know when the stage last changed.
+    # Start the clock now (conservative): existing deals are not flagged as stalled straight away.
+    from django.utils import timezone
+
+    Opportunity.objects.filter(stage_changed_at__isnull=True).update(stage_changed_at=timezone.now())
 
 
 Migration.operations.append(migrations.RunPython(backfill, migrations.RunPython.noop))

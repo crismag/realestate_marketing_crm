@@ -17,12 +17,17 @@ def normalize_email(value: str | None) -> str:
     return (value or "").strip().lower()
 
 
+NAME_KEY_LENGTH = 255
+
+
 def name_key(value: str | None) -> str:
     """Order-insensitive name key: "Smith, John" and "john  SMITH" both give "john smith"."""
     text = unicodedata.normalize("NFKD", value or "")
-    text = "".join(ch for ch in text if not unicodedata.combining(ch)).lower()
-    words = re.findall(r"[a-z0-9]+", text)
-    return " ".join(sorted(words))[:150]
+    text = "".join(ch for ch in text if not unicodedata.combining(ch)).casefold()
+    words = re.findall(r"[^\W_]+", text)  # Unicode letters/digits, so non-Latin names get a key too
+    key = " ".join(sorted(words))
+    # Never truncate: a cut key could make two different names equal. Over-long names get no key.
+    return key if len(key) <= NAME_KEY_LENGTH else ""
 
 
 def normalize_phone(value: str | None) -> str:
@@ -60,7 +65,7 @@ class Contact(models.Model):
     phone = models.CharField(max_length=40, blank=True)
     email_normalized = models.CharField(max_length=254, blank=True, db_index=True, editable=False)
     phone_normalized = models.CharField(max_length=20, blank=True, db_index=True, editable=False)
-    name_key = models.CharField(max_length=150, blank=True, db_index=True, editable=False,
+    name_key = models.CharField(max_length=255, blank=True, db_index=True, editable=False, db_default="",
                                 help_text="Lowercased, accent-free, word-sorted name for duplicate matching")
     lifecycle = models.CharField(max_length=20, choices=LIFECYCLES, default="lead", db_index=True)
     disposition = models.CharField(max_length=20, choices=DISPOSITIONS, default="active")

@@ -34,7 +34,7 @@ Approved rules that the build enforces as written (not defaults):
 | Web intake identity | Exact email match to exactly one active contact reuses it; otherwise a new contact in the intake pool, other candidates flagged in the audit log | OQ-010 |
 | What counts as contact | Outbound attempt, conversation, inbound reply, tour. Notes and profile views never count | Settings |
 | After a tour | Flag if no follow-up task or contact within 48 h | Settings |
-| Stalled opportunity (C-R2) | Flag an open opportunity whose stage has not changed for 21 days (0 = off), or that is still open after its expected close date (on/off). Only a real stage change resets the clock; editing title or amount does not. Snoozable | Settings, OQ-015 |
+| Stalled opportunity (C-R2) | Flag an open opportunity whose stage has not changed for 21 days (0 = off), or that is still open after its expected close date (on/off). Only a real stage change resets the clock; editing title or amount does not. Deals that existed before the upgrade start their clock at the upgrade (no history to go on). One reason per contact lists every stalled deal; snoozable | Settings, OQ-015 |
 | Follow-up suggestion (C-R3) | After you log an interaction, the next-action form is pre-filled (never created): tour → "Follow up after the tour" in 24 h; conversation → 72 h; no-answer attempt → try again in 24 h; customer reply → respond in 4 h; notes → nothing. Skipped when the contact already has a future task. On/off in Settings; titles and hours in the stored policy (`followup_suggestions.by_kind`) | Settings, OQ-015 |
 | Inactivity cadence | Lead 7 days, prospect 14, client 60 (0 = off) | Settings, OQ-008 |
 | Inquiry response target | 24 h | Settings |

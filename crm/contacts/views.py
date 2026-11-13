@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import csv
-import datetime as dt
 from decimal import Decimal
 
 from django.contrib import messages
@@ -32,14 +31,14 @@ from .forms import (
     OpportunityForm,
     OpportunityOutcomeForm,
 )
-from .models import LIFECYCLES, Contact, Inquiry, Interaction, Opportunity, Source, Watch
+from .models import LIFECYCLES, Contact, Inquiry, Opportunity, Source, Watch
 
 User = get_user_model()
 TIMELINE_AUDIT_ACTIONS = {
     "contact.created", "contact.updated", "contact.lifecycle", "contact.opt_out", "contact.opt_in", "contact.archived",
     "task.created", "task.completed", "task.cancelled", "task.replanned", "task.reassigned", "handover.requested",
     "handover.accepted", "handover.declined", "handover.cancelled", "handover.stale", "opportunity.created",
-    "opportunity.outcome", "attention.snoozed", "attention.unsnoozed", "inquiry.closed", "watch.added", "watch.removed",
+    "opportunity.outcome", "opportunity.stage_changed", "attention.snoozed", "attention.unsnoozed", "inquiry.closed", "watch.added", "watch.removed",
 }
 
 
@@ -131,31 +130,10 @@ def _timeline(contact):
     return entries[:150]
 
 
-def followup_suggestion(request, contact, policy) -> dict | None:
-    """C-R3: a pre-filled follow-up task after the user logs an interaction. Nothing is created until they submit.
-
-    Only offered for the interaction this user just logged (by id, within an hour), for interaction types
-    configured in policy, and when the contact has no open task due in the future.
-    """
-    config = policy.get("followup_suggestions") or {}
-    raw = request.GET.get("suggest", "")
-    if not config.get("enabled") or not raw.isdigit():
-        return None
-    now = clock.now()
-    interaction = Interaction.objects.filter(pk=int(raw), contact=contact, actor=request.user,
-                                             recorded_at__gte=now - dt.timedelta(hours=1)).first()
-    rule = (config.get("by_kind") or {}).get(interaction.kind) if interaction else None
-    if not rule:
-        return None
-    if contact.tasks.filter(status="open", due_at__gte=now).exists():
-        return None
-    return {"interaction": interaction, "title": rule["title"][:200],
-            "due_at": now + dt.timedelta(hours=int(rule.get("hours", 24)))}
-
-
 def render_detail(request, contact, *, status=200, **forms):
     policy = get_policy()
-    suggestion = None if forms.get("task_form") else followup_suggestion(request, contact, policy)
+    suggestion = None if forms.get("task_form") else services.followup_suggestion(
+        contact, user=request.user, interaction_ref=request.GET.get("suggest", ""), policy=policy)
     task_initial = {"assignee": request.user}
     if suggestion:
         task_initial.update({"title": suggestion["title"], "kind": "follow_up", "due_at": suggestion["due_at"]})

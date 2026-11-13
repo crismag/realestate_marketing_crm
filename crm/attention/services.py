@@ -205,11 +205,13 @@ def evaluate(*, now: dt.datetime | None = None, policy: dict, contact_ids: list[
                 reasons.append(Reason("next_action_missing", None, "No open follow-up task or agreed contact date", handler_users))
 
         if relationship_active:
-            for opp in opportunities.get(contact.pk, []):
-                stalled = _stalled(opp, now=now, today=local_today, ap=ap)
-                if stalled:
-                    since, detail = stalled
-                    reasons.append(Reason("opportunity_stalled", since, f"'{opp.title}': {detail}", handler_users))
+            # One reason per contact covering every stalled opportunity, so a snooze (keyed by contact and
+            # reason) covers exactly what the person saw rather than hiding a reminder they never saw.
+            stalled = [(opp, s) for opp in opportunities.get(contact.pk, [])
+                       if (s := _stalled(opp, now=now, today=local_today, ap=ap))]
+            if stalled:
+                reasons.append(Reason("opportunity_stalled", min(s[0] for _, s in stalled),
+                                      "; ".join(f"'{opp.title}': {s[1]}" for opp, s in stalled), handler_users))
 
         assignment = getattr(contact, "assignment", None)
         if assignment is not None and assignment.kind == "pool":
