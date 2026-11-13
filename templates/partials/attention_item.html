@@ -3,7 +3,7 @@
     <h3 class="cg-typography" data-variant="h6" data-color="inherit" id="att-{{ item.contact.pk }}"><a href="{% url 'contacts:detail' item.contact.pk %}">{{ item.contact.display_name }}</a> <span class="muted small">{{ crm_policy.lifecycle_labels|get_item:item.contact.lifecycle }}</span></h3>
     <span class="muted small">Handler: {{ item.handler_label }}</span>
   </div>
-  {% if item.score_enabled %}<div class="small">{% chip item.score_label "secondary" %}{% if item.score_lines %} <details><summary>Why this score</summary><ul>{% for line in item.score_lines %}<li>{{ line }}</li>{% endfor %}</ul></details>{% endif %}</div>{% endif %}
+  {% if item.score_enabled %}<div class="small">{% chip item.score_label "secondary" %}{% if item.score_lines %} <details><summary>Why this score for {{ item.contact.display_name }}</summary><ul>{% for line in item.score_lines %}<li>{{ line }}</li>{% endfor %}</ul></details>{% endif %}</div>{% endif %}
   {% for r in item.reasons %}<div class="reason">{% chip r.label r.code %}{% if r.overdue %} {% chip "past target" "failed" %}{% endif %}
     <div><div>{{ r.detail }}</div>{% if r.snoozed_until %}<div class="small muted">Snoozed until {{ r.snoozed_until|local }}</div>{% endif %}</div></div>{% endfor %}
   <div class="att-facts">

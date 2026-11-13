@@ -48,7 +48,7 @@ Commands: `pytest -p no:logging` (all `tests/`), `scripts/e2e.sh` (production-li
 | REQ-003–006 (product) | Import an existing contact book from CSV with preview, validation and duplicate flags | `crm/contacts/importing.py`, Contacts → Import CSV | `tests/test_import.py` | Met as implementation default |
 | REQ-005 (product) | Merge a duplicate into the kept record without losing history or bypassing ADR-001/002 | `crm/contacts/merging.py`, contact page "Possible duplicates" | `tests/test_merge.py` | Met as implementation default |
 | NFR security (product) | Password reset by emailed link; optional or company-required two-step sign-in with recovery codes | `crm/accounts/views.py`, `crm/accounts/totp.py` | `tests/test_sign_in_security.py` | Met as implementation default; staff SMTP needs configuration per install |
-| NFR operations (product) | Repeatable per-company install with HTTPS, encrypted backups, pruning and a documented restore drill | `Dockerfile`, `deploy/`, `scripts/new_company.sh`, `crm/core/backup_crypto.py` | `tests/test_backup_encryption.py`; Docker kit run locally 2026-11-13 (health, HTTPS redirect, HSTS, secure cookies, encrypted backup verified, first admin sign-in) | Met as implementation default; no real server |
+| NFR operations (product) | Repeatable per-company install with HTTPS, encrypted backups, pruning and a documented restore drill | `Dockerfile`, `deploy/`, `scripts/new_company.sh`, `crm/core/backup_crypto.py` | `tests/test_backup_encryption.py`; `tests/test_operations.py`; isolated `backup_db`/`restore_db` on a throwaway SQLite file at 2026-11-13T03:10:20Z (workspace database untouched). Docker kit run locally 2026-11-13 verified encrypted backup, not a second-machine drill | Met as implementation default; no real server |
 | REQ-024 | Configurable terminology and stages | Settings: lifecycle labels, stages | `test_relabelling_keeps_stable_codes_and_history` | Met |
 | REQ-025 | Use the CrisGen design references | Vendored CrisGen UI 1.1; Drawer, Modal and Tabs via `static/crm/behaviors.js` | [UI_COMPONENTS.md](UI_COMPONENTS.md), `.cursor/rules/design-system.mdc` | Met for shell, tables, and sales overlays. Dropdown, popover, tooltip, select listbox, accordion and collapse are not wired |
 | REQ-026 | Resurface forgotten clients, incl. toured with no follow-up; coverage | Attention reasons + coverage metric | `tests/test_attention.py` | Met |
@@ -79,7 +79,7 @@ Commands: `pytest -p no:logging` (all `tests/`), `scripts/e2e.sh` (production-li
 
 - Real email provider delivery (no provider or credentials; sandbox only).
 - MySQL (guide only; no MySQL server in the build environment).
-- Usability testing with the sales team; accessibility audit beyond semantic markup and keyboard-reachable native controls.
+- Usability testing with the sales team, and an assistive-technology audit. A keyboard, label, contrast, empty/error, and 390px pass on Today, the attention queue, Sales, Notifications, and Settings was recorded on 2026-11-13; that is not a substitute for the team pass.
 - Load testing; behaviour above a single-office team size is unmeasured.
 - Hosted CI: first runs on GitHub Actions passed on 2026-11-12 (head 0224dab, runs 43295590124 and 43295644932).
 
@@ -98,6 +98,7 @@ Current execution and exact check results: `context/09_development/CURRENT_RUN_R
 | REQ-019 | Daily digest staff copy is filed or handed to staff mail, skipped when the setting is off, and creates no customer message | `tests/test_staff_digest.py`; migration `automation.0004_digest_staff_email` |
 | REQ-019 / REQ-026 | The oldest unanswered reply anchors the wait; replies on an inquiry closed without response stay closed | `tests/test_pr4_review_fixes.py` |
 | NFR reliability | A send job whose worker crashes on every attempt ends as *Delivery uncertain* (never auto-retried); stale results and expired leases are logged | `tests/test_pr4_review_fixes.py` |
+| NFR-001 | A stage move without a CSRF token is refused. An agent cannot change the priority score or the staff digest setting. One person cannot see or dismiss another's notification. A stage label in the score is escaped. A clean database migration includes the digest email columns | `tests/test_slice_guards.py`; `tests/test_operations.py` `test_fresh_database_migrates_from_zero` |
 
 Reply response matching uses contact chronology; there is no explicit reply-thread link. A linked awaiting inquiry avoids duplicate reply reasons. An unlinked inquiry cannot establish event identity. Digest resolution means departure from the recipient's queue, including reassignment; it does not assert task completion. Existing pre-migration digests have no snapshot; the first new digest establishes the baseline.
 

@@ -25,8 +25,19 @@
   function focusable(root) {
     return Array.prototype.filter.call(
       root.querySelectorAll("a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled])"),
-      function (el) { return el.getClientRects().length > 0; }
+      function (el) {
+        return el.getClientRects().length > 0 && window.getComputedStyle(el).visibility !== "hidden";
+      }
     );
+  }
+
+  function takeFocus(root) {
+    var items = focusable(root);
+    for (var i = 0; i < items.length; i++) {
+      items[i].focus();
+      if (root.contains(document.activeElement)) return true;
+    }
+    return false;
   }
 
   function openOverlays() {
@@ -52,8 +63,11 @@
     el.setAttribute("data-state", "open");
     el.removeAttribute("aria-hidden");
     el.removeAttribute("inert");
-    var items = focusable(el);
-    if (items.length) items[0].focus();
+    if (!takeFocus(el)) {
+      window.requestAnimationFrame(function () {
+        if (el.getAttribute("data-state") === "open") takeFocus(el);
+      });
+    }
   }
 
   function toggleOverlay(el) {

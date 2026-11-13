@@ -180,6 +180,12 @@ a.cg-tabs__tab, a.cg-tabs__tab:hover { text-decoration: none; color: var(--stone
 /* Closed overlays must not widen the page. The transform makes the fixed panel
    a descendant of the overlay so the off-screen slide can be clipped. */
 .cg-drawer[data-state="closed"], .cg-modal[data-state="closed"] { transform: scale(1); overflow: hidden; visibility: hidden; }
+/* Opening flips inherited visibility. Controls with transition: all would stay
+   unfocusable until that delay ends, so an open overlay shows and focuses them at once. */
+.cg-drawer[data-state="open"] :is(select, button, input, textarea, a),
+.cg-modal[data-state="open"] :is(select, button, input, textarea, a) {
+  transition-property: none; visibility: visible;
+}
 .cg-modal__content { width: min(28rem, calc(100% - var(--space-8))); max-height: min(85vh, 40rem); overflow: auto; padding: var(--space-4); margin: var(--space-4); }
 .cg-drawer__panel .filters { grid-template-columns: 1fr; }
 
@@ -191,4 +197,4 @@ a.cg-tabs__tab, a.cg-tabs__tab:hover { text-decoration: none; color: var(--stone
 .board__column h2 { font-size: var(--font-size-sm); line-height: var(--line-height-sm); margin: 0 0 var(--space-2); display: flex; justify-content: space-between; align-items: center; gap: var(--space-2); }
 .board-card { background: var(--white); border: var(--space-px) solid var(--stone-200); border-radius: var(--radius-md); padding: var(--space-3); margin-bottom: var(--space-2); display: flex; flex-direction: column; gap: var(--space-2); align-items: flex-start; }
 .board-card a { font-weight: var(--font-weight-medium); }
-.board__empty { color: var(--stone-500); font-size: var(--font-size-xs); margin: 0; }
+.board__empty { color: var(--stone-700); font-size: var(--font-size-xs); margin: 0; }
