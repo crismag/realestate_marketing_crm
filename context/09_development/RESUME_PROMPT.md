@@ -1,6 +1,6 @@
 # Resume prompt — 2026-11-13T02:36Z run
 
-Continue the Real Estate CRM on branch `cursor/sales-board-crisgen-behaviors-77d9` (or main after it merges).
+Continue the Real Estate CRM on branch `cursor/input-bounds-page-crawl-77d9`. Pull request 8 is merged into main.
 Read CLAUDE.md, `context/09_development/AUTONOMOUS_RUN_STATE.json` and `docs/KNOWN_LIMITATIONS.md`.
 The fixed window is 2026-11-13T02:36:00Z to 2026-11-13T14:36:00Z. Do not extend it. Do not rebuild TASK-003–011.
 

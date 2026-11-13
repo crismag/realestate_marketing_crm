@@ -3,7 +3,7 @@
   "original_start_utc": "2026-11-13T02:36:00Z",
   "fixed_deadline_utc": "2026-11-13T14:36:00Z",
   "deadline_rule": "Fixed at start. Restarts, resumes and context resets never reset or extend it.",
-  "branch": "cursor/sales-board-crisgen-behaviors-77d9",
+  "branch": "cursor/input-bounds-page-crawl-77d9",
   "base_commit": "fda56b35a3ecfcfb32dae41ee2b91030e8371b32",
   "stack": "Python 3.12 (this container) / Django 5.2.19 LTS / SQLite WAL / server-rendered CrisGen UI 1.1 / waitress + whitenoise",
   "current_stage": "page crawl and input bounds",
