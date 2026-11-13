@@ -93,6 +93,7 @@ def prune_backups(directory: Path | None = None, *, keep: int) -> list[Path]:
 
 
 def create_backup(directory: Path | None = None, *, label: str = "") -> Path:
+    key = _key()  # validate before any plain copy exists
     directory = Path(directory or settings.CRM_BACKUP_DIR)
     directory.mkdir(parents=True, exist_ok=True)
     os.chmod(directory, 0o700)
@@ -122,7 +123,6 @@ def create_backup(directory: Path | None = None, *, label: str = "") -> Path:
         "migrations": _latest_migrations(target),
         "encrypted": False,
     }
-    key = _key()
     if key is not None:
         encrypted = target.with_name(target.name + ".enc")
         try:

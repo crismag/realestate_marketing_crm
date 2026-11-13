@@ -84,3 +84,11 @@ def test_deploy_check_warns_without_backup_key(settings):
     assert "crm.W001" in [w.id for w in backup_and_mail_settings(None)]
     settings.CRM_BACKUP_KEY = backup_crypto.new_key()
     assert "crm.W001" not in [w.id for w in backup_and_mail_settings(None)]
+
+
+@pytest.mark.django_db(transaction=True)
+def test_bad_key_leaves_no_plain_backup(tmp_path, settings, users):
+    settings.CRM_BACKUP_KEY = "not-a-valid-key"
+    with pytest.raises(backup.BackupError):
+        backup.create_backup(tmp_path / "bk")
+    assert not (tmp_path / "bk").exists() or list((tmp_path / "bk").iterdir()) == []

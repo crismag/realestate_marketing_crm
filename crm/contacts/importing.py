@@ -223,6 +223,8 @@ def run_import(imp: ContactImport, *, actor, include_duplicates: bool) -> Contac
 
 
 def cancel_import(imp: ContactImport, *, actor) -> None:
+    if imp.created_by_id != actor.pk:
+        raise DomainError("Only the person who uploaded the file can cancel this import.", code="not_owner")
     if not ContactImport.objects.filter(pk=imp.pk, status="preview").update(status="cancelled"):
         raise ConflictError("This import has already run or was cancelled.", code="import_not_pending")
     audit("import.cancelled", imp, f"Cancelled import of {imp.filename}", actor=actor)

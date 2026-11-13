@@ -100,3 +100,12 @@ def test_import_screens(client, users):
     assert "Ready to add" in page and "Phone" in page
     r = client.post(r["Location"], {"action": "run"})
     assert Contact.objects.count() == 2
+
+
+def test_only_uploader_can_cancel(client, users):
+    imp = importing.parse_upload(actor=users["ana"], upload=upload(CSV), destination="me", policy=get_policy())
+    with pytest.raises(DomainError):
+        importing.cancel_import(imp, actor=users["ben"])
+    client.force_login(users["ben"])
+    client.post(f"/contacts/import/{imp.pk}/", {"action": "cancel"})
+    assert ContactImport.objects.get(pk=imp.pk).status == "preview"

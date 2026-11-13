@@ -45,12 +45,13 @@ def login_view(request):
                 services.record_failure(email, ip)
                 form.add_error(None, "Email or password is incorrect, or the account is inactive.")
             else:
-                services.record_success(email, ip)
                 if user.two_factor_enabled:
+                    # Failure counters are cleared only after the second factor succeeds (login_verify).
                     # Password was right; the session only remembers who is half-way through signing in.
                     request.session.cycle_key()
                     request.session[PENDING_2FA] = {"uid": user.pk, "at": clock.now().timestamp(), "next": next_url}
                     return redirect("accounts:login_verify")
+                services.record_success(email, ip)
                 return _complete_login(request, user, next_url)
     return render(request, "accounts/login.html", {"form": form, "next": next_url})
 

@@ -15,6 +15,8 @@ class ForcePasswordChangeMiddleware:
             allowed = {reverse("accounts:password_change"), reverse("accounts:logout")}
             if request.path not in allowed and not request.path.startswith("/static/"):
                 return redirect("accounts:password_change")
+            # Finish the password change first; the two-step requirement applies on the next page.
+            return self.get_response(request)
         if user is not None and user.is_authenticated and not user.two_factor_enabled:
             policy = getattr(request, "crm_policy", None)
             if policy is None:

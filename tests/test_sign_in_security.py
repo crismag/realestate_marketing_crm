@@ -113,3 +113,27 @@ def test_admin_can_reset_lost_phone(client, users):
     assert not User.objects.get(pk=users["ana"].pk).two_factor_enabled
     client.force_login(users["ben"])
     assert client.post(f"/accounts/users/{users['ana'].pk}/reset-two-step/").status_code == 403
+
+
+def test_required_two_step_does_not_block_a_forced_password_change(client, users):
+    from crm.core.services import get_policy, get_settings_row, update_policy
+
+    policy = get_policy()
+    policy["security"] = {"require_two_factor": True}
+    update_policy(policy, actor=users["admin"], expected_version=get_settings_row().version)
+    User.objects.filter(pk=users["ana"].pk).update(must_change_password=True)
+    client.force_login(User.objects.get(pk=users["ana"].pk))
+    assert client.get("/accounts/password/").status_code == 200
+    r = client.post("/accounts/password/", {"old_password": PW, "new_password1": "Another-long-pass-99",
+                                            "new_password2": "Another-long-pass-99"})
+    assert r.status_code == 302
+    assert client.get("/contacts/")["Location"] == "/accounts/two-step/"
+
+
+def test_correct_password_does_not_reset_lockout_before_second_factor(client, users):
+    from crm.accounts.models import LoginThrottle
+
+    _enable(users["ana"])
+    client.post("/accounts/login/", {"email": "ana@example.test", "password": "wrong-password"})
+    client.post("/accounts/login/", {"email": "ana@example.test", "password": PW})
+    assert LoginThrottle.objects.filter(key__startswith="acct:", failures__gte=1).exists()
