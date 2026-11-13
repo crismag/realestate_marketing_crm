@@ -1,6 +1,6 @@
 def workspace(request):
     policy = getattr(request, "crm_policy", None)
-    context = {"workspace_name": (policy or {}).get("workspace_name", "Realstate CRM")}
+    context = {"workspace_name": (policy or {}).get("workspace_name", "Real Estate CRM")}
     if policy is not None:
         context["crm_policy"] = policy
     user = getattr(request, "user", None)

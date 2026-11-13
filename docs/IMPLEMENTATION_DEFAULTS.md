@@ -52,3 +52,5 @@ Approved rules that the build enforces as written (not defaults):
 | Reports | Definitions v`2026-11-13.1` in `crm/reporting/metrics.py`; spend counts only entries wholly inside the period (not prorated); earnings unavailable | OQ-011 |
 | Criticality | A task can be flagged critical; it always surfaces in attention | REQ-017 open issue |
 | Notifications | In-app only; reading or dismissing never completes the underlying work | REQ-019 |
+| Deactivated colleague | Their clients show as "Responsible colleague deactivated" in every administrator's attention queue; an administrator may request the handover on their behalf; the recipient must still accept | Code (`crm/work/services.py`) |
+| Source codes | Derived from the label when left empty | Code (`crm/core/settings_forms.py`) |

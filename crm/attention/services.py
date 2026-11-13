@@ -16,6 +16,7 @@ from django.db import transaction
 from django.db.models import Max, Q
 from django.utils import timezone
 
+from crm.accounts.models import User
 from crm.contacts.models import Contact, Inquiry, Interaction, Opportunity
 from crm.core import clock
 from crm.core.errors import DomainError
@@ -35,10 +36,11 @@ REASONS = {
     "pool_waiting": "Waiting in shared pool",
     "handover_waiting": "Handover awaiting acceptance",
     "critical_task": "Critical task open",
+    "handler_inactive": "Responsible colleague deactivated",
 }
 REASON_ORDER = list(REASONS)
 SNOOZABLE = {"toured_no_followup", "inactive", "next_action_missing", "opportunity_stalled", "pool_waiting"}
-SEVERE = {"inquiry_awaiting", "task_overdue", "promise_due", "handover_waiting", "critical_task"}
+SEVERE = {"handler_inactive", "inquiry_awaiting", "task_overdue", "promise_due", "handover_waiting", "critical_task"}
 
 
 @dataclass
@@ -150,6 +152,7 @@ def evaluate(*, now: dt.datetime | None = None, policy: dict, contact_ids: list[
     followup_types = set(ap["followup_types"]) - {"meeting_tour"}
     reset_types = set(ap["contact_reset_types"])
     items: list[AttentionItem] = []
+    admins = None  # loaded only if a deactivated colleague still holds a client
     for contact in contacts:
         kinds = kind_max.get(contact.pk, {})
         handler_label, handler_users = _handler(contact)
@@ -214,6 +217,13 @@ def evaluate(*, now: dt.datetime | None = None, policy: dict, contact_ids: list[
                                       "; ".join(f"'{opp.title}': {s[1]}" for opp, s in stalled), handler_users))
 
         assignment = getattr(contact, "assignment", None)
+        if assignment is not None and assignment.kind == "person" and not assignment.user.is_active:
+            if admins is None:
+                admins = list(User.objects.filter(is_active=True, is_staff=True))
+            reasons.append(Reason("handler_inactive", None,
+                                  f"{assignment.user} is deactivated; an administrator should hand this client over",
+                                  admins, overdue=True))
+
         if assignment is not None and assignment.kind == "pool":
             reasons.append(Reason("pool_waiting", assignment.since,
                                   f"In pool {assignment.pool} since {_ago(now, assignment.since)}", handler_users,

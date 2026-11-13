@@ -12,7 +12,7 @@ Supervise both (systemd, supervisord, a container runtime). Example systemd unit
 ```ini
 # /etc/systemd/system/crm-web.service
 [Unit]
-Description=Realstate CRM web
+Description=Real Estate CRM web
 After=network.target
 [Service]
 User=crm

@@ -1,4 +1,4 @@
-# Realstate CRM
+# Real Estate CRM
 
 An internal sales and marketing CRM for a real estate team: one shared workspace where every signed-in
 colleague can see every customer, with clear responsibility, shared pools, accepted handovers, an

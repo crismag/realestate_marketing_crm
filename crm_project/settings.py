@@ -1,4 +1,4 @@
-"""Settings for the Realstate CRM.
+"""Settings for the Real Estate CRM.
 
 All environment-dependent values come from CRM_* environment variables (see
 .env.example). Nothing secret is committed. SQLite is the current database;
@@ -29,7 +29,11 @@ def env_list(name: str, default: str) -> list[str]:
 
 
 CRM_ENV = os.environ.get("CRM_ENV", "development")  # development | test | production
-DEBUG = env_bool("CRM_DEBUG", False)
+# Development defaults to DEBUG on so the README quick start works without a .env file
+# (DEBUG off needs collectstatic). Production refuses DEBUG below.
+DEBUG = env_bool("CRM_DEBUG", CRM_ENV == "development")
+if DEBUG and CRM_ENV == "production":
+    raise ImproperlyConfigured("CRM_DEBUG must be off when CRM_ENV=production.")
 
 
 def _load_secret_key() -> str:

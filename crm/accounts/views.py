@@ -10,6 +10,7 @@ from django.views.decorators.http import require_POST
 
 from crm.core.forms import CrisGenMixin
 from crm.core.services import audit
+from crm.work.models import Assignment, Task
 
 from . import services
 from .forms import LoginForm, ResetPasswordForm, UserCreateForm, UserEditForm
@@ -124,6 +125,12 @@ def user_edit(request, pk):
                 audit("user.updated", target, f"User {target.email} updated", actor=request.user,
                       data={"is_active": d["is_active"], "is_staff": d["is_staff"]})
             messages.success(request, "User updated.")
+            if not d["is_active"]:
+                held = Assignment.objects.filter(kind="person", user=target).count()
+                tasks = Task.objects.filter(assignee=target, status="open").count()
+                if held or tasks:
+                    messages.warning(request, f"{target} still holds {held} client(s) and {tasks} open task(s). "
+                                     "They now appear in the attention queue so an administrator can hand them over.")
             return redirect("accounts:users")
     return render(request, "accounts/user_form.html", {"form": form, "reset": reset, "target": target, "title": f"Edit {target}"})
 

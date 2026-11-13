@@ -142,7 +142,18 @@ class TeamForm(Form):
 
 
 class SourceForm(Form):
-    code = forms.SlugField(max_length=50, help_text="Stable code; cannot be changed later")
     label = forms.CharField(max_length=100)
+    code = forms.SlugField(max_length=50, required=False,
+                           help_text="Stable code used in exports and the intake API. Leave empty to derive it from the label.")
     kind = forms.ChoiceField(choices=Source.KINDS)
     active = forms.BooleanField(required=False, initial=True)
+
+    def clean(self):
+        data = super().clean()
+        if not data.get("code") and data.get("label"):
+            from django.utils.text import slugify
+
+            data["code"] = slugify(data["label"])[:50] or "source"
+        if not data.get("code"):
+            self.add_error("code", "Enter a code or a label.")
+        return data

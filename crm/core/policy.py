@@ -24,7 +24,7 @@ CHANNELS = [
 ]
 
 DEFAULT_POLICY: dict = {
-    "workspace_name": "Realstate CRM",
+    "workspace_name": "Real Estate CRM",
     "timezone": "Asia/Shanghai",
     "currency": "USD",
     "lifecycle_labels": {"lead": "Lead", "prospect": "Prospect", "client": "Client"},
