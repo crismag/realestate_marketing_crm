@@ -45,4 +45,4 @@ until the items marked *Before pilot* are done and the product owner has reviewe
 - Inbound reply response matching uses contact-level chronological human-response evidence, not a reply-thread identifier. Staff must still log responses accurately.
 - Daily digest change counts compare with the previous delivered digest snapshot, not every transient state between digests. Reassignment can count as resolved for the old handler.
 - Run normal migrations before starting the upgraded web/worker. `automation.0003_digest_snapshots` adds the comparison baseline, and `automation.0004_digest_staff_email` records whether the staff copy was filed. The first post-upgrade digest establishes the baseline. Older digests stay in-app only.
-- Local environment cannot launch Chromium (socket permission denied), but fresh desktop/390px browser verification passed in GitHub Actions run 43345965197 at bd49e60. See current run report for exact checks.
+- Google Chrome launches in this workspace. `scripts/e2e.sh` passed 19 checks locally on 2026-11-13, and GitHub Actions run 43345965197 also passed a desktop/390px check at bd49e60.

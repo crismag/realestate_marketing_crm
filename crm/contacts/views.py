@@ -190,24 +190,26 @@ def contact_edit(request, pk):
     contact = get_object_or_404(Contact, pk=pk)
     initial = {f: getattr(contact, f) for f in services.CONTACT_EDITABLE_FIELDS}
     form = ContactFieldsForm(request.POST or None, initial=initial)
+    posted_version = request.POST.get("version", contact.version) if request.method == "POST" else contact.version
     if request.method == "POST" and form.is_valid():
-        try:
-            expected = int(request.POST.get("version", "0"))
-        except ValueError:
-            expected = 0
-        data = {k: v if v is not None or k in ("source", "introducer", "next_contact_agreed_at") else ""
-                for k, v in form.cleaned_data.items()}
-        try:
-            services.update_contact(contact, actor=request.user, data=data, expected_version=expected)
-        except DomainError as exc:
-            form.add_error(None, exc.message)
-            contact.refresh_from_db()
+        expected = _posted_version(request)
+        if expected is None:
+            form.add_error(None, "The page version was not valid. Save again to apply your edits.")
+            posted_version = contact.version
         else:
-            messages.success(request, "Contact saved.")
-            return redirect("contacts:detail", pk=pk)
+            data = {k: v if v is not None or k in ("source", "introducer", "next_contact_agreed_at") else ""
+                    for k, v in form.cleaned_data.items()}
+            try:
+                services.update_contact(contact, actor=request.user, data=data, expected_version=expected)
+            except DomainError as exc:
+                form.add_error(None, exc.message)
+                contact.refresh_from_db()
+            else:
+                messages.success(request, "Contact saved.")
+                return redirect("contacts:detail", pk=pk)
     duplicates = services.duplicate_candidates(email=contact.email, phone=contact.phone, name="", exclude_id=contact.pk)
     return render(request, "contacts/edit.html", {"form": form, "contact": contact, "duplicates": duplicates,
-                                                  "version": request.POST.get("version", contact.version)})
+                                                  "version": posted_version})
 
 
 @require_POST
@@ -355,18 +357,11 @@ def opportunity_outcome(request, pk, opp_id):
 _SALES_OUTCOMES = {"open": "Open", "won": "Won", "lost": "Lost", "all": "All outcomes"}
 
 
-_SQL_INT_MAX = 2**63 - 1
-
-
-def _posted_version(request):
+def _posted_version(request, name: str = "version"):
     """Parse a posted optimistic version. Oversized values never reach SQLite."""
-    raw = request.POST.get("version", "")
-    if not isinstance(raw, str) or not raw.isdigit() or len(raw) > 19:
-        return None
-    value = int(raw)
-    if value > _SQL_INT_MAX:
-        return None
-    return value
+    from crm.core.db import parse_version
+
+    return parse_version(request.POST.get(name, ""))
 
 
 def _sales_filters(request):
@@ -525,10 +520,14 @@ def contact_merge(request, pk, duplicate_pk):
     if not merging.can_merge(request.user, keep):
         plan.blockers.append("Only the person (or pool coordinator) responsible for these contacts can merge them.")
     if request.method == "POST":
+        keep_version = _posted_version(request, "keep_version")
+        duplicate_version = _posted_version(request, "duplicate_version")
+        if keep_version is None or duplicate_version is None:
+            messages.error(request, "Reload the page and try again.")
+            return redirect("contacts:merge", pk=keep.pk, duplicate_pk=duplicate.pk)
         try:
             merging.merge_contacts(keep, duplicate, actor=request.user,
-                                   keep_version=int(request.POST.get("keep_version", 0)),
-                                   duplicate_version=int(request.POST.get("duplicate_version", 0)),
+                                   keep_version=keep_version, duplicate_version=duplicate_version,
                                    reason=request.POST.get("reason", "")[:200])
         except (DomainError, ValueError) as exc:
             messages.error(request, getattr(exc, "message", "Could not merge."))

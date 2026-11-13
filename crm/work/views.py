@@ -8,6 +8,7 @@ from django.views.decorators.http import require_POST
 
 from crm.contacts.models import Contact
 from crm.core import clock
+from crm.core.db import parse_version
 from crm.core.errors import DomainError
 from crm.core.web import new_operation_id, paginate, run_action, safe_next
 
@@ -38,9 +39,8 @@ def shared_work(request):
 @require_POST
 def claim(request, contact_id):
     contact = get_object_or_404(Contact, pk=contact_id)
-    try:
-        version = int(request.POST.get("version", ""))
-    except ValueError:
+    version = parse_version(request.POST.get("version", ""))
+    if version is None:
         messages.error(request, "Missing assignment version; reload the page.")
         return redirect(safe_next(request, "/work/shared/"))
     response, result = run_action(
@@ -142,10 +142,8 @@ def task_create(request, contact_id):
 
 
 def _version(request):
-    try:
-        return int(request.POST.get("version", ""))
-    except ValueError:
-        return -1
+    parsed = parse_version(request.POST.get("version", ""))
+    return parsed if parsed is not None else -1
 
 
 @require_POST

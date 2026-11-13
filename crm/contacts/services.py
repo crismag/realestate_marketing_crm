@@ -9,7 +9,7 @@ from django.db.models import F, Q, QuerySet
 
 from crm.automation.queue import emit
 from crm.core import clock
-from crm.core.db import write_transaction
+from crm.core.db import require_version, write_transaction
 from crm.core.errors import ConflictError, DomainError
 from crm.core.services import audit, get_policy
 from crm.work.models import Assignment, AssignmentEvent, Pool
@@ -21,15 +21,10 @@ CONTACT_EDITABLE_FIELDS = (
     "preferred_channel", "next_contact_agreed_at",
 )
 HUMAN_RESPONSE_KINDS = ("outbound_attempt", "conversation", "meeting_tour")
-# SQLite binds integers as signed 64-bit. A larger Python int becomes a database error.
-_SQL_INT_MAX = 2**63 - 1
 
 
 def _require_version(version) -> int:
-    """Reject a missing or out-of-range expected version before it reaches the database."""
-    if type(version) is not int or version < 0 or version > _SQL_INT_MAX:
-        raise DomainError("Reload the page and try again.", code="version_required")
-    return version
+    return require_version(version)
 
 
 def _email_variants(email: str) -> set[str]:
@@ -138,6 +133,8 @@ def capture_contact(*, actor, data: dict, destination: str, pool: Pool | None = 
 
 
 def update_contact(contact: Contact, *, actor, data: dict, expected_version: int) -> Contact:
+    _require_version(expected_version)
+
     def run():
         fields = {k: v for k, v in data.items() if k in CONTACT_EDITABLE_FIELDS}
         current = Contact.objects.get(pk=contact.pk)
@@ -162,6 +159,7 @@ def update_contact(contact: Contact, *, actor, data: dict, expected_version: int
 
 
 def set_lifecycle(contact: Contact, *, actor, lifecycle: str, disposition: str, reason: str, expected_version: int) -> Contact:
+    _require_version(expected_version)
     if lifecycle not in dict(Contact._meta.get_field("lifecycle").choices):
         raise DomainError("Unknown lifecycle.", code="invalid_lifecycle")
     if disposition not in dict(Contact._meta.get_field("disposition").choices):

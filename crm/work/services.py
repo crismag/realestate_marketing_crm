@@ -14,7 +14,7 @@ from django.db.models import F
 
 from crm.automation.queue import emit
 from crm.core import clock
-from crm.core.db import write_transaction
+from crm.core.db import require_version, write_transaction
 from crm.core.errors import ConflictError, DomainError, InvalidTransition, NotAllowed
 from crm.core.services import audit
 
@@ -29,6 +29,7 @@ class ClaimResult:
 
 def claim(contact, *, actor, expected_version: int, operation_id: str) -> ClaimResult:
     """Atomically claim a pool-held contact. First successful claim wins; others get ConflictError."""
+    require_version(expected_version)
     if not operation_id or len(operation_id) > 64:
         raise DomainError("Missing operation id.", code="operation_id_required")
     op_key = f"claim:{operation_id}"
@@ -272,6 +273,8 @@ def create_task(contact, *, actor, assignee, title: str, kind: str, due_at, desc
 
 
 def complete_task(task: Task, *, actor, note: str = "", expected_version: int) -> Task:
+    require_version(expected_version)
+
     def run():
         updated = Task.objects.filter(pk=task.pk, status="open", version=expected_version).update(
             status="done", completed_at=clock.now(), completed_by=actor, completion_note=note.strip()[:300],
@@ -291,6 +294,7 @@ def complete_task(task: Task, *, actor, note: str = "", expected_version: int) -
 
 
 def replan_task(task: Task, *, actor, due_at, reason: str, expected_version: int) -> Task:
+    require_version(expected_version)
     if not reason.strip():
         raise DomainError("Give a reason for changing the due date.", code="reason_required")
     if due_at is None:
@@ -312,6 +316,7 @@ def replan_task(task: Task, *, actor, due_at, reason: str, expected_version: int
 
 
 def reassign_task(task: Task, *, actor, assignee, expected_version: int) -> Task:
+    require_version(expected_version)
     if assignee is None or not assignee.is_active:
         raise DomainError("Choose an active assignee.", code="invalid_assignee")
 
@@ -330,6 +335,7 @@ def reassign_task(task: Task, *, actor, assignee, expected_version: int) -> Task
 
 
 def cancel_task(task: Task, *, actor, reason: str, expected_version: int) -> Task:
+    require_version(expected_version)
     if not reason.strip():
         raise DomainError("Give a reason for cancelling.", code="reason_required")
 
