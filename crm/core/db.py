@@ -20,9 +20,13 @@ def parse_version(raw) -> int | None:
     """A posted optimistic version that is safe to bind, or None when it is missing or oversized."""
     if type(raw) is int:
         return raw if 0 <= raw <= SQL_INT_MAX else None
-    if not isinstance(raw, str) or not raw.isdigit() or len(raw) > 19:
+    # isdigit() is true for superscripts and circled numbers, which int() rejects.
+    if not isinstance(raw, str) or not raw.isdecimal() or len(raw) > 19:
         return None
-    value = int(raw)
+    try:
+        value = int(raw)
+    except ValueError:
+        return None
     return value if value <= SQL_INT_MAX else None
 
 

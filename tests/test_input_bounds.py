@@ -12,6 +12,31 @@ pytestmark = pytest.mark.django_db
 HUGE = "9" * 40
 
 
+def test_non_decimal_version_digits_are_a_message(client, users, pool, make_contact, frozen):
+    contact = make_contact("Superscript", email="super@example.test")
+    client.force_login(users["ana"])
+    edited = client.post(f"/contacts/{contact.pk}/edit/", {"display_name": "Renamed", "version": "²"})
+    assert edited.status_code == 200
+    assert "The page version was not valid." in edited.content.decode()
+    contact.refresh_from_db()
+    assert contact.display_name == "Superscript"
+
+    pooled = make_contact("Circled", destination="pool", pool=pool, email="circled@example.test")
+    client.force_login(users["ben"])
+    claimed = client.post(f"/work/claim/{pooled.pk}/", {"version": "①", "operation_id": "circled-claim"}, follow=True)
+    assert claimed.status_code == 200
+    assert "Missing assignment version" in claimed.content.decode()
+    assert Assignment.objects.get(contact=pooled).kind == "pool"
+
+    task = work.create_task(contact, actor=users["ana"], assignee=users["ana"], title="Call back",
+                            kind="call", due_at=frozen)
+    client.force_login(users["ana"])
+    completed = client.post(f"/work/tasks/{task.pk}/complete/", {"version": "²", "note": "done"}, follow=True)
+    assert completed.status_code == 200
+    assert "Reload the page and try again." in completed.content.decode()
+    assert Task.objects.get(pk=task.pk).status == "open"
+
+
 def test_contact_edit_rejects_an_oversized_version(client, users, make_contact):
     contact = make_contact("Bound Contact", email="bound@example.test")
     client.force_login(users["ana"])
