@@ -4,7 +4,7 @@
 <div class="page-head">
   <div><h1 class="cg-typography" data-variant="h4">{{ contact.display_name }}</h1>
     <div class="row">{% chip lifecycle_labels|get_item:contact.lifecycle "open" "solid" %}{% if contact.disposition != 'active' %} {% chip contact.get_disposition_display %}{% endif %}{% if contact.archived_at %} {% chip "Archived" %}{% endif %}{% if contact.email_opt_out %} {% chip "Email opt-out" "suppressed" %}{% endif %}
-    <span class="muted">Responsible: <strong>{% if assignment.kind == 'pool' %}Pool {{ assignment.pool }}{% else %}{{ assignment.user }}{% endif %}</strong> since {{ assignment.since|local }}</span></div>
+    <span class="muted">Responsible: <strong>{% if assignment.kind == 'pool' %}Pool {{ assignment.pool }}{% else %}{{ assignment.user }}{% if not assignment.user.is_active %} (deactivated){% endif %}{% endif %}</strong> since {{ assignment.since|local }}</span></div>
   </div>
   <div class="row">
     {% if assignment.kind == 'pool' %}<form method="post" action="{% url 'work:claim' contact.pk %}">{% csrf_token %}<input type="hidden" name="version" value="{{ assignment.version }}"><input type="hidden" name="operation_id" value="{{ operation_id }}"><button class="cg-button" data-variant="gradient" data-color="primary" data-size="md" data-shape="rounded" data-full-width="false">Claim this client</button></form>{% endif %}
@@ -14,6 +14,9 @@
   </div>
 </div>
 
+{% if contact.merged_into %}<div class="alert-soft" role="status">This record was merged into <a href="{% url 'contacts:detail' contact.merged_into.pk %}">{{ contact.merged_into.display_name }}</a> and archived. Its history moved there.</div>{% endif %}
+{% if possible_duplicates %}<section class="cg-card" aria-labelledby="dups"><div class="card-title"><h2 id="dups">Possible duplicates</h2></div>
+<ul class="cg-list">{% for d in possible_duplicates %}<li class="cg-list__item" data-color="default"><span><a href="{% url 'contacts:detail' d.pk %}">{{ d.display_name }}</a> <span class="small muted">{{ d.email|default:"no email" }} · {{ d.phone|default:"no phone" }} · {{ d.assignment.describe }}</span></span>{% if can_merge %}<a class="cg-button" data-variant="outline" data-color="secondary" data-size="sm" data-shape="rounded" data-full-width="false" href="{% url 'contacts:merge' contact.pk d.pk %}">Merge into this contact</a>{% endif %}</li>{% endfor %}</ul></section>{% endif %}
 <div class="grid grid--main-side">
 <div class="stack">
   <section class="cg-card" aria-labelledby="attn"><div class="card-title"><h2 id="attn">Attention</h2><span class="small muted">Evaluated {{ now|local }}</span></div>
@@ -37,7 +40,8 @@
     <span><a href="{% url 'work:task' t.pk %}">{{ t.title }}</a> {% if t.critical %}{% chip "Critical" "critical_task" %}{% endif %}<br><span class="small muted">{{ t.get_kind_display }} · {{ t.assignee }} · {% if t.due_at %}{% if t.due_at < now %}overdue, {% endif %}due {{ t.due_at|local }}{% else %}no due date{% endif %}</span></span>
     <form method="post" action="{% url 'work:task_complete' t.pk %}">{% csrf_token %}<input type="hidden" name="version" value="{{ t.version }}"><button class="cg-button" data-variant="outline" data-color="success" data-size="sm" data-shape="rounded" data-full-width="false">Mark done</button></form></span></li>
   {% empty %}<li class="empty">No open next action.</li>{% endfor %}</ul>
-  <details class="disclosure card-pad" {% if task_form.errors %}open{% endif %}><summary>Add next action</summary>
+  {% if followup_suggestion %}<div class="card-pad"><div class="cg-alert" data-cg="alert" role="status" data-variant="gradient" data-color="info"><div class="cg-alert__content" data-cg-part="content">Suggested next action after your {{ followup_suggestion.interaction.get_kind_display|lower }}: <strong>{{ followup_suggestion.title }}</strong>, due {{ followup_suggestion.due_at|local }}. The form below is pre-filled; nothing is created until you press Create task. Change or ignore it as you see fit.</div></div></div>{% endif %}
+  <details class="disclosure card-pad" {% if task_form.errors or followup_suggestion %}open{% endif %}><summary>Add next action</summary>
   <form method="post" action="{% url 'work:task_create' contact.pk %}" class="stack-sm" novalidate>{% csrf_token %}{% with form=task_form %}{% include "partials/form_errors.html" %}<div class="form-grid form-grid--2">{% for field in form %}{% include "partials/field.html" %}{% endfor %}</div>{% endwith %}
   <button class="cg-button" data-variant="solid" data-color="primary" data-size="sm" data-shape="rounded" data-full-width="false">Create task</button></form></details>
   </section>
@@ -78,6 +82,7 @@
       <form method="post" action="{% url 'work:handover_decide' open_handover.pk 'decline' %}" class="row">{% csrf_token %}<input type="hidden" name="next" value="{{ request.path }}"><label class="sr-only" for="decline-note">Decline reason</label><input class="cg-input" data-size="sm" data-color="default" id="decline-note" name="note" placeholder="Reason"><button class="cg-button" data-variant="outline" data-color="secondary" data-size="sm" data-shape="rounded" data-full-width="false">Decline</button></form></div>{% endif %}
     {% if is_sender %}<form method="post" action="{% url 'work:handover_decide' open_handover.pk 'cancel' %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.path }}"><button class="cg-button" data-variant="ghost" data-color="secondary" data-size="sm" data-shape="rounded" data-full-width="false">Cancel my request</button></form>{% endif %}
   {% endif %}
+  {% if not open_handover %}<p class="small muted">{% if can_handover %}You can hand this client to a colleague{% if assignment.kind == 'person' %} or release them to a pool{% endif %}. You stay responsible until it is accepted.{% elif assignment.kind == 'pool' %}Anyone can claim this client. Only the pool coordinator can offer them to a specific agent.{% elif not assignment.user.is_active %}{{ assignment.user }} is deactivated. An administrator can start a handover to an active colleague.{% else %}Only {{ assignment.user }} can hand this client over. Ask them, or a manager, if it should move.{% endif %}</p>{% endif %}
   {% if handovers %}<ul class="small">{% for h in handovers %}<li>{{ h.requested_at|local:"Y-m-d" }}: {{ h.get_kind_display }} to {{ h.destination_label }} — {% chip h.get_state_display h.state %}{% if h.decided_by %} by {{ h.decided_by }}{% endif %}</li>{% endfor %}</ul>{% endif %}
   </div></section>
 

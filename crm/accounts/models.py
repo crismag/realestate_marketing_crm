@@ -42,6 +42,15 @@ class User(AbstractBaseUser, PermissionsMixin):
     must_change_password = models.BooleanField(default=False)
     date_joined = models.DateTimeField(default=clock.now)
     teams = models.ManyToManyField("Team", blank=True, related_name="members")
+    # Two-step sign-in (authenticator app). The secret is only active once confirmed with a code.
+    totp_secret = models.CharField(max_length=64, blank=True)
+    totp_confirmed_at = models.DateTimeField(null=True, blank=True)
+    totp_last_step = models.BigIntegerField(default=0)
+    recovery_code_hashes = models.JSONField(default=list, blank=True)
+
+    @property
+    def two_factor_enabled(self) -> bool:
+        return bool(self.totp_secret and self.totp_confirmed_at)
 
     objects = UserManager()
 

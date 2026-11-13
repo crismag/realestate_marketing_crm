@@ -8,13 +8,16 @@ contact totals are counted separately from reason totals.
 from __future__ import annotations
 
 import datetime as dt
+import zoneinfo
 from collections import defaultdict
 from dataclasses import dataclass, field
 
 from django.db import transaction
 from django.db.models import Max, Q
+from django.utils import timezone
 
-from crm.contacts.models import Contact, Inquiry, Interaction
+from crm.accounts.models import User
+from crm.contacts.models import Contact, Inquiry, Interaction, Opportunity
 from crm.core import clock
 from crm.core.errors import DomainError
 from crm.core.services import audit
@@ -29,13 +32,15 @@ REASONS = {
     "promise_due": "Promise to customer due",
     "inactive": "Inactive relationship",
     "next_action_missing": "Next action missing",
+    "opportunity_stalled": "Opportunity stalled",
     "pool_waiting": "Waiting in shared pool",
     "handover_waiting": "Handover awaiting acceptance",
     "critical_task": "Critical task open",
+    "handler_inactive": "Responsible colleague deactivated",
 }
 REASON_ORDER = list(REASONS)
-SNOOZABLE = {"toured_no_followup", "inactive", "next_action_missing", "pool_waiting"}
-SEVERE = {"inquiry_awaiting", "task_overdue", "promise_due", "handover_waiting", "critical_task"}
+SNOOZABLE = {"toured_no_followup", "inactive", "next_action_missing", "opportunity_stalled", "pool_waiting"}
+SEVERE = {"handler_inactive", "inquiry_awaiting", "task_overdue", "promise_due", "handover_waiting", "critical_task"}
 
 
 @dataclass
@@ -127,6 +132,11 @@ def evaluate(*, now: dt.datetime | None = None, policy: dict, contact_ids: list[
     for task in Task.objects.filter(contact_id__in=ids, status="open").select_related("assignee").order_by("due_at"):
         tasks[task.contact_id].append(task)
 
+    opportunities = defaultdict(list)
+    for opp in Opportunity.objects.filter(contact_id__in=ids, outcome="open").order_by("created_at"):
+        opportunities[opp.contact_id].append(opp)
+    local_today = timezone.localtime(now, zoneinfo.ZoneInfo(policy["timezone"])).date()
+
     handovers = {}
     for h in Handover.objects.filter(contact_id__in=ids, state="requested").select_related(
         "sender", "recipient", "pool__coordinator", "pool__backup_coordinator"
@@ -142,6 +152,7 @@ def evaluate(*, now: dt.datetime | None = None, policy: dict, contact_ids: list[
     followup_types = set(ap["followup_types"]) - {"meeting_tour"}
     reset_types = set(ap["contact_reset_types"])
     items: list[AttentionItem] = []
+    admins = None  # loaded only if a deactivated colleague still holds a client
     for contact in contacts:
         kinds = kind_max.get(contact.pk, {})
         handler_label, handler_users = _handler(contact)
@@ -196,7 +207,23 @@ def evaluate(*, now: dt.datetime | None = None, policy: dict, contact_ids: list[
             if not any(r.code in ("task_overdue", "promise_due") for r in reasons):
                 reasons.append(Reason("next_action_missing", None, "No open follow-up task or agreed contact date", handler_users))
 
+        if relationship_active:
+            # One reason per contact covering every stalled opportunity, so a snooze (keyed by contact and
+            # reason) covers exactly what the person saw rather than hiding a reminder they never saw.
+            stalled = [(opp, s) for opp in opportunities.get(contact.pk, [])
+                       if (s := _stalled(opp, now=now, today=local_today, ap=ap))]
+            if stalled:
+                reasons.append(Reason("opportunity_stalled", min(s[0] for _, s in stalled),
+                                      "; ".join(f"'{opp.title}': {s[1]}" for opp, s in stalled), handler_users))
+
         assignment = getattr(contact, "assignment", None)
+        if assignment is not None and assignment.kind == "person" and not assignment.user.is_active:
+            if admins is None:
+                admins = list(User.objects.filter(is_active=True, is_staff=True))
+            reasons.append(Reason("handler_inactive", None,
+                                  f"{assignment.user} is deactivated; an administrator should hand this client over",
+                                  admins, overdue=True))
+
         if assignment is not None and assignment.kind == "pool":
             reasons.append(Reason("pool_waiting", assignment.since,
                                   f"In pool {assignment.pool} since {_ago(now, assignment.since)}", handler_users,
@@ -223,6 +250,22 @@ def evaluate(*, now: dt.datetime | None = None, policy: dict, contact_ids: list[
                                        last_tour, next_task))
     items.sort(key=lambda i: (i.severity, i.oldest_since or now, i.contact.display_name))
     return items
+
+
+def _stalled(opp: Opportunity, *, now: dt.datetime, today: dt.date, ap: dict) -> tuple[dt.datetime, str] | None:
+    """Open opportunity whose stage has not moved in N days, or whose expected close date has passed (C-R2).
+
+    Uses `stage_changed_at`, which only moves when the stage really changes, so editing the amount or
+    title does not reset the clock. Both checks are implementation defaults; 0 / false switch them off.
+    """
+    days = ap.get("stalled_opportunity_days", 0)
+    changed = opp.stage_changed_at or opp.created_at
+    if ap.get("flag_past_expected_close", False) and opp.expected_close and opp.expected_close < today:
+        since = dt.datetime.combine(opp.expected_close, dt.time.min, tzinfo=dt.UTC)
+        return since, f"expected close {opp.expected_close:%Y-%m-%d} has passed and it is still open"
+    if days and now - changed > dt.timedelta(days=days):
+        return changed, f"stage unchanged since {_ago(now, changed)} (limit {days} days)"
+    return None
 
 
 def _ago(now: dt.datetime, then: dt.datetime | None) -> str:

@@ -31,10 +31,10 @@
 <dt>Still awaiting</dt><dd>{{ response.awaiting }}</dd>
 <dt>Median hours to respond</dt><dd>{% if response.median_hours is not None %}{{ response.median_hours|floatformat:1 }}{% else %}<span class="muted">not applicable</span>{% endif %}</dd></dl></div></section>
 <section class="cg-card"><div class="card-title"><h2>Logged activity</h2></div><div class="cg-table table-scroll"><table class="cg-table__table"><thead><tr><th class="cg-table__head-cell" scope="col">Person</th><th class="cg-table__head-cell" scope="col">Type</th><th class="cg-table__head-cell num" scope="col">Count</th></tr></thead><tbody>
-{% for a in activity_by_user %}<tr><td class="cg-table__cell">{{ a.actor__full_name|default:"System" }}</td><td class="cg-table__cell">{{ a.kind }}</td><td class="cg-table__cell num">{{ a.n }}</td></tr>{% empty %}<tr><td class="cg-table__cell" colspan="3"><div class="empty">No interactions logged in this period.</div></td></tr>{% endfor %}</tbody></table></div></section>
+{% for a in activity_by_user %}<tr><td class="cg-table__cell">{{ a.actor__full_name|default:"System" }}</td><td class="cg-table__cell">{{ a.kind|interaction_label }}</td><td class="cg-table__cell num">{{ a.n }}</td></tr>{% empty %}<tr><td class="cg-table__cell" colspan="3"><div class="empty">No interactions logged in this period.</div></td></tr>{% endfor %}</tbody></table></div></section>
 </div>
 
-<section class="cg-card mt-4"><div class="card-title"><h2>Relationships by lifecycle</h2></div><div class="card-pad row">{% for l in lifecycle_counts %}{% chip l.lifecycle %} <strong>{{ l.n }}</strong>{% empty %}<span class="muted">No contacts yet.</span>{% endfor %}</div></section>
+<section class="cg-card mt-4"><div class="card-title"><h2>Relationships by lifecycle</h2></div><div class="card-pad row">{% for l in lifecycle_counts %}{% chip crm_policy.lifecycle_labels|get_item:l.lifecycle %} <strong>{{ l.n }}</strong>{% empty %}<span class="muted">No contacts yet.</span>{% endfor %}</div></section>
 
 <details class="cg-card card-pad disclosure mt-4"><summary>Metric definitions</summary><dl class="facts">{% for key, d in definitions.items %}<dt>{{ d.0 }}</dt><dd>{{ d.1 }}</dd>{% endfor %}</dl></details>
 {% endblock %}

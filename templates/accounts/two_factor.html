@@ -1,0 +1,23 @@
+{% extends "base.html" %}{% block title %}Two-step sign-in{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1 class="cg-typography" data-variant="h4">Two-step sign-in</h1><p class="muted">A code from an authenticator app (Google Authenticator, Microsoft Authenticator, 1Password and similar) after your password.</p></div><a href="{% url 'accounts:password_change' %}">Back to security</a></div>
+{% if recovery_codes %}
+<section class="cg-card narrow"><div class="card-title"><h2>Save your recovery codes</h2></div><div class="card-pad stack-sm">
+<p>Each code works once if you lose your phone. They are shown only now: print them or keep them in a password manager.</p>
+<ul class="recovery-codes">{% for c in recovery_codes %}<li><code>{{ c }}</code></li>{% endfor %}</ul>
+<a class="cg-button" data-variant="solid" data-color="primary" data-size="md" data-shape="rounded" data-full-width="false" href="{% url 'core:today' %}">I saved them</a></div></section>
+{% elif enabled %}
+<section class="cg-card narrow"><div class="card-pad stack-sm"><p><span class="cg-chip" data-variant="solid" data-color="success" data-size="sm">On</span> You will be asked for a code each time you sign in. {{ codes_left }} recovery code(s) left.</p>
+{% if crm_policy.security.require_two_factor %}<p class="small muted">Your company requires two-step sign-in, so it stays on. An administrator can reset it if you change phones.</p>
+{% else %}<form method="post" class="stack-sm" novalidate>{% csrf_token %}<input type="hidden" name="action" value="disable">{% include "partials/form_errors.html" %}{% for field in form %}{% include "partials/field.html" %}{% endfor %}
+<button class="cg-button" data-variant="outline" data-color="warning" data-size="sm" data-shape="rounded" data-full-width="false" type="submit">Turn off two-step sign-in</button></form>{% endif %}</div></section>
+{% else %}
+{% if crm_policy.security.require_two_factor %}<div class="alert-soft" role="status">Your company requires two-step sign-in. Set it up to continue.</div>{% endif %}
+<section class="cg-card narrow"><div class="card-pad stack">
+<ol class="stack-sm"><li>Open your authenticator app and add an account.</li><li>Scan this code, or type the key below.</li><li>Enter the 6-digit code the app shows.</li></ol>
+<div class="totp-qr-wrap">{{ qr_svg }}</div>
+<p class="small">Key: <code class="totp-key">{{ secret_groups }}</code></p>
+<form method="post" class="stack-sm" novalidate>{% csrf_token %}{% include "partials/form_errors.html" %}{% for field in form %}{% include "partials/field.html" %}{% endfor %}
+<button class="cg-button" data-variant="solid" data-color="primary" data-size="md" data-shape="rounded" data-full-width="false" type="submit">Turn on</button></form></div></section>
+{% endif %}
+{% endblock %}

@@ -2,6 +2,7 @@
 {% block content %}
 <div class="page-head"><h1 class="cg-typography" data-variant="h4">Contacts</h1>
 <div class="row"><a class="cg-button" data-variant="outline" data-color="secondary" data-size="sm" data-shape="rounded" data-full-width="false" href="?{{ request.GET.urlencode }}&amp;format=csv">Export CSV</a>
+<a class="cg-button" data-variant="outline" data-color="secondary" data-size="sm" data-shape="rounded" data-full-width="false" href="{% url 'contacts:import' %}">Import CSV</a>
 <a class="cg-button" data-variant="gradient" data-color="primary" data-size="md" data-shape="rounded" data-full-width="false" href="{% url 'contacts:new' %}">Capture contact</a></div></div>
 <section class="cg-card">
 <form method="get" class="card-pad filters" role="search" aria-label="Filter contacts">

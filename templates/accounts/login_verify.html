@@ -1,0 +1,13 @@
+{% extends "base.html" %}{% block title %}Two-step sign-in{% endblock %}
+{% block auth_content %}
+<div class="cg-card auth-card" data-shadow="lg">
+  <div class="card-title"><h1 class="cg-typography" data-variant="h5" data-color="inherit">Enter your code</h1></div>
+  <form method="post" class="card-pad stack-sm" novalidate>
+    {% csrf_token %}
+    {% include "partials/form_errors.html" %}
+    {% for field in form %}{% include "partials/field.html" %}{% endfor %}
+    <button class="cg-button" data-variant="gradient" data-color="primary" data-size="md" data-shape="rounded" data-full-width="true" type="submit">Verify</button>
+    <p class="small muted">Lost your phone? Use a recovery code, or ask an administrator to turn off two-step sign-in for your account. <a href="{% url 'accounts:login' %}">Start again</a></p>
+  </form>
+</div>
+{% endblock %}

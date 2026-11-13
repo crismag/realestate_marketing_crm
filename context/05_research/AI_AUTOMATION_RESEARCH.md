@@ -173,6 +173,11 @@ and a visible "AI-generated, check before use" label. No suggestion is ever appl
 
 ## 6. Recommended order if Cris promotes items
 
+Update 2026-11-13: C-R2, C-R3 and C-R6 were built as **implementation defaults** (configurable, listed in
+`docs/IMPLEMENTATION_DEFAULTS.md`, tests in `tests/test_rule_automations.py`). That is not a business approval;
+OQ-015 still decides whether they stay. No AI-assisted item has been built.
+
+
 1. Rule-based, no new data: C-R2, C-R3, C-R6, then C-R1 (needs agreed weights).
 2. First AI pilot, read-only and lowest risk: C-A1 relationship summary, behind a policy switch, demo data only.
 3. Then C-A4 and C-A2, both suggest/draft-only.

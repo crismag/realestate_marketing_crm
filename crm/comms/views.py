@@ -53,7 +53,8 @@ class TemplateForm(Form):
     name = forms.CharField(max_length=120)
     subject = forms.CharField(max_length=200)
     body = forms.CharField(widget=forms.Textarea(attrs={"rows": 8}),
-                           help_text="Plain text. Placeholders: {{ customer_name }}, {{ handler_name }}, {{ workspace_name }}")
+                           help_text="Plain text. Placeholders: {{ customer_name }}, {{ handler_name }}, {{ workspace_name }}, "
+                                     "{{ company_phone }}, {{ company_email }}, {{ company_website }}, {{ company_address }}")
     active = forms.BooleanField(required=False)
     version = forms.IntegerField(widget=forms.HiddenInput)
 
@@ -77,7 +78,7 @@ def template_edit(request, pk):
         d = form.cleaned_data
         if request.POST.get("action") == "preview":
             values = {"customer_name": "Sample Customer", "handler_name": request.user.full_name,
-                      "workspace_name": get_policy()["workspace_name"]}
+                      **services.company_values(get_policy())}
             preview = {"subject": services.render_template(d["subject"], values),
                        "body": services.render_template(d["body"], values)}
         else:

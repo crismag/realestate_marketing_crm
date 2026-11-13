@@ -11,7 +11,7 @@ These are unresolved, not blockers on unrelated documentation or research.
 | OQ-012 | Hosting, scale, authentication, recovery, retention, currency and timezone constraints? | Unknown; do not select stack prematurely | Architecture |
 | OQ-013 | Are special groups beyond the five named groups required? | Existing groups only until clarified | User/module context |
 | OQ-014 | Is support full case management or client follow-up coordination? | Keep support linked to customer history; no full helpdesk assumed | Engagement scope |
-| OQ-015 | Which AI/automation candidates (if any) to promote, and may contact data be sent to an external AI provider? | Proposal: promote rule-based C-R2, C-R3, C-R6 first; pilot AI only as read-only C-A1 on demo data behind an off-by-default switch; see ../05_research/AI_AUTOMATION_RESEARCH.md | REQ-003–006, REQ-014–017, REQ-019, REQ-020, REQ-022, REQ-023, REQ-026; PRD first-release scope |
+| OQ-015 | Which AI/automation candidates (if any) to promote, and may contact data be sent to an external AI provider? | Proposal: promote rule-based C-R2, C-R3, C-R6 first; pilot AI only as read-only C-A1 on demo data behind an off-by-default switch; see ../05_research/AI_AUTOMATION_RESEARCH.md. C-R2, C-R3, C-R6 built 2026-11-13 as switchable implementation defaults (not approved) | REQ-003–006, REQ-014–017, REQ-019, REQ-020, REQ-022, REQ-023, REQ-026; PRD first-release scope |
 
 Resolved 13 November 2026: OQ-006 — user approved sender accountability until recipient acceptance (ADR-001). Impacts REQ-015, REQ-019 and REQ-020; workflow and model updated. Baseline v0.1 remains an unchanged historical snapshot; this decision supersedes its statement that the policy is unapproved. No implementation exists to invalidate.
 
