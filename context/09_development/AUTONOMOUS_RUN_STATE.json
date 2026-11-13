@@ -15,7 +15,7 @@
   },
   "last_checkpoint_utc": "2026-11-13T03:01:43Z",
   "checks": [
-    {"name": "pytest", "command": ".venv/bin/python -m pytest -p no:logging", "result": "216 passed", "at_utc": "2026-11-13T03:01:00Z"},
+    {"name": "pytest", "command": ".venv/bin/python -m pytest -p no:logging", "result": "222 passed after merging main 688ecf2", "at_utc": "2026-11-13T03:05:00Z"},
     {"name": "ruff", "command": ".venv/bin/ruff check .", "result": "passed", "at_utc": "2026-11-13T03:01:00Z"},
     {"name": "makemigrations --check --dry-run", "result": "no changes", "at_utc": "2026-11-13T03:01:00Z"},
     {"name": "scripts/e2e.sh", "result": "19 checks passed (desktop stage move, notifications, 390px board). Demo seed ran staff.digest_email jobs.", "at_utc": "2026-11-13T03:01:43Z", "browser": "Google Chrome via CRM_CHROMIUM_PATH"}
