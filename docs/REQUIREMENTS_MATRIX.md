@@ -92,6 +92,8 @@ Current execution and exact check results: `context/09_development/CURRENT_RUN_R
 | REQ-022 / NFR-002 | Inquiry/response chronology validated; spend and audit rollback together | `tests/test_reporting_integrity.py` |
 | REQ-016 / REQ-026 | Agreed future contact pauses tour cadence but not urgent work | `tests/test_attention_agreement.py` |
 | REQ-019 / REQ-026 | Unanswered inbound replies surface until later human-response evidence | `tests/test_inbound_attention.py` |
-| REQ-026 | Digest counts new/continuing/resolved unique clients against prior delivered snapshot, including resolved-only digests | `tests/test_digest_changes.py`; migration `automation.0003_digest_snapshots` |
+| REQ-026 | Digest counts new/continuing/resolved unique clients against prior delivered snapshot, including resolved-only digests; clients merged since the snapshot count as continuing | `tests/test_digest_changes.py`, `tests/test_pr4_review_fixes.py`; migration `automation.0003_digest_snapshots` |
+| REQ-019 / REQ-026 | The oldest unanswered reply anchors the wait; replies on an inquiry closed without response stay closed | `tests/test_pr4_review_fixes.py` |
+| NFR reliability | A send job whose worker crashes on every attempt ends as *Delivery uncertain* (never auto-retried); stale results and expired leases are logged | `tests/test_pr4_review_fixes.py` |
 
 Reply response matching uses contact chronology; there is no explicit reply-thread link. A linked awaiting inquiry avoids duplicate reply reasons. An unlinked inquiry cannot establish event identity. Digest resolution means departure from the recipient's queue, including reassignment; it does not assert task completion. Existing pre-migration digests have no snapshot; the first new digest establishes the baseline.

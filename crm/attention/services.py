@@ -129,12 +129,26 @@ def evaluate(*, now: dt.datetime | None = None, policy: dict, contact_ids: list[
     for inq in Inquiry.objects.filter(contact_id__in=ids, status="awaiting").order_by("received_at"):
         inquiries[inq.contact_id].append(inq)
 
-    latest_replies = {}
+    # The oldest customer reply after the last human response anchors the wait, so a second
+    # message from the customer does not reset how long they have been waiting. Replies linked
+    # to an inquiry someone closed without response (for example spam) stay closed.
+    last_human = {}
+    for cid, kinds in kind_max.items():
+        times = [kinds[k] for k in HUMAN_RESPONSE_KINDS if k in kinds]
+        if times:
+            last_human[cid] = max(times)
+    closed_inquiries = set(Inquiry.objects.filter(contact_id__in=ids, status="closed").values_list("pk", flat=True))
+    unanswered_replies = {}
     for reply in (
         Interaction.objects.filter(contact_id__in=ids, kind="inbound_reply", occurred_at__lte=now)
-        .only("contact_id", "occurred_at", "inquiry_id").order_by("contact_id", "-occurred_at", "-pk")
+        .only("contact_id", "occurred_at", "inquiry_id").order_by("contact_id", "occurred_at", "pk")
     ):
-        latest_replies.setdefault(reply.contact_id, reply)
+        if reply.contact_id in unanswered_replies or reply.inquiry_id in closed_inquiries:
+            continue
+        answered_at = last_human.get(reply.contact_id)
+        # Only a response strictly after the reply answers it (same-time evidence stays open).
+        if answered_at is None or reply.occurred_at >= answered_at:
+            unanswered_replies[reply.contact_id] = reply
 
     tasks = defaultdict(list)
     for task in Task.objects.filter(contact_id__in=ids, status="open").select_related("assignee").order_by("due_at"):
@@ -186,12 +200,10 @@ def evaluate(*, now: dt.datetime | None = None, policy: dict, contact_ids: list[
                 handler_users, inquiry=inq, overdue=hours > ap["inquiry_response_hours"],
             ))
 
-        reply = latest_replies.get(contact.pk)
+        reply = unanswered_replies.get(contact.pk)
         if reply is not None:
-            responded = any(kinds.get(kind) is not None and kinds[kind] > reply.occurred_at
-                            for kind in HUMAN_RESPONSE_KINDS)
             covered_by_inquiry = any(inq.pk == reply.inquiry_id for inq in inquiries.get(contact.pk, []))
-            if not responded and not covered_by_inquiry:
+            if not covered_by_inquiry:
                 reasons.append(Reason(
                     "inquiry_awaiting", reply.occurred_at,
                     f"Inbound reply received {_ago(now, reply.occurred_at)} with no later human response recorded",

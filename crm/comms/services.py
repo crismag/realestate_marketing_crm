@@ -160,6 +160,18 @@ def mark_failed(message_id: int, error: str) -> None:
     OutboundMessage.objects.filter(pk=message_id, status="scheduled").update(status="failed", status_reason=error[:300])
 
 
+def mark_uncertain_after_crash(message_id: int) -> None:
+    """A send job whose worker kept dying: the transport may have been called, so never retry it automatically."""
+    msg = OutboundMessage.objects.filter(pk=message_id, status="scheduled").select_related("contact").first()
+    if msg is None:
+        return
+    updated = OutboundMessage.objects.filter(pk=msg.pk, status="scheduled").update(
+        status="uncertain", status_reason="The worker stopped during every attempt; check before retrying")
+    if updated:
+        audit("message.uncertain", msg, "Delivery outcome unknown after repeated worker crashes; not retried "
+              "automatically to avoid duplicates", actor_kind="worker", contact=msg.contact)
+
+
 def retry_message(msg: OutboundMessage, *, actor) -> OutboundMessage:
     """Controlled manual retry for failed (not uncertain) messages."""
     from crm.automation.models import Job

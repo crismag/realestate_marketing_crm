@@ -295,6 +295,17 @@ def run_sweep(now: dt.datetime | None = None, *, job=None) -> dict:
     return totals
 
 
+def _canonical_ids(contact_ids) -> set[int]:
+    """Map contacts merged since the snapshot to the record they were merged into, so they count as continuing."""
+    ids = set(contact_ids)
+    for _ in range(5):  # merge chains are short; stop on anything unexpected
+        merged = dict(Contact.objects.filter(pk__in=ids, merged_into__isnull=False).values_list("pk", "merged_into_id"))
+        if not merged:
+            break
+        ids = {merged.get(i, i) for i in ids}
+    return ids
+
+
 def run_digest(now: dt.datetime | None = None, *, job=None) -> dict:
     """One digest per active user per local day; recipients and counts evaluated now."""
     now = now or clock.now()
@@ -316,7 +327,7 @@ def run_digest(now: dt.datetime | None = None, *, job=None) -> dict:
                 run.suppressed += 1
                 continue
             previous = DigestSnapshot.objects.filter(recipient=user, day__lt=local_day).first()
-            previous_ids = set(previous.contact_ids) if previous else set()
+            previous_ids = _canonical_ids(previous.contact_ids) if previous else set()
             new = len(current_ids - previous_ids)
             continuing = len(current_ids & previous_ids)
             resolved = len(previous_ids - current_ids)
