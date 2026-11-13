@@ -1,0 +1,54 @@
+# One customer company = one copy of this folder with its own .env and data volume.
+# Start:   docker compose --env-file .env up -d --build
+# Admin:   docker compose --env-file .env run --rm web manage create_admin --email you@company.example --generate
+name: crm-${CRM_COMPANY_SLUG:?set CRM_COMPANY_SLUG in .env}
+
+x-app: &app
+  build:
+    context: ..
+  image: realestate-crm:latest
+  env_file: .env
+  environment:
+    CRM_ENV: production
+    CRM_BEHIND_TLS_PROXY: "1"
+    CRM_SECURE_COOKIES: "1"
+    CRM_HSTS_SECONDS: "${CRM_HSTS_SECONDS:-31536000}"
+    CRM_ALLOWED_HOSTS: "${CRM_DOMAIN},web,localhost"
+    CRM_CSRF_TRUSTED_ORIGINS: "https://${CRM_DOMAIN}"
+  volumes:
+    - crm-data:/data
+  restart: unless-stopped
+
+services:
+  web:
+    <<: *app
+    command: ["web"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen(urllib.request.Request('http://localhost:8000/healthz', headers={'Host': 'localhost'})).status==200 else 1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+  worker:
+    <<: *app
+    command: ["worker"]
+    depends_on: [web]
+  backup:
+    <<: *app
+    command: ["backup"]
+    depends_on: [web]
+  caddy:
+    image: caddy:2.10.2
+    restart: unless-stopped
+    ports: ["80:80", "443:443"]
+    environment:
+      CRM_DOMAIN: ${CRM_DOMAIN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on: [web]
+
+volumes:
+  crm-data:
+  caddy-data:
+  caddy-config:

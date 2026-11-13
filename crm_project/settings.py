@@ -183,7 +183,7 @@ USE_I18N = False
 USE_TZ = True
 
 STATIC_URL = "static/"
-STATIC_ROOT = VAR_DIR / "staticfiles"
+STATIC_ROOT = Path(os.environ.get("CRM_STATIC_ROOT", VAR_DIR / "staticfiles"))
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
@@ -198,6 +198,7 @@ STORAGES = {
 
 # --- CRM runtime ----------------------------------------------------------------
 CRM_BACKUP_DIR = Path(os.environ.get("CRM_BACKUP_DIR", VAR_DIR / "backups"))
+CRM_BACKUP_KEY = os.environ.get("CRM_BACKUP_KEY", "")  # URL-safe base64, 32 bytes; empty = unencrypted backups
 CRM_EMAIL_TRANSPORT = os.environ.get("CRM_EMAIL_TRANSPORT", "sandbox")  # only 'sandbox' is implemented
 # Staff email (password reset links to employees, never customer messages). Nothing is sent unless an
 # SMTP server is configured; otherwise each message is written to var/staff_mail/ for the administrator.

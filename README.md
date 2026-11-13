@@ -104,6 +104,16 @@ See [Operations](docs/OPERATIONS.md) and [Security notes](docs/SECURITY.md).
 
 ## Documentation
 
+Selling and running it for a customer company:
+
+- [Install for a new company](docs/INSTALL_NEW_COMPANY.md): Docker, automatic HTTPS, encrypted hourly backups, restore drill
+- [Administrator guide](docs/ADMIN_GUIDE.md): first-day setup, importing contacts, accounts, leavers, duplicates
+- [Sales demo script](docs/DEMO_SCRIPT.md): a 15-minute walkthrough on demo data
+- [Guided pilot test](docs/PILOT_TEST_SCRIPT.md): 30 minutes of tasks for testers
+
+Engineering:
+
+
 - [Implementation defaults](docs/IMPLEMENTATION_DEFAULTS.md): every product decision made during the build, all configurable
 - [Requirement matrix](docs/REQUIREMENTS_MATRIX.md): requirement → implementation → test evidence
 - [Security notes](docs/SECURITY.md)

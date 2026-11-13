@@ -1,5 +1,8 @@
 # Operations
 
+For a new customer company, start with [INSTALL_NEW_COMPANY.md](INSTALL_NEW_COMPANY.md) (Docker, automatic HTTPS,
+encrypted backups). This page covers running the processes directly.
+
 ## Processes
 
 | Process | Command | Notes |
@@ -56,8 +59,13 @@ python manage.py backup_db --verify /mnt/backup/crm/crm-20261113T020000000000Z.s
 - Uses SQLite's online backup API, so it is consistent while the app and worker run.
 - Each backup is integrity-checked, written with mode 0600 in a 0700 directory, and described by a manifest
   with its SHA-256, size and latest migrations.
-- **Backups are not encrypted.** Copy them to encrypted, access-controlled storage and treat them as
-  personal data.
+- **Encryption**: when `CRM_BACKUP_KEY` is set (generate one with `python manage.py backup_key`), backups are
+  written as `crm-<stamp>.sqlite3.enc` (AES-256-GCM) and no plain copy stays on disk. `--verify` and
+  `restore_db` decrypt to a temporary file with the same key. Without a key, backups are plain SQLite files:
+  copy them to encrypted, access-controlled storage and treat them as personal data. `check --deploy` warns
+  when no key is set.
+- `--keep N` deletes all but the newest N regular backups after a successful one (pre-restore copies are kept).
+- The Docker kit (`deploy/`, see [INSTALL_NEW_COMPANY.md](INSTALL_NEW_COMPANY.md)) runs encrypted hourly backups.
 - Suggested schedule (owner to confirm recovery targets, OQ-012): hourly during office hours plus nightly,
   keep 7 daily and 4 weekly copies, and copy off the server. Example cron:
   `0 * * * * cd /srv/crm && .venv/bin/python manage.py backup_db --dir /srv/crm-backups >> /var/log/crm-backup.log 2>&1`
