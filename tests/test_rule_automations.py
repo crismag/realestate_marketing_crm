@@ -217,3 +217,14 @@ def test_overlong_name_gets_no_key_rather_than_a_truncated_one():
 
     assert name_key("a" * 300 + " b") == ""
     assert name_key("Smith, John") == "john smith"
+
+
+def test_wider_duplicate_matching_can_be_switched_off(users, make_contact):
+    make_contact("Tag One", email="jane+web@example.test")
+    make_contact("José Ramírez")
+    policy = get_policy()
+    policy["duplicate_matching"]["extended"] = False
+    update_policy(policy, actor=users["admin"], expected_version=get_settings_row().version, note="test")
+    assert list(contacts.duplicate_candidates(email="jane@example.test")) == []
+    assert list(contacts.duplicate_candidates(name="Ramirez, Jose")) == []
+    assert len(contacts.duplicate_candidates(email="jane+web@example.test")) == 1

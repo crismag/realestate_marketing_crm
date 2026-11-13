@@ -11,7 +11,7 @@ from crm.automation.queue import emit
 from crm.core import clock
 from crm.core.db import write_transaction
 from crm.core.errors import ConflictError, DomainError
-from crm.core.services import audit
+from crm.core.services import audit, get_policy
 from crm.work.models import Assignment, AssignmentEvent, Pool
 
 from .models import Contact, Inquiry, Interaction, Opportunity, Source, Watch, name_key, normalize_email, normalize_phone
@@ -32,7 +32,12 @@ def _email_variants(email: str) -> set[str]:
     return {value, f"{local.split('+', 1)[0]}@{domain}"}
 
 
-def duplicate_candidates(*, email: str = "", phone: str = "", name: str = "", exclude_id: int | None = None) -> QuerySet:
+def extended_matching_enabled() -> bool:
+    return bool(get_policy().get("duplicate_matching", {}).get("extended", True))
+
+
+def duplicate_candidates(*, email: str = "", phone: str = "", name: str = "", exclude_id: int | None = None,
+                         extended: bool | None = None) -> QuerySet:
     """Possible duplicates. Never merges automatically.
 
     Matches (implementation default, C-R6): normalised email, including the address without a "+tag";
@@ -40,9 +45,14 @@ def duplicate_candidates(*, email: str = "", phone: str = "", name: str = "", ex
     ("Smith, John" = "john smith"). A name match only counts for names of two or more words, so a single
     first name does not flag everyone who shares it.
     """
+    if extended is None:
+        extended = extended_matching_enabled()
     query = Q()
-    emails = _email_variants(email)
+    emails = _email_variants(email) if extended else ({normalize_email(email)} - {""})
     for variant in emails:
+        if not extended:
+            query |= Q(email_normalized=variant)
+            continue
         query |= Q(email_normalized=variant) | Q(email_normalized__startswith=variant.split("@")[0] + "+",
                                                  email_normalized__endswith="@" + variant.split("@")[-1])
     if normalize_phone(phone) and len(normalize_phone(phone)) >= 7:
@@ -50,7 +60,7 @@ def duplicate_candidates(*, email: str = "", phone: str = "", name: str = "", ex
     if name.strip():
         query |= Q(display_name__iexact=name.strip())
         key = name_key(name)
-        if len(key.split()) >= 2:
+        if extended and len(key.split()) >= 2:
             query |= Q(name_key=key)
     if not query:
         return Contact.objects.none()

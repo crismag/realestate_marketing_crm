@@ -34,6 +34,8 @@ class PolicyForm(Form):
                                                   label="Flag opportunities whose stage has not changed for (days, 0 = off)")
     flag_past_expected_close = forms.BooleanField(required=False, label="Flag open opportunities past their expected close date")
     followup_suggestions_enabled = forms.BooleanField(required=False, label="Suggest a follow-up task after logging an interaction")
+    extended_duplicate_matching = forms.BooleanField(
+        required=False, label="Wider duplicate check (+tag emails, names in any order)")
     contact_reset_types = forms.MultipleChoiceField(
         choices=[c for c in INTERACTION_TYPES if c[0] != "note"], widget=forms.CheckboxSelectMultiple,
         label="Interactions that count as contact (reset inactivity and after-tour follow-up)")
@@ -87,6 +89,7 @@ class PolicyForm(Form):
             "stalled_opportunity_days": a.get("stalled_opportunity_days", 0),
             "flag_past_expected_close": a.get("flag_past_expected_close", False),
             "followup_suggestions_enabled": policy.get("followup_suggestions", {}).get("enabled", False),
+            "extended_duplicate_matching": policy.get("duplicate_matching", {}).get("extended", False),
             "contact_reset_types": a["contact_reset_types"], "digest_hour": n["digest_hour"],
             "attention_sweep_minutes": n["attention_sweep_minutes"], "quiet_hours_start": n["quiet_hours_start"],
             "quiet_hours_end": n["quiet_hours_end"], "customer_frequency_cap_hours": n["customer_frequency_cap_hours"],
@@ -114,6 +117,8 @@ class PolicyForm(Form):
                                "followup_types": list(d["contact_reset_types"])}
         policy["followup_suggestions"] = {**current.get("followup_suggestions", {}),
                                           "enabled": d["followup_suggestions_enabled"]}
+        policy["duplicate_matching"] = {**current.get("duplicate_matching", {}),
+                                        "extended": d["extended_duplicate_matching"]}
         policy["notifications"] = {**current["notifications"], "digest_hour": d["digest_hour"],
                                    "attention_sweep_minutes": d["attention_sweep_minutes"],
                                    "quiet_hours_start": d["quiet_hours_start"], "quiet_hours_end": d["quiet_hours_end"],

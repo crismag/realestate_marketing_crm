@@ -55,6 +55,9 @@ DEFAULT_POLICY: dict = {
         "followup_types": ["outbound_attempt", "conversation", "inbound_reply", "meeting_tour"],
         "contact_reset_types": ["outbound_attempt", "conversation", "inbound_reply", "meeting_tour"],
     },
+    # C-R6 implementation default: also match +tag email variants and multi-word names in any order.
+    # False = exact email/phone/name only (the original rule).
+    "duplicate_matching": {"extended": True},
     # C-R3 implementation default: after an interaction is logged, pre-fill (never create) a follow-up task.
     # Keyed by interaction type; hours = suggested due time from now. Types not listed get no suggestion.
     "followup_suggestions": {
