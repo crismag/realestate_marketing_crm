@@ -1,0 +1,17 @@
+{% extends "base.html" %}{% load crm_ui %}{% block title %}Import contacts{% endblock %}
+{% block content %}
+<nav class="cg-breadcrumb small" aria-label="Breadcrumb"><a class="cg-breadcrumb__link" href="{% url 'contacts:list' %}">Contacts</a> <span class="cg-breadcrumb__separator" aria-hidden="true">/</span> <span aria-current="page">Import</span></nav>
+<div class="page-head"><div><h1 class="cg-typography" data-variant="h4">Import contacts</h1><p class="muted">Bring in contacts from a spreadsheet. You will see a preview before anything is added.</p></div>
+<a class="cg-button" data-variant="outline" data-color="secondary" data-size="sm" data-shape="rounded" data-full-width="false" href="{% url 'contacts:import_template' %}">Download template</a></div>
+<div class="grid grid--main-side">
+<section class="cg-card"><form method="post" enctype="multipart/form-data" class="card-pad stack" novalidate>{% csrf_token %}{% include "partials/form_errors.html" %}
+{% for field in form %}{% include "partials/field.html" %}{% endfor %}
+<div class="form-actions"><button class="cg-button" data-variant="solid" data-color="primary" data-size="md" data-shape="rounded" data-full-width="false" type="submit">Upload and preview</button></div></form></section>
+<aside class="stack">
+<section class="cg-card"><div class="card-title"><h2>What the file can have</h2></div><div class="card-pad small stack-sm">
+<p>A header row, then one contact per row. Columns are recognised by name; others are ignored.</p>
+<ul class="small"><li><strong>Name</strong> (or First name and Last name), required</li><li>Email, Phone</li><li>Source (matched to your acquisition sources), Source detail</li><li>Interests, Notes</li><li>Lifecycle ({{ crm_policy.lifecycle_labels.lead }}, {{ crm_policy.lifecycle_labels.prospect }} or {{ crm_policy.lifecycle_labels.client }})</li></ul>
+<p class="muted">Imported contacts belong to you or to the pool you choose. To give a contact to a colleague afterwards, use a handover so they accept it.</p></div></section>
+{% if recent %}<section class="cg-card"><div class="card-title"><h2>Your recent imports</h2></div><ul class="cg-list">{% for r in recent %}<li class="cg-list__item" data-color="default"><span><a href="{% url 'contacts:import_detail' r.pk %}">{{ r.filename }}</a> {% chip r.get_status_display r.status %}<br><span class="small muted">{{ r.created_at|local }}{% if r.summary.created is not None %} · {{ r.summary.created }} added{% endif %}</span></span></li>{% endfor %}</ul></section>{% endif %}
+</aside></div>
+{% endblock %}

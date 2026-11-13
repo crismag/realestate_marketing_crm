@@ -1,6 +1,6 @@
 {% extends "base.html" %}{% load crm_ui %}{% block title %}Settings{% endblock %}
 {% block content %}
-<div class="page-head"><div><h1 class="cg-typography" data-variant="h4">Workspace settings</h1><p class="muted">Version {{ row.version }}. These are implementation defaults chosen to get started; change them to match how your team works.</p></div><div class="row"><a href="{% url 'accounts:users' %}">People</a><a href="{% url 'core:audit' %}">Audit log</a></div></div>
+<div class="page-head"><div><h1 class="cg-typography" data-variant="h4">Workspace settings</h1><p class="muted">Version {{ row.version }}. These are implementation defaults chosen to get started; change them to match how your team works.</p></div><div class="row"><a href="{% url 'core:company' %}">Company profile</a><a href="{% url 'accounts:users' %}">People</a><a href="{% url 'core:audit' %}">Audit log</a></div></div>
 <div class="grid grid--main-side">
 <section class="cg-card">{% if user.is_staff %}<form method="post" class="card-pad stack" novalidate>{% csrf_token %}{% include "partials/form_errors.html" %}
 <div class="form-grid form-grid--2">{% for field in form %}{% if field.name != "stages" and field.name != "contact_reset_types" and field.name != "escalation_recipients" and field.name != "note" %}{% include "partials/field.html" %}{% endif %}{% endfor %}</div>

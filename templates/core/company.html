@@ -1,0 +1,9 @@
+{% extends "base.html" %}{% block title %}Company profile{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1 class="cg-typography" data-variant="h4">Company profile</h1><p class="muted">Who this CRM belongs to. Customer email templates can use these details.</p></div><a href="{% url 'core:settings' %}">Back to settings</a></div>
+<section class="cg-card narrow">{% if user.is_staff %}<form method="post" enctype="multipart/form-data" class="card-pad stack" novalidate>{% csrf_token %}{% include "partials/form_errors.html" %}
+{% if logo %}<div class="row"><img class="brand-logo brand-logo--preview" src="{% url 'core:brand_logo' %}?v={{ logo.sha256|slice:':12' }}" alt="Current logo"><span class="small muted">Uploaded {{ logo.uploaded_at|date:"Y-m-d" }}</span></div>{% endif %}
+{% for field in form %}{% if field.name != "remove_logo" or logo %}{% include "partials/field.html" %}{% endif %}{% endfor %}
+<div class="form-actions"><button class="cg-button" data-variant="solid" data-color="primary" data-size="md" data-shape="rounded" data-full-width="false" type="submit">Save company profile</button></div></form>
+{% else %}<dl class="card-pad facts"><dt>Name</dt><dd>{{ crm_policy.workspace_name }}</dd>{% for k, v in crm_policy.company.items %}{% if v %}<dt>{{ k|capfirst }}</dt><dd>{{ v }}</dd>{% endif %}{% endfor %}</dl><p class="card-pad small muted">Only administrators can change the company profile.</p>{% endif %}</section>
+{% endblock %}

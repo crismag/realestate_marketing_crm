@@ -86,6 +86,8 @@ class Contact(models.Model):
         null=True, blank=True, help_text="Customer-requested later contact date; suppresses routine inactivity reminders"
     )
     archived_at = models.DateTimeField(null=True, blank=True)
+    merged_into = models.ForeignKey("self", null=True, blank=True, on_delete=models.PROTECT, related_name="merged_from",
+                                    help_text="Set when this record was merged into another and archived")
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.PROTECT, related_name="+")
     created_at = models.DateTimeField(default=clock.now, db_index=True)
     updated_at = models.DateTimeField(default=clock.now)
@@ -177,3 +179,27 @@ class Watch(models.Model):
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=["user", "contact"], name="unique_watch")]
+
+
+class ContactImport(models.Model):
+    """A spreadsheet import: parsed and previewed first, then run once (status flip guards double submits)."""
+
+    STATUSES = [("preview", "Preview"), ("running", "Importing"), ("done", "Imported"), ("cancelled", "Cancelled")]
+
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+")
+    created_at = models.DateTimeField(default=clock.now)
+    filename = models.CharField(max_length=200)
+    destination = models.CharField(max_length=10, default="me")
+    pool = models.ForeignKey("work.Pool", null=True, blank=True, on_delete=models.PROTECT, related_name="+")
+    default_source = models.ForeignKey(Source, null=True, blank=True, on_delete=models.PROTECT, related_name="+")
+    columns = models.JSONField(default=dict)  # recognised header -> field
+    rows = models.JSONField(default=list)  # [{line, data, errors, duplicates, status, contact_id}]
+    status = models.CharField(max_length=12, choices=STATUSES, default="preview")
+    finished_at = models.DateTimeField(null=True, blank=True)
+    summary = models.JSONField(default=dict)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"Import {self.pk} ({self.filename})"

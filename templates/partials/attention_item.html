@@ -1,6 +1,6 @@
 {% load crm_ui %}<article class="att-item" aria-labelledby="att-{{ item.contact.pk }}">
   <div class="row row--between">
-    <h3 class="cg-typography" data-variant="h6" data-color="inherit" id="att-{{ item.contact.pk }}"><a href="{% url 'contacts:detail' item.contact.pk %}">{{ item.contact.display_name }}</a> <span class="muted small">{{ item.contact.get_lifecycle_display }}</span></h3>
+    <h3 class="cg-typography" data-variant="h6" data-color="inherit" id="att-{{ item.contact.pk }}"><a href="{% url 'contacts:detail' item.contact.pk %}">{{ item.contact.display_name }}</a> <span class="muted small">{{ crm_policy.lifecycle_labels|get_item:item.contact.lifecycle }}</span></h3>
     <span class="muted small">Handler: {{ item.handler_label }}</span>
   </div>
   {% for r in item.reasons %}<div class="reason">{% chip r.label r.code %}{% if r.overdue %} {% chip "past target" "failed" %}{% endif %}

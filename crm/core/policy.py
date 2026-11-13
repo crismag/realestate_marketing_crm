@@ -24,7 +24,12 @@ CHANNELS = [
 ]
 
 DEFAULT_POLICY: dict = {
-    "workspace_name": "Realstate CRM",
+    "workspace_name": "Real Estate CRM",
+    # Company profile for this install (one install per customer company). Shown to staff and
+    # available to customer email templates as {{ company_* }} placeholders.
+    # Two-step sign-in (authenticator app) is optional per person unless the company requires it.
+    "security": {"require_two_factor": False},
+    "company": {"legal_name": "", "phone": "", "email": "", "website": "", "address": ""},
     "timezone": "Asia/Shanghai",
     "currency": "USD",
     "lifecycle_labels": {"lead": "Lead", "prospect": "Prospect", "client": "Client"},

@@ -110,3 +110,19 @@ class OpportunityOutcomeForm(Form):
         if data.get("outcome") == "lost" and not data.get("reason"):
             self.add_error("reason", "Record why it was lost.")
         return data
+
+
+class ImportUploadForm(Form):
+    file = forms.FileField(label="CSV file", help_text="Save your spreadsheet as CSV (UTF-8). Up to 5,000 rows and 2 MB.")
+    destination = forms.ChoiceField(choices=[("me", "I am responsible for these contacts"), ("pool", "Put them in a shared pool")],
+                                    widget=forms.RadioSelect, initial="me", label="Responsibility")
+    pool = forms.ModelChoiceField(queryset=Pool.objects.filter(active=True), required=False)
+    default_source = forms.ModelChoiceField(queryset=Source.objects.filter(active=True), required=False,
+                                            label="Source when the file has none",
+                                            help_text="Used for rows without a recognised Source column value.")
+
+    def clean(self):
+        data = super().clean()
+        if data.get("destination") == "pool" and not data.get("pool"):
+            self.add_error("pool", "Choose the pool.")
+        return data

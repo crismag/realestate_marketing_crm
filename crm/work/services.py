@@ -84,7 +84,12 @@ def _mark_open_handovers_stale(contact, actor, note: str):
 
 def can_initiate_handover(assignment: Assignment, user) -> bool:
     if assignment.kind == "person":
-        return assignment.user_id == user.pk
+        if assignment.user_id == user.pk:
+            return True
+        # Implementation default: when the responsible colleague has been deactivated (left the company),
+        # an administrator may start the handover on their behalf. The client stays with the deactivated
+        # colleague until the recipient accepts (ADR-001), so nothing changes hands silently.
+        return bool(user.is_staff and user.is_active and not assignment.user.is_active)
     return user in assignment.pool.accountable_users()
 
 

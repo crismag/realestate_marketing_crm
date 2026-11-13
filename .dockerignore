@@ -1,0 +1,14 @@
+.git
+.venv
+var
+*.sqlite3
+*.sqlite3-*
+.env
+deploy/.env
+deploy/companies
+__pycache__
+*.pyc
+.pytest_cache
+.ruff_cache
+e2e/node_modules
+context

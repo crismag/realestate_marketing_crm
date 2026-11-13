@@ -21,17 +21,18 @@ from crm.work.forms import TaskForm
 from crm.work.models import Assignment, AssignmentEvent, Handover, Pool
 from crm.work.services import can_decide, can_initiate_handover
 
-from . import services
+from . import importing, merging, services
 from .forms import (
     CaptureForm,
     ContactFieldsForm,
+    ImportUploadForm,
     InquiryForm,
     InteractionForm,
     LifecycleForm,
     OpportunityForm,
     OpportunityOutcomeForm,
 )
-from .models import LIFECYCLES, Contact, Inquiry, Opportunity, Source, Watch
+from .models import LIFECYCLES, Contact, ContactImport, Inquiry, Opportunity, Source, Watch
 
 User = get_user_model()
 TIMELINE_AUDIT_ACTIONS = {
@@ -171,6 +172,10 @@ def render_detail(request, contact, *, status=200, **forms):
         "lifecycle_labels": policy["lifecycle_labels"],
         "now": clock.now(),
         "snoozable": attention.SNOOZABLE,
+        "possible_duplicates": [] if contact.archived_at else [
+            d for d in services.duplicate_candidates(email=contact.email, phone=contact.phone, name=contact.display_name,
+                                                     exclude_id=contact.pk) if d.archived_at is None][:5],
+        "can_merge": merging.can_merge(request.user, contact),
     }
     return render(request, "contacts/detail.html", ctx, status=status)
 
@@ -361,3 +366,75 @@ def opportunities(request):
         "stage_labels": {s["code"]: s["label"] for s in policy["opportunity_stages"]}, "currency": policy["currency"],
     })
 
+
+
+def import_start(request):
+    form = ImportUploadForm(request.POST or None, request.FILES or None)
+    if request.method == "POST" and form.is_valid():
+        d = form.cleaned_data
+        try:
+            imp = importing.parse_upload(actor=request.user, upload=d["file"], destination=d["destination"], pool=d.get("pool"),
+                                         default_source=d.get("default_source"), policy=get_policy())
+        except DomainError as exc:
+            form.add_error("file", exc.message)
+        else:
+            return redirect("contacts:import_detail", pk=imp.pk)
+    recent = ContactImport.objects.filter(created_by=request.user).only(
+        "id", "filename", "status", "created_at", "summary")[:10]
+    return render(request, "contacts/import.html", {"form": form, "recent": recent})
+
+
+def import_detail(request, pk):
+    imp = get_object_or_404(ContactImport.objects.select_related("pool", "default_source", "created_by"), pk=pk)
+    if request.method == "POST":
+        action = request.POST.get("action")
+        try:
+            if action == "cancel":
+                importing.cancel_import(imp, actor=request.user)
+                messages.info(request, "Import cancelled. Nothing was added.")
+                return redirect("contacts:import")
+            imp = importing.run_import(imp, actor=request.user, include_duplicates=request.POST.get("include_duplicates") == "1")
+        except DomainError as exc:
+            messages.error(request, exc.message)
+        else:
+            messages.success(request, f"Imported {imp.summary['created']} contact(s).")
+        return redirect("contacts:import_detail", pk=imp.pk)
+    headers = list(imp.columns)
+    return render(request, "contacts/import_detail.html", {
+        "imp": imp, "counts": importing.counts(imp), "rows": imp.rows[:300], "more": max(0, len(imp.rows) - 300),
+        "recognised": headers, "field_labels": FIELD_LABELS,
+        "is_owner": imp.created_by_id == request.user.pk,
+    })
+
+
+FIELD_LABELS = {"display_name": "Name", "first_name": "First name", "last_name": "Last name", "email": "Email", "phone": "Phone",
+                "source": "Source", "source_detail": "Source detail", "interests": "Interests", "notes": "Notes",
+                "lifecycle": "Lifecycle"}
+
+
+def import_template(request):
+    response = HttpResponse(importing.template_csv(), content_type="text/csv; charset=utf-8")
+    response["Content-Disposition"] = 'attachment; filename="contacts-import-template.csv"'
+    return response
+
+
+def contact_merge(request, pk, duplicate_pk):
+    keep = get_object_or_404(Contact, pk=pk)
+    duplicate = get_object_or_404(Contact, pk=duplicate_pk)
+    plan = merging.plan_merge(keep, duplicate)
+    if not merging.can_merge(request.user, keep):
+        plan.blockers.append("Only the person (or pool coordinator) responsible for these contacts can merge them.")
+    if request.method == "POST":
+        try:
+            merging.merge_contacts(keep, duplicate, actor=request.user,
+                                   keep_version=int(request.POST.get("keep_version", 0)),
+                                   duplicate_version=int(request.POST.get("duplicate_version", 0)),
+                                   reason=request.POST.get("reason", "")[:200])
+        except (DomainError, ValueError) as exc:
+            messages.error(request, getattr(exc, "message", "Could not merge."))
+            return redirect("contacts:merge", pk=keep.pk, duplicate_pk=duplicate.pk)
+        messages.success(request, f"Merged {duplicate.display_name} into {keep.display_name}. The duplicate is archived.")
+        return redirect("contacts:detail", pk=keep.pk)
+    return render(request, "contacts/merge.html", {"plan": plan, "keep": keep, "duplicate": duplicate,
+                                                   "field_labels": {f: Contact._meta.get_field(f).verbose_name
+                                                                    for f in merging.FILLABLE}})

@@ -9,7 +9,8 @@ from crm.core import clock
 class MessageTemplate(models.Model):
     """Customer-facing email template. Only {{ placeholders }} from ALLOWED_FIELDS are substituted."""
 
-    ALLOWED_FIELDS = ("customer_name", "handler_name", "workspace_name")
+    ALLOWED_FIELDS = ("customer_name", "handler_name", "workspace_name", "company_phone", "company_email",
+                      "company_website", "company_address")
 
     key = models.SlugField(max_length=50, unique=True)
     name = models.CharField(max_length=120)
