@@ -108,14 +108,20 @@ def recover_expired_leases(now: dt.datetime) -> int:
     count = 0
     for job in expired:
         exhausted = job.attempts >= job.max_attempts
-        updated = Job.objects.filter(pk=job.pk, status="running", lease_expires_at__lt=now).update(
-            status="dead" if exhausted else "failed",
-            last_error=f"Lease expired (worker {job.lease_owner} stopped or crashed)",
-            lease_owner="", lease_expires_at=None, updated_at=now, run_at=now,
-            finished_at=now if exhausted else None,
-        )
-        JobAttempt.objects.filter(job=job, finished_at__isnull=True).update(finished_at=now, outcome="lease_expired")
-        count += updated
+        with transaction.atomic():
+            updated = Job.objects.filter(
+                pk=job.pk, status="running", lease_owner=job.lease_owner, attempts=job.attempts,
+                lease_expires_at=job.lease_expires_at, lease_expires_at__lt=now,
+            ).update(
+                status="dead" if exhausted else "failed",
+                last_error=f"Lease expired (worker {job.lease_owner} stopped or crashed)",
+                lease_owner="", lease_expires_at=None, updated_at=now, run_at=now,
+                finished_at=now if exhausted else None,
+            )
+            if updated:
+                JobAttempt.objects.filter(job=job, attempt_no=job.attempts, worker_id=job.lease_owner,
+                                          finished_at__isnull=True).update(finished_at=now, outcome="lease_expired")
+            count += updated
     return count
 
 
@@ -140,48 +146,54 @@ def execute(job: Job, worker_id: str) -> str:
     handlers = _handlers()
     handler = handlers.get(job.kind)
     started = clock.now()
+
+    def finish(outcome, *, error="", fail_message=False, **changes):
+        # The attempt is a fencing token even if a worker reuses its identifier.
+        # Keep finalization and its side effects atomic with the ownership check.
+        with transaction.atomic():
+            updated = Job.objects.filter(pk=job.pk, status="running", lease_owner=worker_id,
+                                         attempts=job.attempts).update(**changes)
+            if not updated:
+                return "stale"
+            JobAttempt.objects.filter(job=job, attempt_no=job.attempts, worker_id=worker_id,
+                                      finished_at__isnull=True).update(
+                finished_at=clock.now(), outcome=outcome, error=error)
+            if fail_message:
+                from crm.comms.services import mark_failed
+
+                mark_failed(job.payload.get("message_id"), error)
+        return outcome
+
     try:
         if handler is None:
             raise PermanentError(f"No handler for job kind '{job.kind}'")
-        # Handlers make their own short, idempotent writes (logical keys), so no
-        # long transaction holds the SQLite write lock during a sweep or a send.
+        # Slow handler work stays outside the short finalization transaction.
         result = handler(job) or {}
         finished = clock.now()
-        Job.objects.filter(pk=job.pk, lease_owner=worker_id).update(
-            status="succeeded", result=result, finished_at=finished, updated_at=finished, lease_owner="",
-            lease_expires_at=None, last_error="",
-        )
-        JobAttempt.objects.filter(job=job, attempt_no=job.attempts).update(finished_at=finished, outcome="succeeded")
-        return "succeeded"
+        return finish("succeeded", status="succeeded", result=result, finished_at=finished,
+                      updated_at=finished, lease_owner="", lease_expires_at=None, last_error="")
     except Deferred as exc:
-        Job.objects.filter(pk=job.pk).update(status="queued", run_at=exc.run_at, attempts=F("attempts") - 1,
-                                             lease_owner="", lease_expires_at=None, last_error=str(exc), updated_at=clock.now())
-        JobAttempt.objects.filter(job=job, attempt_no=job.attempts).update(finished_at=clock.now(), outcome="deferred",
-                                                                          error=str(exc))
-        return "deferred"
+        return finish("deferred", error=str(exc), status="queued", run_at=exc.run_at,
+                      attempts=F("attempts") - 1, lease_owner="", lease_expires_at=None,
+                      last_error=str(exc), updated_at=clock.now())
     except Exception as exc:  # noqa: BLE001 - every failure is recorded and retried or dead-lettered
         if is_lock_error(exc):
-            # Contention is transient: release without counting the attempt.
-            Job.objects.filter(pk=job.pk).update(status="queued", attempts=F("attempts") - 1, lease_owner="",
-                                                 lease_expires_at=None, run_at=clock.now() + dt.timedelta(seconds=2))
-            return "contended"
+            return finish("contended", status="queued", attempts=F("attempts") - 1, lease_owner="",
+                          lease_expires_at=None, run_at=clock.now() + dt.timedelta(seconds=2))
         now = clock.now()
         permanent = isinstance(exc, PermanentError) or job.attempts >= job.max_attempts
         error = f"{exc.__class__.__name__}: {exc}"[:2000]
-        Job.objects.filter(pk=job.pk).update(
+        outcome = finish(
+            "dead" if permanent else "failed", error=error,
+            fail_message=permanent and job.kind == "comms.send",
             status="dead" if permanent else "failed", last_error=error, updated_at=now, lease_owner="",
             lease_expires_at=None, run_at=now + backoff(job.attempts), finished_at=now if permanent else None,
         )
-        JobAttempt.objects.filter(job=job, attempt_no=job.attempts).update(
-            finished_at=now, outcome="dead" if permanent else "failed", error=error)
-        log.warning("job failed", extra={"job_id": job.pk, "kind": job.kind, "attempt": job.attempts,
-                                         "permanent": permanent, "error": error,
-                                         "trace": traceback.format_exc().splitlines()[-1]})
-        if permanent and job.kind == "comms.send":
-            from crm.comms.services import mark_failed
-
-            mark_failed(job.payload.get("message_id"), error)
-        return "dead" if permanent else "failed"
+        if outcome != "stale":
+            log.warning("job failed", extra={"job_id": job.pk, "kind": job.kind, "attempt": job.attempts,
+                                             "permanent": permanent, "error": error,
+                                             "trace": traceback.format_exc().splitlines()[-1]})
+        return outcome
     finally:
         log.info("job finished", extra={"job_id": job.pk, "kind": job.kind,
                                         "ms": int((clock.now() - started).total_seconds() * 1000)})

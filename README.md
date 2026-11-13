@@ -5,6 +5,8 @@ colleague can see every customer, with clear responsibility, shared pools, accep
 attention queue for forgotten clients, durable reminders, sandboxed customer email and reports that
 reconcile to their source records.
 
+Current autonomous development context and remaining stages: [`context/09_development/DEVELOPMENT_EXECUTION.md`](context/09_development/DEVELOPMENT_EXECUTION.md).
+
 The product requirements live in [`context/`](context/README.md). This README covers running the software.
 
 > Status: a locally runnable, tested build. It is **not production-ready**: see
@@ -68,6 +70,8 @@ The administrator must change the temporary password at first sign-in, then adds
 
 `scripts/e2e.sh` needs Playwright: either a global install (`npm i -g playwright@1.63.0 && npx playwright install chromium`)
 or `cd e2e && npm install && npx playwright install chromium`, then `NODE_PATH=e2e/node_modules scripts/e2e.sh`.
+
+For an existing system Chromium, set `CRM_CHROMIUM_PATH=/usr/bin/chromium` when running the browser journey. Otherwise Playwright uses its downloaded browser.
 
 ## Production-like run
 

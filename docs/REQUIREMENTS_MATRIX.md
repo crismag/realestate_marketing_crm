@@ -1,6 +1,6 @@
 # Requirement → implementation → evidence
 
-Evidence below was produced on branch `claude/project-thread-2p04se` in the build container
+Historical baseline evidence below was produced on branch `claude/project-thread-2p04se` in the build container
 (Python 3.13.18, Django 5.2.19, SQLite 3.53, Chromium via Playwright 1.63). "Passed" means the named check
 ran and passed there; it is re-run by CI on every push. Nothing here has been verified with real users,
 real customer data or a real email provider.
@@ -80,3 +80,18 @@ Commands: `pytest -p no:logging` (all `tests/`), `scripts/e2e.sh` (production-li
 - Usability testing with the sales team; accessibility audit beyond semantic markup and keyboard-reachable native controls.
 - Load testing; behaviour above a single-office team size is unmeasured.
 - Hosted CI: first runs on GitHub Actions passed on 2026-11-12 (head 0224dab, runs 43295590124 and 43295644932).
+
+## 13 November 2026 hardening evidence
+
+Current execution and exact check results: `context/09_development/CURRENT_RUN_REPORT.md`.
+
+| Requirement | Added behavior | Regression evidence |
+|---|---|---|
+| REQ-020 / NFR-003 | Old worker completion cannot overwrite newer lease state or fail its customer message | `tests/test_worker_fencing.py` |
+| REQ-018 / REQ-020 | Manual retries preserve inquiry stop checks and reject stale actions | `tests/test_comms_retry.py` |
+| REQ-022 / NFR-002 | Inquiry/response chronology validated; spend and audit rollback together | `tests/test_reporting_integrity.py` |
+| REQ-016 / REQ-026 | Agreed future contact pauses tour cadence but not urgent work | `tests/test_attention_agreement.py` |
+| REQ-019 / REQ-026 | Unanswered inbound replies surface until later human-response evidence | `tests/test_inbound_attention.py` |
+| REQ-026 | Digest counts new/continuing/resolved unique clients against prior delivered snapshot, including resolved-only digests | `tests/test_digest_changes.py`; migration `automation.0003_digest_snapshots` |
+
+Reply response matching uses contact chronology; there is no explicit reply-thread link. A linked awaiting inquiry avoids duplicate reply reasons. An unlinked inquiry cannot establish event identity. Digest resolution means departure from the recipient's queue, including reassignment; it does not assert task completion. Existing pre-migration digests have no snapshot; the first new digest establishes the baseline.

@@ -155,3 +155,17 @@ class ScheduleState(models.Model):
     key = models.CharField(max_length=80, unique=True)
     last_run_at = models.DateTimeField(null=True, blank=True)
     next_run_at = models.DateTimeField()
+
+
+class DigestSnapshot(models.Model):
+    """Unique contacts in one delivered personal digest, retained for daily comparisons."""
+
+    recipient = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="digest_snapshots")
+    day = models.DateField()
+    contact_ids = models.JSONField(default=list)
+    notification = models.OneToOneField(Notification, on_delete=models.CASCADE, related_name="digest_snapshot")
+    created_at = models.DateTimeField(default=clock.now)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["recipient", "day"], name="unique_recipient_digest_day")]
+        ordering = ["-day"]

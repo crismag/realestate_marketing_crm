@@ -18,6 +18,7 @@ from django.utils import timezone
 
 from crm.accounts.models import User
 from crm.contacts.models import Contact, Inquiry, Interaction, Opportunity
+from crm.contacts.services import HUMAN_RESPONSE_KINDS
 from crm.core import clock
 from crm.core.errors import DomainError
 from crm.core.services import audit
@@ -128,6 +129,13 @@ def evaluate(*, now: dt.datetime | None = None, policy: dict, contact_ids: list[
     for inq in Inquiry.objects.filter(contact_id__in=ids, status="awaiting").order_by("received_at"):
         inquiries[inq.contact_id].append(inq)
 
+    latest_replies = {}
+    for reply in (
+        Interaction.objects.filter(contact_id__in=ids, kind="inbound_reply", occurred_at__lte=now)
+        .only("contact_id", "occurred_at", "inquiry_id").order_by("contact_id", "-occurred_at", "-pk")
+    ):
+        latest_replies.setdefault(reply.contact_id, reply)
+
     tasks = defaultdict(list)
     for task in Task.objects.filter(contact_id__in=ids, status="open").select_related("assignee").order_by("due_at"):
         tasks[task.contact_id].append(task)
@@ -178,7 +186,20 @@ def evaluate(*, now: dt.datetime | None = None, policy: dict, contact_ids: list[
                 handler_users, inquiry=inq, overdue=hours > ap["inquiry_response_hours"],
             ))
 
-        if relationship_active and last_tour is not None:
+        reply = latest_replies.get(contact.pk)
+        if reply is not None:
+            responded = any(kinds.get(kind) is not None and kinds[kind] > reply.occurred_at
+                            for kind in HUMAN_RESPONSE_KINDS)
+            covered_by_inquiry = any(inq.pk == reply.inquiry_id for inq in inquiries.get(contact.pk, []))
+            if not responded and not covered_by_inquiry:
+                reasons.append(Reason(
+                    "inquiry_awaiting", reply.occurred_at,
+                    f"Inbound reply received {_ago(now, reply.occurred_at)} with no later human response recorded",
+                    handler_users,
+                    overdue=now - reply.occurred_at > dt.timedelta(hours=ap["inquiry_response_hours"]),
+                ))
+
+        if relationship_active and last_tour is not None and not agreed_later:
             followup = [kinds[k] for k in followup_types if k in kinds and kinds[k] > last_tour]
             if not followup and now - last_tour > dt.timedelta(hours=ap["after_tour_hours"]):
                 reasons.append(Reason("toured_no_followup", last_tour,

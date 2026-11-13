@@ -191,7 +191,8 @@ async function narrowChecks(browser) {
 }
 
 (async () => {
-  const browser = await chromium.launch();
+  const browser = await chromium.launch(process.env.CRM_CHROMIUM_PATH
+    ? { executablePath: process.env.CRM_CHROMIUM_PATH } : {});
   try {
     console.log("Desktop journey (1280px)");
     await desktopJourney(browser);

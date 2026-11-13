@@ -19,3 +19,13 @@ Planning items CHK-001–004 remain under review/in progress. Generated task bri
 | CHK-016 | [TASK-012: Verify release candidate and pilot handoff](../07_tasks/TASK-012_CONTEXT.md) | in progress; local acceptance evidence done, pilot not started | TASK-005, TASK-007, TASK-008, TASK-010, TASK-011 |
 
 Autonomous build run 2026-11-12/13 implemented TASK-003 to TASK-011 locally; evidence and gaps are in [docs/REQUIREMENTS_MATRIX.md](../../docs/REQUIREMENTS_MATRIX.md). "Implemented" means built and verified by automated tests in the build environment, not accepted by the product owner. Implementation defaults remain unapproved (see [docs/IMPLEMENTATION_DEFAULTS.md](../../docs/IMPLEMENTATION_DEFAULTS.md)). TASK-001 and TASK-002 (owner decisions and reference research) are still open.
+
+## Current hardening run — 13 November 2026
+
+Source of current execution: DEVELOPMENT_EXECUTION.md and CURRENT_RUN_REPORT.md. Historical task status above is retained for traceability.
+
+- Worker lease fencing and recovery race regressions implemented.
+- Message retry context, stale transition and retry generation regressions implemented.
+- Inquiry chronology and transactional reporting spend implemented.
+- Inbound response-needed attention, tour agreement suppression and durable digest comparisons implemented.
+- Fresh desktop/390px browser journey passed in hosted CI run 43345965197 at bd49e60; pilot acceptance remains open.

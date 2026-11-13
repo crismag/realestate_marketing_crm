@@ -1,21 +1,7 @@
-# Resume prompt
+# Resume prompt — current development
 
-Paste this into a new Claude Code session opened on branch `claude/project-thread-2p04se` of
-`crismag/realestate_marketing_crm` (or run `claude --continue` in the same checkout):
+Continue Realstate CRM in the current checkout. The user authorizes implementation, context maintenance and multiple agents. Read CLAUDE.md, context/README.md, context/09_development/DEVELOPMENT_EXECUTION.md and CURRENT_RUN_REPORT.md first. Preserve existing changes and inspect git status/log.
 
----
+Continue the highest-priority unfinished required item from the current report. Delegate independent tasks with disjoint file ownership and isolated CRM_TEST_DB_PATH values. Reproduce bugs before implementing fixes. Keep Django/SQLite, CrisGen UI and sandbox messages. Do not expand into deferred product scope or claim real delivery/deployment/MySQL validation without evidence.
 
-You are resuming the autonomous CRM build `autonomous-build-2026-11-12`. The fixed deadline is
-2026-11-13T07:08:03Z; do not extend it. If it has passed, do only handoff and verification work.
-
-1. Read `CLAUDE.md`, `context/09_development/AUTONOMOUS_RUN_STATE.json`, `context/09_development/RUN_LOG.md`
-   (last rows) and `docs/REQUIREMENTS_MATRIX.md`.
-2. Recreate the environment: `python3 -m venv .venv && .venv/bin/pip install -r requirements-dev.txt`.
-3. Re-run the evidence before trusting it: `.venv/bin/python -m pytest -p no:logging`, `.venv/bin/ruff check .`,
-   and `scripts/e2e.sh` if Playwright is available. Record results; never mark a check passed without running it.
-4. Continue from `next_action` in the state file. Keep the boundaries: implementation defaults are not
-   approvals; sandbox transport only; no deployment, purchases, real customer data or messages; no
-   force-push; preserve ADR-001/002 and the product exclusions.
-5. After each slice: commit, push, update the state file and append a RUN_LOG row with UTC time and evidence.
-
----
+Verify with pytest, ruff, manage.py check, makemigrations --check --dry-run and browser journeys when available. Record exact evidence, update the current checkpoint, append RUN_LOG and prepare a reviewable commit/PR. Never reuse historical passed results as fresh evidence. Historical fixed deadlines belong only to their named runs.

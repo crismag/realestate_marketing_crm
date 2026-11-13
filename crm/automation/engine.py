@@ -18,7 +18,7 @@ from crm.core import clock
 from crm.core.services import get_policy
 from crm.work.models import Assignment, Handover, Task
 
-from .models import Notification, Rule, RuleRun
+from .models import DigestSnapshot, Notification, Rule, RuleRun
 
 User = get_user_model()
 
@@ -305,23 +305,44 @@ def run_digest(now: dt.datetime | None = None, *, job=None) -> dict:
     local_day = now.astimezone(zoneinfo.ZoneInfo(policy["timezone"])).date()
     run = RuleRun.objects.create(rule=rule, rule_version=rule.version, evaluated_for=now, job=job, started_at=clock.now())
     items = attention.evaluate(now=now, policy=policy)
-    since = now - dt.timedelta(days=1)
     for user in User.objects.filter(is_active=True):
         mine = attention.filter_items(items, user=user, scope="mine")
-        if not mine:
-            continue
-        run.matched += 1
-        summary = attention.summarize(mine)
-        new = sum(1 for i in mine if i.oldest_since and i.oldest_since >= since)
-        lines = [f"{attention.REASONS[c]}: {n}" for c, n in summary["per_reason"].items() if n]
-        created, _ = notify(
-            recipients=[user], kind="digest",
-            title=f"Daily digest: {summary['unique_contacts']} client(s) need attention ({new} new)",
-            body="\n".join(lines) + "\nReason counts overlap; the client total counts each client once.",
-            reason="Daily attention digest", logical_key=f"digest:{user.pk}:{local_day.isoformat()}", rule=rule,
-        )
-        run.created += created
-        run.suppressed += 0 if created else 1
+        current_ids = {item.contact.pk for item in mine}
+        logical_key = f"digest:{user.pk}:{local_day.isoformat()}"
+        # Commit the comparison baseline together with the delivered notification.
+        # Daily replay must not replace the original snapshot with later state.
+        with transaction.atomic():
+            if Notification.objects.filter(logical_key=f"{logical_key}:u{user.pk}").exists():
+                run.suppressed += 1
+                continue
+            previous = DigestSnapshot.objects.filter(recipient=user, day__lt=local_day).first()
+            previous_ids = set(previous.contact_ids) if previous else set()
+            new = len(current_ids - previous_ids)
+            continuing = len(current_ids & previous_ids)
+            resolved = len(previous_ids - current_ids)
+            if not current_ids and not resolved:
+                continue
+            run.matched += 1
+            summary = attention.summarize(mine)
+            lines = [f"{attention.REASONS[c]}: {n}" for c, n in summary["per_reason"].items() if n]
+            comparison = (f"Compared with your previous delivered digest ({previous.day.isoformat()})."
+                          if previous else "No previous delivered digest; all current clients count as new.")
+            created, _ = notify(
+                recipients=[user], kind="digest",
+                title=f"Daily digest: {len(current_ids)} client(s) need attention "
+                      f"({new} new, {continuing} continuing, {resolved} resolved)",
+                body="\n".join(lines) + "\nReason counts overlap; the client total counts each client once.\n"
+                     + comparison + " Resolved means no longer in your attention queue.",
+                reason="Daily attention digest", logical_key=logical_key, rule=rule,
+            )
+            if created:
+                DigestSnapshot.objects.create(
+                    recipient=user, day=local_day, contact_ids=sorted(current_ids),
+                    notification=Notification.objects.get(logical_key=f"{logical_key}:u{user.pk}"),
+                    created_at=now,
+                )
+            run.created += created
+            run.suppressed += 0 if created else 1
     run.outcome = "succeeded"
     run.finished_at = clock.now()
     run.save()

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import datetime as dt
 import re
+import uuid
 import zoneinfo
 
 from django.db import IntegrityError, transaction
@@ -161,20 +162,30 @@ def mark_failed(message_id: int, error: str) -> None:
 
 def retry_message(msg: OutboundMessage, *, actor) -> OutboundMessage:
     """Controlled manual retry for failed (not uncertain) messages."""
-    from crm.core.errors import DomainError
+    from crm.automation.models import Job
+    from crm.core.errors import ConflictError, DomainError
 
     if msg.status != "failed":
         raise DomainError("Only failed messages can be retried. Uncertain deliveries need manual review.", code="not_retryable")
     with transaction.atomic():
-        OutboundMessage.objects.filter(pk=msg.pk, status="failed").update(status="scheduled", status_reason="Manual retry requested")
-        enqueue("comms.send", {"message_id": msg.pk}, logical_key=f"send:{msg.pk}:retry:{clock.now().timestamp():.0f}",
+        updated = OutboundMessage.objects.filter(pk=msg.pk, status="failed").update(
+            status="scheduled", status_reason="Manual retry requested")
+        if updated != 1:
+            raise ConflictError("The message changed; reload before retrying.")
+        # The originating job is the durable source of inquiry stop-policy context.
+        original = Job.objects.filter(logical_key=f"send:{msg.pk}", kind="comms.send").first()
+        if original is None:
+            raise DomainError("Cannot retry because the original send context is missing; review the message manually.",
+                              code="retry_context_missing")
+        payload = {**original.payload, "message_id": msg.pk}
+        enqueue("comms.send", payload, logical_key=f"send:{msg.pk}:retry:{uuid.uuid4().hex}",
                 max_attempts=1, rule=msg.rule)
         audit("message.retry", msg, "Manual retry of failed customer message", actor=actor, contact=msg.contact)
     return OutboundMessage.objects.get(pk=msg.pk)
 
 
 def resolve_uncertain(msg: OutboundMessage, *, actor, outcome: str, note: str) -> OutboundMessage:
-    from crm.core.errors import DomainError
+    from crm.core.errors import ConflictError, DomainError
 
     if msg.status != "uncertain":
         raise DomainError("Only uncertain messages can be resolved.", code="not_uncertain")
@@ -183,6 +194,9 @@ def resolve_uncertain(msg: OutboundMessage, *, actor, outcome: str, note: str) -
     if not note.strip():
         raise DomainError("Record what you checked.", code="note_required")
     with transaction.atomic():
-        OutboundMessage.objects.filter(pk=msg.pk, status="uncertain").update(status=outcome, status_reason=note.strip()[:300])
+        updated = OutboundMessage.objects.filter(pk=msg.pk, status="uncertain").update(
+            status=outcome, status_reason=note.strip()[:300])
+        if updated != 1:
+            raise ConflictError("The message changed; reload before resolving it.")
         audit("message.resolved", msg, f"Uncertain message resolved as {outcome}: {note}", actor=actor, contact=msg.contact)
     return OutboundMessage.objects.get(pk=msg.pk)
