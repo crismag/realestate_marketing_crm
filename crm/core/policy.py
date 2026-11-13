@@ -46,10 +46,25 @@ DEFAULT_POLICY: dict = {
         "handover_pending_hours": 24,
         "pool_waiting_hours": 24,
         "escalation_overdue_hours": 72,
+        # C-R2 implementation default: flag open opportunities whose stage has not changed for this many
+        # days (0 = off), and ones still open after their expected close date.
+        "stalled_opportunity_days": 21,
+        "flag_past_expected_close": True,
         # Activity types that count as follow-up after a tour and that reset
         # the inactivity clock. Profile views and notes never count.
         "followup_types": ["outbound_attempt", "conversation", "inbound_reply", "meeting_tour"],
         "contact_reset_types": ["outbound_attempt", "conversation", "inbound_reply", "meeting_tour"],
+    },
+    # C-R3 implementation default: after an interaction is logged, pre-fill (never create) a follow-up task.
+    # Keyed by interaction type; hours = suggested due time from now. Types not listed get no suggestion.
+    "followup_suggestions": {
+        "enabled": True,
+        "by_kind": {
+            "meeting_tour": {"title": "Follow up after the tour", "hours": 24},
+            "conversation": {"title": "Follow up on the conversation", "hours": 72},
+            "outbound_attempt": {"title": "Try again to reach the customer", "hours": 24},
+            "inbound_reply": {"title": "Respond to the customer's reply", "hours": 4},
+        },
     },
     "notifications": {
         "digest_hour": 8,

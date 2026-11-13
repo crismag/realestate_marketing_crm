@@ -17,7 +17,7 @@ STATUS_COLORS = {
     "routing_gap": "error", "declined": None, "cancelled": None, "stale": None, "suppressed": None, "lost": None,
     "open": "secondary", "awaiting": "warning", "closed": None,
     "inquiry_awaiting": "warning", "task_overdue": "error", "promise_due": "error", "toured_no_followup": "warning",
-    "inactive": "warning", "next_action_missing": "secondary", "pool_waiting": "secondary",
+    "inactive": "warning", "opportunity_stalled": "warning", "next_action_missing": "secondary", "pool_waiting": "secondary",
     "handover_waiting": "warning", "critical_task": "error",
 }
 

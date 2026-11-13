@@ -32,7 +32,7 @@ their documented class and `data-*` attributes; none were invented under the `cg
 | Attention queue | REQ-016, REQ-017, REQ-026 | Card stat tiles, Select filters, Checkbox, Chip (reason + severity), Button, details disclosure for snooze |
 | Contacts list + CSV export | FR-001, REQ-003–006 | data-table pattern (Input search, Select filters, Table, Pagination), Chip |
 | Capture contact | REQ-003–006 | Card, Input, Textarea, Select, Radio, Checkbox, Alert (duplicate candidates) |
-| Contact profile | FR-001, REQ-014–016, REQ-021 | Card, Chip, Timeline, List, Button, details disclosures for forms |
+| Contact profile | FR-001, REQ-014–016, REQ-021 | Card, Chip, Timeline, List, Button, details disclosures for forms; Alert (info) for the pre-filled follow-up suggestion |
 | Shared work (pools, handovers) | REQ-014, REQ-015 | data-table pattern, Chip, Button (claim/accept/decline) |
 | Handover request | REQ-015, ADR-001/002 | Card, Radio, Select, Textarea, per-task disposition Selects |
 | Tasks | REQ-015, REQ-017, REQ-020 | data-table pattern, Chip (overdue/critical) |

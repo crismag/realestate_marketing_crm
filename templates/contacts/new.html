@@ -2,8 +2,8 @@
 {% block content %}
 <div class="page-head"><h1 class="cg-typography" data-variant="h4">Capture contact</h1></div>
 {% if duplicates %}<section class="cg-card" aria-labelledby="dup-title"><div class="card-title"><h2 id="dup-title">Possible existing contacts</h2></div>
-<div class="card-pad"><p>These records share the email, phone or name. To record a repeat inquiry, open the existing contact instead of creating a duplicate. Records are never merged automatically.</p>
-<ul class="cg-list">{% for d in duplicates %}<li class="cg-list__item" data-color="default"><span><a href="{% url 'contacts:detail' d.pk %}">{{ d.display_name }}</a> · {{ d.email|default:"no email" }} · {{ d.phone|default:"no phone" }} · {{ d.assignment.describe }}</span></li>{% endfor %}</ul>
+<div class="card-pad"><p>These records look like the same person: same email (also ignoring a +tag), phone, or name in any word order. To record a repeat inquiry, open the existing contact instead of creating a duplicate. Records are never merged automatically.</p>
+<ul class="cg-list">{% for d in duplicates %}<li class="cg-list__item" data-color="default"><span><a href="{% url 'contacts:detail' d.pk %}">{{ d.display_name }}</a> · {{ d.email|default:"no email" }} · {{ d.phone|default:"no phone" }} · {{ d.assignment.describe }}{% if d.match_reasons %} · <span class="small muted">Matched on {{ d.match_reasons|join:", " }}</span>{% endif %}</span></li>{% endfor %}</ul>
 <p class="small">If this is a different person, tick “create a new contact anyway” below and save again. Your entries are kept.</p></div></section>{% endif %}
 <section class="cg-card"><form method="post" class="card-pad stack" novalidate>{% csrf_token %}
 {% include "partials/form_errors.html" %}

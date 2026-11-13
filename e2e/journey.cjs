@@ -91,8 +91,13 @@ async function desktopJourney(browser) {
   await page.getByText("Toured unit 4B").first().waitFor();
   step("agent records the tour");
 
-  // 4. Create the next action, already due (so attention picks it up).
-  await page.getByText("Add next action").click();
+  // 4. The follow-up suggestion (C-R3) opens the pre-filled next-action form; nothing is created yet.
+  await page.getByText("Suggested next action after your").waitFor();
+  const suggested = await page.getByRole("textbox", { name: "Next action" }).inputValue();
+  if (suggested !== "Follow up after the tour") throw new Error(`unexpected suggestion: ${suggested}`);
+  step("follow-up task is suggested, not created");
+
+  // Create the next action, already due (so attention picks it up).
   await page.getByRole("textbox", { name: "Next action" }).fill("Send floor plans and parking info");
   const due = new Date(Date.now() - 60 * 60 * 1000);
   const pad = (n) => String(n).padStart(2, "0");

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+import unicodedata
 
 from django.conf import settings
 from django.db import models
@@ -14,6 +15,14 @@ DISPOSITIONS = [("active", "Active"), ("nurture", "Nurture"), ("inactive", "Inac
 
 def normalize_email(value: str | None) -> str:
     return (value or "").strip().lower()
+
+
+def name_key(value: str | None) -> str:
+    """Order-insensitive name key: "Smith, John" and "john  SMITH" both give "john smith"."""
+    text = unicodedata.normalize("NFKD", value or "")
+    text = "".join(ch for ch in text if not unicodedata.combining(ch)).lower()
+    words = re.findall(r"[a-z0-9]+", text)
+    return " ".join(sorted(words))[:150]
 
 
 def normalize_phone(value: str | None) -> str:
@@ -51,6 +60,8 @@ class Contact(models.Model):
     phone = models.CharField(max_length=40, blank=True)
     email_normalized = models.CharField(max_length=254, blank=True, db_index=True, editable=False)
     phone_normalized = models.CharField(max_length=20, blank=True, db_index=True, editable=False)
+    name_key = models.CharField(max_length=150, blank=True, db_index=True, editable=False,
+                                help_text="Lowercased, accent-free, word-sorted name for duplicate matching")
     lifecycle = models.CharField(max_length=20, choices=LIFECYCLES, default="lead", db_index=True)
     disposition = models.CharField(max_length=20, choices=DISPOSITIONS, default="active")
     disposition_reason = models.CharField(max_length=200, blank=True)
@@ -85,6 +96,7 @@ class Contact(models.Model):
     def save(self, *args, **kwargs):
         self.email_normalized = normalize_email(self.email)
         self.phone_normalized = normalize_phone(self.phone)
+        self.name_key = name_key(self.display_name)
         super().save(*args, **kwargs)
 
     @property
@@ -134,6 +146,7 @@ class Opportunity(models.Model):
     contact = models.ForeignKey(Contact, on_delete=models.PROTECT, related_name="opportunities")
     title = models.CharField(max_length=200)
     stage = models.CharField(max_length=40, default="new")
+    stage_changed_at = models.DateTimeField(null=True, blank=True, help_text="When the stage last actually changed")
     outcome = models.CharField(max_length=10, choices=OUTCOMES, default="open", db_index=True)
     amount_minor = models.BigIntegerField(null=True, blank=True, help_text="Integer minor units (e.g. cents)")
     currency = models.CharField(max_length=3, blank=True)

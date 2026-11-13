@@ -13,7 +13,7 @@ from crm.core.errors import ConflictError, DomainError
 from crm.core.services import audit
 from crm.work.models import Assignment, AssignmentEvent, Pool
 
-from .models import Contact, Inquiry, Interaction, Opportunity, Source, Watch, normalize_email, normalize_phone
+from .models import Contact, Inquiry, Interaction, Opportunity, Source, Watch, name_key, normalize_email, normalize_phone
 
 CONTACT_EDITABLE_FIELDS = (
     "display_name", "email", "phone", "source", "source_detail", "introducer", "interests", "notes",
@@ -22,21 +22,56 @@ CONTACT_EDITABLE_FIELDS = (
 HUMAN_RESPONSE_KINDS = ("outbound_attempt", "conversation", "meeting_tour")
 
 
+def _email_variants(email: str) -> set[str]:
+    """The address itself plus its form without a "+tag" (jane+web@x.com -> jane@x.com)."""
+    value = normalize_email(email)
+    if "@" not in value:
+        return {value} if value else set()
+    local, _, domain = value.partition("@")
+    return {value, f"{local.split('+', 1)[0]}@{domain}"}
+
+
 def duplicate_candidates(*, email: str = "", phone: str = "", name: str = "", exclude_id: int | None = None) -> QuerySet:
-    """Possible duplicates by exact normalised email/phone or exact name. Never merges automatically."""
+    """Possible duplicates. Never merges automatically.
+
+    Matches (implementation default, C-R6): normalised email, including the address without a "+tag";
+    the last 10 phone digits; and the name compared ignoring case, accents, punctuation and word order
+    ("Smith, John" = "john smith"). A name match only counts for names of two or more words, so a single
+    first name does not flag everyone who shares it.
+    """
     query = Q()
-    if normalize_email(email):
-        query |= Q(email_normalized=normalize_email(email))
+    emails = _email_variants(email)
+    for variant in emails:
+        query |= Q(email_normalized=variant) | Q(email_normalized__startswith=variant.split("@")[0] + "+",
+                                                 email_normalized__endswith="@" + variant.split("@")[-1])
     if normalize_phone(phone) and len(normalize_phone(phone)) >= 7:
         query |= Q(phone_normalized=normalize_phone(phone))
     if name.strip():
         query |= Q(display_name__iexact=name.strip())
+        key = name_key(name)
+        if len(key.split()) >= 2:
+            query |= Q(name_key=key)
     if not query:
         return Contact.objects.none()
     qs = Contact.objects.filter(query).select_related("assignment__user", "assignment__pool")
     if exclude_id:
         qs = qs.exclude(pk=exclude_id)
     return qs[:10]
+
+
+def match_reasons(candidate: Contact, *, email: str = "", phone: str = "", name: str = "") -> list[str]:
+    """Why a candidate was suggested, so the person can judge it (shown next to each candidate)."""
+    reasons = []
+    mine = {e.split("@")[0].split("+")[0] + "@" + e.split("@")[-1] for e in _email_variants(email) if "@" in e}
+    theirs = {e.split("@")[0].split("+")[0] + "@" + e.split("@")[-1] for e in _email_variants(candidate.email) if "@" in e}
+    if mine & theirs:
+        reasons.append("same email" if normalize_email(email) == candidate.email_normalized else "same email apart from a +tag")
+    if normalize_phone(phone) and len(normalize_phone(phone)) >= 7 and normalize_phone(phone) == candidate.phone_normalized:
+        reasons.append("same phone")
+    if name.strip() and (candidate.display_name.lower() == name.strip().lower()
+                         or (len(name_key(name).split()) >= 2 and candidate.name_key == name_key(name))):
+        reasons.append("same name" if candidate.display_name.lower() == name.strip().lower() else "same name, different order or spelling marks")
+    return reasons
 
 
 @dataclass
@@ -91,6 +126,7 @@ def update_contact(contact: Contact, *, actor, data: dict, expected_version: int
             return current
         fields["email_normalized"] = normalize_email(fields.get("email", current.email))
         fields["phone_normalized"] = normalize_phone(fields.get("phone", current.phone))
+        fields["name_key"] = name_key(fields.get("display_name", current.display_name))
         updated = Contact.objects.filter(pk=contact.pk, version=expected_version).update(
             version=expected_version + 1, updated_at=clock.now(), **fields
         )
@@ -240,11 +276,16 @@ def save_opportunity(contact: Contact, *, actor, opportunity: Opportunity | None
     def run():
         fields = {k: v for k, v in data.items() if k in allowed}
         if opportunity is None:
-            opp = Opportunity.objects.create(contact=contact, created_by=actor, created_at=clock.now(), **fields)
+            now = clock.now()
+            opp = Opportunity.objects.create(contact=contact, created_by=actor, created_at=now, stage_changed_at=now, **fields)
             audit("opportunity.created", opp, f"Opportunity '{opp.title}' created", actor=actor, contact=contact)
             return opp
         if opportunity.outcome != "open":
             raise DomainError("Closed opportunities cannot be edited. Reopen it first.", code="closed")
+        stage_changed = "stage" in fields and fields["stage"] != opportunity.stage
+        if stage_changed:
+            # Only a real stage change moves the clock used by the stalled-opportunity reason (C-R2).
+            fields["stage_changed_at"] = clock.now()
         updated = Opportunity.objects.filter(pk=opportunity.pk, version=expected_version).update(
             version=expected_version + 1, **fields
         )
@@ -252,6 +293,9 @@ def save_opportunity(contact: Contact, *, actor, opportunity: Opportunity | None
             raise ConflictError("This opportunity was changed by someone else. Reload and try again.")
         opp = Opportunity.objects.get(pk=opportunity.pk)
         audit("opportunity.updated", opp, f"Opportunity '{opp.title}' updated (stage {opp.stage})", actor=actor, contact=contact)
+        if stage_changed:
+            audit("opportunity.stage_changed", opp, f"Opportunity '{opp.title}' stage {opportunity.stage} -> {opp.stage}",
+                  actor=actor, contact=contact, data={"from": opportunity.stage, "to": opp.stage})
         return opp
 
     return write_transaction(run)

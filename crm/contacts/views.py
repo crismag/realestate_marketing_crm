@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import csv
+import datetime as dt
 from decimal import Decimal
 
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.views.decorators.http import require_POST
 
 from crm.attention import services as attention
@@ -30,7 +32,7 @@ from .forms import (
     OpportunityForm,
     OpportunityOutcomeForm,
 )
-from .models import LIFECYCLES, Contact, Inquiry, Opportunity, Source, Watch
+from .models import LIFECYCLES, Contact, Inquiry, Interaction, Opportunity, Source, Watch
 
 User = get_user_model()
 TIMELINE_AUDIT_ACTIONS = {
@@ -86,6 +88,8 @@ def contact_new(request):
     if request.method == "POST" and form.is_valid():
         d = form.cleaned_data
         duplicates = list(services.duplicate_candidates(email=d["email"], phone=d["phone"], name=d["display_name"]))
+        for dup in duplicates:
+            dup.match_reasons = services.match_reasons(dup, email=d["email"], phone=d["phone"], name=d["display_name"])
         if duplicates and not d["confirm_new"]:
             messages.warning(request, "Possible existing contacts found. Open one to add a repeat inquiry, or confirm this is a different person.")
         else:
@@ -127,8 +131,34 @@ def _timeline(contact):
     return entries[:150]
 
 
+def followup_suggestion(request, contact, policy) -> dict | None:
+    """C-R3: a pre-filled follow-up task after the user logs an interaction. Nothing is created until they submit.
+
+    Only offered for the interaction this user just logged (by id, within an hour), for interaction types
+    configured in policy, and when the contact has no open task due in the future.
+    """
+    config = policy.get("followup_suggestions") or {}
+    raw = request.GET.get("suggest", "")
+    if not config.get("enabled") or not raw.isdigit():
+        return None
+    now = clock.now()
+    interaction = Interaction.objects.filter(pk=int(raw), contact=contact, actor=request.user,
+                                             recorded_at__gte=now - dt.timedelta(hours=1)).first()
+    rule = (config.get("by_kind") or {}).get(interaction.kind) if interaction else None
+    if not rule:
+        return None
+    if contact.tasks.filter(status="open", due_at__gte=now).exists():
+        return None
+    return {"interaction": interaction, "title": rule["title"][:200],
+            "due_at": now + dt.timedelta(hours=int(rule.get("hours", 24)))}
+
+
 def render_detail(request, contact, *, status=200, **forms):
     policy = get_policy()
+    suggestion = None if forms.get("task_form") else followup_suggestion(request, contact, policy)
+    task_initial = {"assignee": request.user}
+    if suggestion:
+        task_initial.update({"title": suggestion["title"], "kind": "follow_up", "due_at": suggestion["due_at"]})
     assignment = Assignment.objects.select_related("user", "pool__coordinator", "pool__backup_coordinator").filter(contact=contact).first()
     items = attention.evaluate(policy=policy, contact_ids=[contact.pk])
     open_handover = Handover.objects.filter(contact=contact, state="requested").select_related("sender", "recipient", "pool").first()
@@ -152,7 +182,8 @@ def render_detail(request, contact, *, status=200, **forms):
         "timeline": _timeline(contact),
         "messages_out": OutboundMessage.objects.filter(contact=contact)[:10],
         "interaction_form": forms.get("interaction_form") or InteractionForm(contact=contact, prefix="ix"),
-        "task_form": forms.get("task_form") or TaskForm(prefix="task", initial={"assignee": request.user}),
+        "task_form": forms.get("task_form") or TaskForm(prefix="task", initial=task_initial),
+        "followup_suggestion": suggestion,
         "inquiry_form": forms.get("inquiry_form") or InquiryForm(prefix="inq"),
         "lifecycle_form": forms.get("lifecycle_form") or LifecycleForm(prefix="lc", initial={
             "lifecycle": contact.lifecycle, "disposition": contact.disposition, "reason": contact.disposition_reason,
@@ -260,13 +291,14 @@ def add_interaction(request, pk):
         return render_detail(request, contact, interaction_form=form, status=400)
     d = form.cleaned_data
     try:
-        services.record_interaction(contact, actor=request.user, kind=d["kind"], channel=d["channel"], summary=d["summary"],
-                                    occurred_at=d["occurred_at"] or clock.now(), inquiry=d["inquiry"])
+        interaction = services.record_interaction(contact, actor=request.user, kind=d["kind"], channel=d["channel"],
+                                                  summary=d["summary"], occurred_at=d["occurred_at"] or clock.now(),
+                                                  inquiry=d["inquiry"])
     except DomainError as exc:
         form.add_error(None, exc.message)
         return render_detail(request, contact, interaction_form=form, status=400)
     messages.success(request, "Interaction logged.")
-    return redirect("contacts:detail", pk=pk)
+    return redirect(f"{reverse('contacts:detail', args=[pk])}?suggest={interaction.pk}#next")
 
 
 @require_POST

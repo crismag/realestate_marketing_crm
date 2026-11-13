@@ -30,15 +30,17 @@ Approved rules that the build enforces as written (not defaults):
 |---|---|---|
 | Lifecycle | One contact record: lead → prospect → client. A contact becomes a client when one of its opportunities is **won** | OQ-002 / PROP-032 |
 | Sales stages | new, qualification, viewing, proposal, decision; won/lost are outcomes, not stages | Settings (labels and stages) |
-| Duplicate matching | Exact normalised email, normalised phone (≥7 digits) or exact name. Never merged automatically; the user confirms "different person" | TASK-004 open issue |
+| Duplicate matching (C-R6) | Normalised email, also ignoring a "+tag" (jane+web@ = jane@); normalised phone (≥7 digits); exact name, or the same name ignoring case, accents, punctuation and word order when it has two or more words. The capture screen says which of these matched. Never merged automatically; the user confirms "different person" | TASK-004 open issue, OQ-015 |
 | Web intake identity | Exact email match to exactly one active contact reuses it; otherwise a new contact in the intake pool, other candidates flagged in the audit log | OQ-010 |
 | What counts as contact | Outbound attempt, conversation, inbound reply, tour. Notes and profile views never count | Settings |
 | After a tour | Flag if no follow-up task or contact within 48 h | Settings |
+| Stalled opportunity (C-R2) | Flag an open opportunity whose stage has not changed for 21 days (0 = off), or that is still open after its expected close date (on/off). Only a real stage change resets the clock; editing title or amount does not. Snoozable | Settings, OQ-015 |
+| Follow-up suggestion (C-R3) | After you log an interaction, the next-action form is pre-filled (never created): tour → "Follow up after the tour" in 24 h; conversation → 72 h; no-answer attempt → try again in 24 h; customer reply → respond in 4 h; notes → nothing. Skipped when the contact already has a future task. On/off in Settings; titles and hours in the stored policy (`followup_suggestions.by_kind`) | Settings, OQ-015 |
 | Inactivity cadence | Lead 7 days, prospect 14, client 60 (0 = off) | Settings, OQ-008 |
 | Inquiry response target | 24 h | Settings |
 | Pool waiting / pending handover reminders | 24 h each | Settings |
 | Overdue escalation | Tasks overdue by 72 h notify the configured escalation recipients; with nobody configured a visible "routing gap" is recorded | Settings |
-| Snoozing | Allowed for after-tour, inactivity, missing next action and pool waiting, with a reason and end date. Never for unanswered inquiries, overdue tasks, promises or critical tasks | Code (`crm/attention/services.py`) |
+| Snoozing | Allowed for after-tour, inactivity, missing next action, stalled opportunity and pool waiting, with a reason and end date. Never for unanswered inquiries, overdue tasks, promises or critical tasks | Code (`crm/attention/services.py`) |
 | Daily digest | 08:00 workspace time, in-app | Settings, Automation |
 | Attention sweep | Every 15 minutes; missed runs coalesce into one | Settings |
 | Customer email rules | Inquiry acknowledgement and client onboarding, both enabled, sandbox only | Automation (enable/disable, versioned) |
