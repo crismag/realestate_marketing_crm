@@ -17,7 +17,7 @@ from django.db.models import F
 from crm.automation.models import Notification
 from crm.comms.models import OutboundMessage
 from crm.core import clock
-from crm.core.db import write_transaction
+from crm.core.db import require_version, write_transaction
 from crm.core.errors import ConflictError, DomainError
 from crm.core.services import audit
 from crm.work.models import Assignment, Handover, Task
@@ -76,6 +76,9 @@ def can_merge(user, keep: Contact) -> bool:
 
 def merge_contacts(keep: Contact, duplicate: Contact, *, actor, keep_version: int, duplicate_version: int,
                    reason: str = "") -> Contact:
+    require_version(keep_version)
+    require_version(duplicate_version)
+
     def run():
         k = Contact.objects.get(pk=keep.pk)
         d = Contact.objects.get(pk=duplicate.pk)

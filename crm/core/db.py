@@ -12,6 +12,28 @@ from .errors import ServiceUnavailable
 
 log = logging.getLogger("crm.db")
 
+# SQLite binds integers as signed 64-bit. A larger Python int becomes a database error.
+SQL_INT_MAX = 2**63 - 1
+
+
+def parse_version(raw) -> int | None:
+    """A posted optimistic version that is safe to bind, or None when it is missing or oversized."""
+    if type(raw) is int:
+        return raw if 0 <= raw <= SQL_INT_MAX else None
+    if not isinstance(raw, str) or not raw.isdigit() or len(raw) > 19:
+        return None
+    value = int(raw)
+    return value if value <= SQL_INT_MAX else None
+
+
+def require_version(version) -> int:
+    """Reject a missing or out-of-range expected version before it reaches the database."""
+    from .errors import DomainError
+
+    if type(version) is not int or version < 0 or version > SQL_INT_MAX:
+        raise DomainError("Reload the page and try again.", code="version_required")
+    return version
+
 _LOCK_MESSAGES = ("database is locked", "database table is locked", "busy")
 
 

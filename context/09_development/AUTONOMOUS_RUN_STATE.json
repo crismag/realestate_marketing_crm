@@ -6,7 +6,7 @@
   "branch": "cursor/sales-board-crisgen-behaviors-77d9",
   "base_commit": "fda56b35a3ecfcfb32dae41ee2b91030e8371b32",
   "stack": "Python 3.12 (this container) / Django 5.2.19 LTS / SQLite WAL / server-rendered CrisGen UI 1.1 / waitress + whitenoise",
-  "current_stage": "restore and usability checks",
+  "current_stage": "page crawl and input bounds",
   "stages": {
     "baseline_TASK-003_to_011": "already on main (fda56b3); not regenerated",
     "sales_board_and_crisgen_behaviors": "done_locally",
@@ -15,18 +15,20 @@
     "attention_priority_score": "done_locally",
     "isolated_sqlite_restore": "done_locally",
     "usability_pass_changed_screens": "done_locally",
-    "slice_security_and_clean_start": "done_locally"
+    "slice_security_and_clean_start": "done_locally",
+    "page_crawl_and_input_bounds": "done_locally"
   },
-  "last_checkpoint_utc": "2026-11-13T03:18:40Z",
+  "last_checkpoint_utc": "2026-11-13T03:54:20Z",
   "checks": [
-    {"name": "pytest", "command": ".venv/bin/python -m pytest -p no:logging", "result": "231 passed", "at_utc": "2026-11-13T03:18:25Z"},
-    {"name": "ruff", "command": ".venv/bin/ruff check .", "result": "passed", "at_utc": "2026-11-13T03:18:25Z"},
+    {"name": "pytest", "command": ".venv/bin/python -m pytest -p no:logging", "result": "238 passed", "at_utc": "2026-11-13T03:53:40Z"},
+    {"name": "ruff", "command": ".venv/bin/ruff check .", "result": "passed", "at_utc": "2026-11-13T03:53:40Z"},
     {"name": "isolated backup_db/restore_db", "result": "throwaway file only; restore returned Restore Marker; safety restore returned both contacts; workspace var/crm.sqlite3 unchanged", "at_utc": "2026-11-13T03:10:20Z"},
-    {"name": "scripts/e2e.sh", "result": "19 checks passed, including the filter drawer, stage move, attention queue, and 390px", "at_utc": "2026-11-13T03:18:40Z", "browser": "Google Chrome via CRM_CHROMIUM_PATH"}
+    {"name": "scripts/e2e.sh", "result": "19 checks passed, including the filter drawer, stage move, attention queue, and 390px", "at_utc": "2026-11-13T03:54:10Z", "browser": "Google Chrome via CRM_CHROMIUM_PATH"},
+    {"name": "throwaway page crawl", "result": "Ana and Ada walked the main pages plus bad query strings on a throwaway SQLite demo. Pages had headings, no console errors, and no sideways scroll at 390px. Ana saved an open opportunity stage. Messages stayed labelled not sent.", "at_utc": "2026-11-13T03:53:00Z"}
   ],
   "blockers": [],
   "running_services": [],
-  "next_action": "The isolated restore, the usability pass on this run's screens, and the new-slice security and clean-start checks are recorded. Do not repeat them. Remaining work is outside this run: a real customer email provider, a live MySQL database, a public deploy, and a pass with the sales team. Retention, calendars, saved filters, and bulk handovers stay out. Do not wait on review.",
+  "next_action": "The page crawl and the input-bound checks are recorded. Do not repeat them. Remaining work is outside this run: a real customer email provider, a live MySQL database, a public deploy, and a pass with the sales team. Retention, calendars, saved filters, and bulk handovers stay out. Customer mail stays sandbox. SQLite stays the database. Do not wait on review.",
   "historical_run": {
     "run_id": "autonomous-build-2026-11-12",
     "original_start_utc": "2026-11-12T19:08:03Z",

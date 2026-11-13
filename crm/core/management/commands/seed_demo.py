@@ -100,6 +100,12 @@ class Command(BaseCommand):
                     interests="3BR house with garden, budget around 12M")
         log(c, now - 2 * D, ana, "conversation", "Discussed financing options; sending shortlist.")
         task(c, now - 2 * D, ana, ana, "Send shortlist of 3 garden homes", now + 2 * D)
+        with clock.frozen(now - 2 * D):
+            contacts.save_opportunity(
+                c, actor=ana, opportunity=None, expected_version=None,
+                data={"title": "Garden home shortlist", "stage": "viewing",
+                      "amount_minor": 1_200_000_000, "currency": policy["currency"]},
+            )
 
         # Overdue follow-up (task_overdue).
         c = capture("Sofia Mendoza", now - 9 * D, ana, email="sofia@example.test", source="referral",

@@ -146,7 +146,12 @@ def intake_view(request):
     if not supplied.startswith("Bearer ") or not hmac.compare_digest(supplied[7:].encode(), expected.encode()):
         log.warning("intake rejected: bad token", extra={"remote": request.META.get("REMOTE_ADDR", "")})
         return JsonResponse({"error": "Unauthorized."}, status=401)
-    if int(request.headers.get("Content-Length") or 0) > MAX_BODY or len(request.body) > MAX_BODY:
+    declared = request.headers.get("Content-Length")
+    try:
+        declared_length = int(declared) if declared else 0
+    except ValueError:
+        return JsonResponse({"error": "Content-Length is not a number."}, status=400)
+    if declared_length < 0 or declared_length > MAX_BODY or len(request.body) > MAX_BODY:
         return JsonResponse({"error": "Payload too large."}, status=413)
     try:
         payload = json.loads(request.body.decode("utf-8") or "null")
