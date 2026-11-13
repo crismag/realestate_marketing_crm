@@ -62,6 +62,20 @@ DEFAULT_POLICY: dict = {
         # the inactivity clock. Profile views and notes never count.
         "followup_types": ["outbound_attempt", "conversation", "inbound_reply", "meeting_tour"],
         "contact_reset_types": ["outbound_attempt", "conversation", "inbound_reply", "meeting_tour"],
+        # C-R1 implementation default: a sort aid on the attention queue. Not a ranking of people,
+        # and not an approved weighting. 0 on a points key turns that factor off.
+        "priority": {
+            "enabled": True,
+            "inquiry_points_per_day": 2,
+            "inquiry_day_cap": 14,
+            "recent_tour_points": 5,
+            "recent_tour_days": 7,
+            "opportunity_points": 2,
+            "stage_step_points": 1,
+            "agreed_due_points": 6,
+            "watcher_points": 1,
+            "watcher_cap": 3,
+        },
     },
     # C-R6 implementation default: also match +tag email variants and multi-word names in any order.
     # False = exact email/phone/name only (the original rule).

@@ -13,11 +13,11 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 
 from django.db import transaction
-from django.db.models import Max, Q
+from django.db.models import Count, Max, Q
 from django.utils import timezone
 
 from crm.accounts.models import User
-from crm.contacts.models import Contact, Inquiry, Interaction, Opportunity
+from crm.contacts.models import Contact, Inquiry, Interaction, Opportunity, Watch
 from crm.contacts.services import HUMAN_RESPONSE_KINDS
 from crm.core import clock
 from crm.core.errors import DomainError
@@ -75,6 +75,13 @@ class AttentionItem:
     last_success: dt.datetime | None
     last_tour: dt.datetime | None
     next_task: Task | None
+    score: int = 0
+    score_lines: list = field(default_factory=list)
+    score_enabled: bool = False
+
+    @property
+    def score_label(self) -> str:
+        return f"Priority {self.score}"
 
     @property
     def active_reasons(self) -> list[Reason]:
@@ -165,6 +172,9 @@ def evaluate(*, now: dt.datetime | None = None, policy: dict, contact_ids: list[
     ):
         handovers[h.contact_id] = h
 
+    watch_counts = dict(
+        Watch.objects.filter(contact_id__in=ids).values("contact_id").annotate(n=Count("pk")).values_list("contact_id", "n")
+    )
     snoozes = defaultdict(dict)
     for s in Snooze.objects.filter(contact_id__in=ids, until__gt=now, cleared_at__isnull=True):
         current = snoozes[s.contact_id].get(s.reason_code)
@@ -279,10 +289,69 @@ def evaluate(*, now: dt.datetime | None = None, policy: dict, contact_ids: list[
                 reason.snoozed_until = snoozes[contact.pk][reason.code]
         if reasons:
             reasons.sort(key=lambda r: REASON_ORDER.index(r.code))
-            items.append(AttentionItem(contact, handler_label, handler_users, reasons, last_attempt, last_success,
-                                       last_tour, next_task))
-    items.sort(key=lambda i: (i.severity, i.oldest_since or now, i.contact.display_name))
+            item = AttentionItem(contact, handler_label, handler_users, reasons, last_attempt, last_success,
+                                 last_tour, next_task)
+            _apply_priority(
+                item, now=now, policy=policy, open_opportunities=opportunities.get(contact.pk, []),
+                watcher_count=watch_counts.get(contact.pk, 0),
+            )
+            items.append(item)
+    # Severe reasons stay ahead of the rest. The score only orders within that group.
+    items.sort(key=lambda i: (i.severity, -i.score, i.oldest_since or now, i.contact.display_name))
     return items
+
+
+def _points(weights: dict, key: str) -> int:
+    try:
+        value = int(weights.get(key, 0) or 0)
+    except (TypeError, ValueError):
+        return 0
+    return max(0, value)
+
+
+def _apply_priority(item: AttentionItem, *, now: dt.datetime, policy: dict, open_opportunities, watcher_count: int) -> None:
+    """Explainable sort aid (C-R1). It never changes who is responsible and never hides a client."""
+    weights = (policy.get("attention") or {}).get("priority") or {}
+    if not weights.get("enabled", True):
+        return
+    item.score_enabled = True
+    lines = []
+    score = 0
+    waits = [r.since for r in item.active_reasons if r.code == "inquiry_awaiting" and r.since]
+    if waits:
+        days = min(_points(weights, "inquiry_day_cap"), int((now - min(waits)).total_seconds() // 86400))
+        points = days * _points(weights, "inquiry_points_per_day")
+        if points:
+            score += points
+            lines.append(f"Inquiry waiting {days} day(s)")
+    tour_days = _points(weights, "recent_tour_days")
+    tour_points = _points(weights, "recent_tour_points")
+    if item.last_tour is not None and tour_days and tour_points and now - item.last_tour <= dt.timedelta(days=tour_days):
+        score += tour_points
+        lines.append(f"Tour within the last {tour_days} day(s)")
+    if open_opportunities:
+        stages = policy.get("opportunity_stages") or []
+        index = {stage["code"]: i for i, stage in enumerate(stages)}
+        labels = {stage["code"]: stage["label"] for stage in stages}
+        furthest = max(open_opportunities, key=lambda opp: index.get(opp.stage, -1))
+        step = index.get(furthest.stage, -1)
+        points = _points(weights, "opportunity_points") + (max(0, step) * _points(weights, "stage_step_points"))
+        if points:
+            score += points
+            label = labels.get(furthest.stage, furthest.stage)
+            lines.append(f"Open opportunity at {label}")
+    agreed = item.contact.next_contact_agreed_at
+    agreed_points = _points(weights, "agreed_due_points")
+    if agreed is not None and agreed <= now and agreed_points:
+        score += agreed_points
+        lines.append("Agreed contact date has arrived")
+    watchers = min(_points(weights, "watcher_cap"), max(0, watcher_count))
+    watcher_points = watchers * _points(weights, "watcher_points")
+    if watcher_points:
+        score += watcher_points
+        lines.append(f"{watchers} colleague(s) watching")
+    item.score = score
+    item.score_lines = lines
 
 
 def _stalled(opp: Opportunity, *, now: dt.datetime, today: dt.date, ap: dict) -> tuple[dt.datetime, str] | None:
@@ -331,8 +400,11 @@ def filter_items(items: list[AttentionItem], *, user=None, scope: str = "mine", 
             if not any(team_id in [t.pk for t in u.teams.all()] for u in item.handler_users):
                 continue
         if reasons:
-            result.append(AttentionItem(item.contact, item.handler_label, item.handler_users, reasons,
-                                        item.last_attempt, item.last_success, item.last_tour, item.next_task))
+            # The score belongs to the client, so a reason filter keeps the same explanation.
+            copy = AttentionItem(item.contact, item.handler_label, item.handler_users, reasons,
+                                 item.last_attempt, item.last_success, item.last_tour, item.next_task)
+            copy.score, copy.score_lines, copy.score_enabled = item.score, list(item.score_lines), item.score_enabled
+            result.append(copy)
     return result
 
 

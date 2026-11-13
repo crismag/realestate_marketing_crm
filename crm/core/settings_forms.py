@@ -36,6 +36,11 @@ class PolicyForm(Form):
     stalled_opportunity_days = forms.IntegerField(min_value=0, max_value=3650,
                                                   label="Flag opportunities whose stage has not changed for (days, 0 = off)")
     flag_past_expected_close = forms.BooleanField(required=False, label="Flag open opportunities past their expected close date")
+    priority_score_enabled = forms.BooleanField(
+        required=False, label="Sort attention with an explained priority score",
+        help_text="A sort aid from the current rules. It does not rank people and does not change who is responsible. "
+                  "An implementation default, not an approved weighting.",
+    )
     followup_suggestions_enabled = forms.BooleanField(required=False, label="Suggest a follow-up task after logging an interaction")
     extended_duplicate_matching = forms.BooleanField(
         required=False, label="Wider duplicate check (+tag emails, names in any order)")
@@ -100,6 +105,7 @@ class PolicyForm(Form):
             "pool_waiting_hours": a["pool_waiting_hours"], "escalation_overdue_hours": a["escalation_overdue_hours"],
             "stalled_opportunity_days": a.get("stalled_opportunity_days", 0),
             "flag_past_expected_close": a.get("flag_past_expected_close", False),
+            "priority_score_enabled": a.get("priority", {}).get("enabled", True),
             "followup_suggestions_enabled": policy.get("followup_suggestions", {}).get("enabled", False),
             "extended_duplicate_matching": policy.get("duplicate_matching", {}).get("extended", False),
             "require_two_factor": policy.get("security", {}).get("require_two_factor", False),
@@ -127,6 +133,8 @@ class PolicyForm(Form):
                                "escalation_overdue_hours": d["escalation_overdue_hours"],
                                "stalled_opportunity_days": d["stalled_opportunity_days"],
                                "flag_past_expected_close": d["flag_past_expected_close"],
+                               "priority": {**current.get("attention", {}).get("priority", {}),
+                                            "enabled": d["priority_score_enabled"]},
                                "contact_reset_types": list(d["contact_reset_types"]),
                                "followup_types": list(d["contact_reset_types"])}
         policy["security"] = {**current.get("security", {}), "require_two_factor": d["require_two_factor"]}
