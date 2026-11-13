@@ -5,6 +5,8 @@ colleague can see every customer, with clear responsibility, shared pools, accep
 attention queue for forgotten clients, durable reminders, sandboxed customer email and reports that
 reconcile to their source records.
 
+Cursor Cloud handoff: [`context/cursor-cloud/README.md`](context/cursor-cloud/README.md), including the full launch prompt, cloud setup, work queue and resume checkpoints.
+
 Current autonomous development context and remaining stages: [`context/09_development/DEVELOPMENT_EXECUTION.md`](context/09_development/DEVELOPMENT_EXECUTION.md).
 
 The product requirements live in [`context/`](context/README.md). This README covers running the software.
