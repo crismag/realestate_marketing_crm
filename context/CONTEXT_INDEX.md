@@ -18,6 +18,7 @@ Authority: project-model.yaml plus current requirement records and accepted deci
 - [04_requirements/USER_MODULE_MATRIX.md](04_requirements/USER_MODULE_MATRIX.md)
 - [04_requirements/WORKFLOWS_v0.1.md](04_requirements/WORKFLOWS_v0.1.md)
 - [05_research/REFERENCE_FEATURE_MATRIX.md](05_research/REFERENCE_FEATURE_MATRIX.md)
+- [05_research/AI_AUTOMATION_RESEARCH.md](05_research/AI_AUTOMATION_RESEARCH.md) — AI/automation proposals (OQ-015)
 - [06_architecture/DATA_CONTRACTS.md](06_architecture/DATA_CONTRACTS.md)
 - [06_architecture/ERROR_AND_EVENT_CATALOG.md](06_architecture/ERROR_AND_EVENT_CATALOG.md)
 - [06_architecture/INTEGRATION_DESIGN.md](06_architecture/INTEGRATION_DESIGN.md)
