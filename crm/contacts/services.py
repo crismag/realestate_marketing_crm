@@ -1,6 +1,7 @@
 """Customer capture, search and relationship services (MOD-001, MOD-003)."""
 from __future__ import annotations
 
+import datetime as dt
 from dataclasses import dataclass
 
 from django.db import IntegrityError
@@ -10,10 +11,10 @@ from crm.automation.queue import emit
 from crm.core import clock
 from crm.core.db import write_transaction
 from crm.core.errors import ConflictError, DomainError
-from crm.core.services import audit
+from crm.core.services import audit, get_policy
 from crm.work.models import Assignment, AssignmentEvent, Pool
 
-from .models import Contact, Inquiry, Interaction, Opportunity, Source, Watch, normalize_email, normalize_phone
+from .models import Contact, Inquiry, Interaction, Opportunity, Source, Watch, name_key, normalize_email, normalize_phone
 
 CONTACT_EDITABLE_FIELDS = (
     "display_name", "email", "phone", "source", "source_detail", "introducer", "interests", "notes",
@@ -22,21 +23,66 @@ CONTACT_EDITABLE_FIELDS = (
 HUMAN_RESPONSE_KINDS = ("outbound_attempt", "conversation", "meeting_tour")
 
 
-def duplicate_candidates(*, email: str = "", phone: str = "", name: str = "", exclude_id: int | None = None) -> QuerySet:
-    """Possible duplicates by exact normalised email/phone or exact name. Never merges automatically."""
+def _email_variants(email: str) -> set[str]:
+    """The address itself plus its form without a "+tag" (jane+web@x.com -> jane@x.com)."""
+    value = normalize_email(email)
+    if "@" not in value:
+        return {value} if value else set()
+    local, _, domain = value.partition("@")
+    return {value, f"{local.split('+', 1)[0]}@{domain}"}
+
+
+def extended_matching_enabled() -> bool:
+    return bool(get_policy().get("duplicate_matching", {}).get("extended", True))
+
+
+def duplicate_candidates(*, email: str = "", phone: str = "", name: str = "", exclude_id: int | None = None,
+                         extended: bool | None = None) -> QuerySet:
+    """Possible duplicates. Never merges automatically.
+
+    Matches (implementation default, C-R6): normalised email, including the address without a "+tag";
+    the last 10 phone digits; and the name compared ignoring case, accents, punctuation and word order
+    ("Smith, John" = "john smith"). A name match only counts for names of two or more words, so a single
+    first name does not flag everyone who shares it.
+    """
+    if extended is None:
+        extended = extended_matching_enabled()
     query = Q()
-    if normalize_email(email):
-        query |= Q(email_normalized=normalize_email(email))
+    emails = _email_variants(email) if extended else ({normalize_email(email)} - {""})
+    for variant in emails:
+        if not extended:
+            query |= Q(email_normalized=variant)
+            continue
+        query |= Q(email_normalized=variant) | Q(email_normalized__startswith=variant.split("@")[0] + "+",
+                                                 email_normalized__endswith="@" + variant.split("@")[-1])
     if normalize_phone(phone) and len(normalize_phone(phone)) >= 7:
         query |= Q(phone_normalized=normalize_phone(phone))
     if name.strip():
         query |= Q(display_name__iexact=name.strip())
+        key = name_key(name)
+        if extended and len(key.split()) >= 2:
+            query |= Q(name_key=key)
     if not query:
         return Contact.objects.none()
     qs = Contact.objects.filter(query).select_related("assignment__user", "assignment__pool")
     if exclude_id:
         qs = qs.exclude(pk=exclude_id)
     return qs[:10]
+
+
+def match_reasons(candidate: Contact, *, email: str = "", phone: str = "", name: str = "") -> list[str]:
+    """Why a candidate was suggested, so the person can judge it (shown next to each candidate)."""
+    reasons = []
+    mine = {e.split("@")[0].split("+")[0] + "@" + e.split("@")[-1] for e in _email_variants(email) if "@" in e}
+    theirs = {e.split("@")[0].split("+")[0] + "@" + e.split("@")[-1] for e in _email_variants(candidate.email) if "@" in e}
+    if mine & theirs:
+        reasons.append("same email" if normalize_email(email) == candidate.email_normalized else "same email apart from a +tag")
+    if normalize_phone(phone) and len(normalize_phone(phone)) >= 7 and normalize_phone(phone) == candidate.phone_normalized:
+        reasons.append("same phone")
+    if name.strip() and (candidate.display_name.lower() == name.strip().lower()
+                         or (len(name_key(name).split()) >= 2 and candidate.name_key == name_key(name))):
+        reasons.append("same name" if candidate.display_name.lower() == name.strip().lower() else "same name, different order or spelling marks")
+    return reasons
 
 
 @dataclass
@@ -91,6 +137,7 @@ def update_contact(contact: Contact, *, actor, data: dict, expected_version: int
             return current
         fields["email_normalized"] = normalize_email(fields.get("email", current.email))
         fields["phone_normalized"] = normalize_phone(fields.get("phone", current.phone))
+        fields["name_key"] = name_key(fields.get("display_name", current.display_name))
         updated = Contact.objects.filter(pk=contact.pk, version=expected_version).update(
             version=expected_version + 1, updated_at=clock.now(), **fields
         )
@@ -244,11 +291,16 @@ def save_opportunity(contact: Contact, *, actor, opportunity: Opportunity | None
     def run():
         fields = {k: v for k, v in data.items() if k in allowed}
         if opportunity is None:
-            opp = Opportunity.objects.create(contact=contact, created_by=actor, created_at=clock.now(), **fields)
+            now = clock.now()
+            opp = Opportunity.objects.create(contact=contact, created_by=actor, created_at=now, stage_changed_at=now, **fields)
             audit("opportunity.created", opp, f"Opportunity '{opp.title}' created", actor=actor, contact=contact)
             return opp
         if opportunity.outcome != "open":
             raise DomainError("Closed opportunities cannot be edited. Reopen it first.", code="closed")
+        stage_changed = "stage" in fields and fields["stage"] != opportunity.stage
+        if stage_changed:
+            # Only a real stage change moves the clock used by the stalled-opportunity reason (C-R2).
+            fields["stage_changed_at"] = clock.now()
         updated = Opportunity.objects.filter(pk=opportunity.pk, version=expected_version).update(
             version=expected_version + 1, **fields
         )
@@ -256,6 +308,9 @@ def save_opportunity(contact: Contact, *, actor, opportunity: Opportunity | None
             raise ConflictError("This opportunity was changed by someone else. Reload and try again.")
         opp = Opportunity.objects.get(pk=opportunity.pk)
         audit("opportunity.updated", opp, f"Opportunity '{opp.title}' updated (stage {opp.stage})", actor=actor, contact=contact)
+        if stage_changed:
+            audit("opportunity.stage_changed", opp, f"Opportunity '{opp.title}' stage {opportunity.stage} -> {opp.stage}",
+                  actor=actor, contact=contact, data={"from": opportunity.stage, "to": opp.stage})
         return opp
 
     return write_transaction(run)
@@ -335,3 +390,30 @@ def search_contacts(*, q: str = "", lifecycle: str = "", responsibility: str = "
         "-updated": ["-updated_at", "-id"],
     }.get(sort, ["display_name", "id"])
     return qs.order_by(*order)
+
+
+MAX_ID = 2**63 - 1
+
+
+def followup_suggestion(contact: Contact, *, user, interaction_ref: str, policy: dict) -> dict | None:
+    """C-R3: a pre-filled follow-up task after `user` logs an interaction. Nothing is created here.
+
+    Offered only for the interaction this user just logged (by id, within an hour), for interaction types
+    configured in policy, and when the contact has no open task due in the future.
+    """
+    config = policy.get("followup_suggestions") or {}
+    if not config.get("enabled") or not interaction_ref.isdigit() or len(interaction_ref) > 19:
+        return None
+    interaction_id = int(interaction_ref)
+    if interaction_id > MAX_ID:
+        return None
+    now = clock.now()
+    interaction = Interaction.objects.filter(pk=interaction_id, contact=contact, actor=user,
+                                             recorded_at__gte=now - dt.timedelta(hours=1)).first()
+    rule = (config.get("by_kind") or {}).get(interaction.kind) if interaction else None
+    if not rule:
+        return None
+    if contact.tasks.filter(status="open", due_at__gte=now).exists():
+        return None
+    return {"interaction": interaction, "title": str(rule["title"])[:200],
+            "due_at": now + dt.timedelta(hours=int(rule.get("hours", 24)))}

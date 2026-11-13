@@ -1,0 +1,19 @@
+{% extends "base.html" %}{% load crm_ui %}{% block title %}Merge {{ duplicate.display_name }}{% endblock %}
+{% block content %}
+<nav class="cg-breadcrumb small" aria-label="Breadcrumb"><a class="cg-breadcrumb__link" href="{% url 'contacts:list' %}">Contacts</a> <span class="cg-breadcrumb__separator" aria-hidden="true">/</span> <a class="cg-breadcrumb__link" href="{% url 'contacts:detail' keep.pk %}">{{ keep.display_name }}</a> <span class="cg-breadcrumb__separator" aria-hidden="true">/</span> <span aria-current="page">Merge</span></nav>
+<div class="page-head"><div><h1 class="cg-typography" data-variant="h4">Merge a duplicate</h1><p class="muted">Keep <strong>{{ keep.display_name }}</strong> and move everything from <strong>{{ duplicate.display_name }}</strong> into it.</p></div></div>
+<div class="grid grid--2">
+<section class="cg-card"><div class="card-title"><h2>Keep</h2></div><dl class="card-pad facts"><dt>Name</dt><dd><a href="{% url 'contacts:detail' keep.pk %}">{{ keep.display_name }}</a></dd><dt>Email</dt><dd>{{ keep.email|default:"—" }}</dd><dt>Phone</dt><dd>{{ keep.phone|default:"—" }}</dd><dt>Captured</dt><dd>{{ keep.created_at|local:"Y-m-d" }}</dd></dl></section>
+<section class="cg-card"><div class="card-title"><h2>Merge and archive</h2></div><dl class="card-pad facts"><dt>Name</dt><dd><a href="{% url 'contacts:detail' duplicate.pk %}">{{ duplicate.display_name }}</a></dd><dt>Email</dt><dd>{{ duplicate.email|default:"—" }}</dd><dt>Phone</dt><dd>{{ duplicate.phone|default:"—" }}</dd><dt>Captured</dt><dd>{{ duplicate.created_at|local:"Y-m-d" }}</dd></dl></section>
+</div>
+<section class="cg-card mt-4"><div class="card-title"><h2>What happens</h2></div><div class="card-pad stack-sm">
+<ul class="small">{% for label, n in plan.moves.items %}{% if n %}<li>{{ n }} {{ label }} move to {{ keep.display_name }}</li>{% endif %}{% endfor %}
+{% for f in plan.filled %}<li>{{ field_labels|get_item:f|capfirst }} is copied over (it is empty on the kept record)</li>{% endfor %}
+<li>Notes are combined; the more advanced lifecycle is kept; an email opt-out on either record applies to the kept one</li>
+<li>{{ duplicate.display_name }} is archived with a link to {{ keep.display_name }}. Nothing is deleted.</li></ul>
+{% if plan.blockers %}{% for b in plan.blockers %}<div class="alert-soft" role="alert">{{ b }}</div>{% endfor %}
+{% else %}<form method="post" class="stack-sm" novalidate>{% csrf_token %}<input type="hidden" name="keep_version" value="{{ keep.version }}"><input type="hidden" name="duplicate_version" value="{{ duplicate.version }}">
+<div class="field"><label for="merge-reason">Note (optional)</label><input class="cg-input" data-size="md" data-color="default" id="merge-reason" name="reason" maxlength="200" placeholder="e.g. Same buyer, second email address"></div>
+<div class="form-actions"><button class="cg-button" data-variant="solid" data-color="primary" data-size="md" data-shape="rounded" data-full-width="false" type="submit">Merge</button><a class="cg-button" data-variant="ghost" data-color="secondary" data-size="md" data-shape="rounded" data-full-width="false" href="{% url 'contacts:detail' keep.pk %}">Cancel</a></div></form>{% endif %}
+</div></section>
+{% endblock %}

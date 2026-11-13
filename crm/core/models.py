@@ -51,3 +51,16 @@ class SettingsVersion(models.Model):
 
     class Meta:
         ordering = ["-version"]
+
+
+class BrandLogo(models.Model):
+    """Singleton (pk=1): the company logo, stored in the database so backups carry it."""
+
+    content_type = models.CharField(max_length=40)
+    data = models.BinaryField()
+    sha256 = models.CharField(max_length=64)
+    uploaded_at = models.DateTimeField(default=clock.now)
+    uploaded_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.PROTECT, related_name="+")
+
+    class Meta:
+        constraints = [models.CheckConstraint(condition=models.Q(pk=1), name="brand_logo_singleton")]

@@ -1,0 +1,21 @@
+{% extends "base.html" %}{% load crm_ui %}{% block title %}Import {{ imp.filename }}{% endblock %}
+{% block content %}
+<nav class="cg-breadcrumb small" aria-label="Breadcrumb"><a class="cg-breadcrumb__link" href="{% url 'contacts:list' %}">Contacts</a> <span class="cg-breadcrumb__separator" aria-hidden="true">/</span> <a class="cg-breadcrumb__link" href="{% url 'contacts:import' %}">Import</a> <span class="cg-breadcrumb__separator" aria-hidden="true">/</span> <span aria-current="page">{{ imp.filename }}</span></nav>
+<div class="page-head"><div><h1 class="cg-typography" data-variant="h4">{{ imp.filename }}</h1>
+<p class="muted">{% chip imp.get_status_display imp.status %} Uploaded by {{ imp.created_by }} {{ imp.created_at|local }}. Responsible: {% if imp.destination == 'pool' %}pool {{ imp.pool }}{% else %}{{ imp.created_by }}{% endif %}.</p></div></div>
+<section class="grid grid--stats" aria-label="Import summary">
+{% if imp.status == 'done' %}<div class="cg-card stat"><div class="stat__value">{{ counts.created }}</div><div class="stat__label">Added</div></div><div class="cg-card stat"><div class="stat__value">{{ counts.skipped }}</div><div class="stat__label">Skipped as possible duplicates</div></div>
+{% else %}<div class="cg-card stat"><div class="stat__value">{{ counts.ready }}</div><div class="stat__label">Ready to add</div></div><div class="cg-card stat"><div class="stat__value">{{ counts.duplicate }}</div><div class="stat__label">Possible duplicates</div></div>{% endif %}
+<div class="cg-card stat"><div class="stat__value">{{ counts.error }}</div><div class="stat__label">Rows with problems (not added)</div></div>
+</section>
+<p class="small muted">Columns used: {% for h in recognised %}<strong>{{ h }}</strong> → {% with f=imp.columns|get_item:h %}{{ field_labels|get_item:f }}{% endwith %}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
+{% if imp.status == 'preview' and is_owner %}<section class="cg-card"><form method="post" class="card-pad row">{% csrf_token %}
+{% if counts.duplicate %}<label class="field--checkbox"><input class="cg-checkbox" data-color="primary" type="checkbox" name="include_duplicates" value="1"> Also add the {{ counts.duplicate }} possible duplicate(s)</label>{% endif %}
+<button class="cg-button" data-variant="solid" data-color="primary" data-size="md" data-shape="rounded" data-full-width="false" name="action" value="run">Add contacts</button>
+<button class="cg-button" data-variant="ghost" data-color="secondary" data-size="md" data-shape="rounded" data-full-width="false" name="action" value="cancel">Cancel import</button></form></section>{% endif %}
+<section class="cg-card mt-4"><div class="table-wrap"><table class="cg-table"><thead><tr><th class="cg-table__head">Row</th><th class="cg-table__head">Name</th><th class="cg-table__head">Email / phone</th><th class="cg-table__head">Result</th></tr></thead><tbody>
+{% for r in rows %}<tr><td class="cg-table__cell num">{{ r.line }}</td><td class="cg-table__cell">{% if r.contact_id %}<a href="{% url 'contacts:detail' r.contact_id %}">{{ r.data.display_name }}</a>{% else %}{{ r.data.display_name|default:"—" }}{% endif %}</td>
+<td class="cg-table__cell small">{{ r.data.email }}{% if r.data.email and r.data.phone %}<br>{% endif %}{{ r.data.phone }}</td>
+<td class="cg-table__cell small">{% chip r.status|capfirst r.status %}{% for e in r.errors %}<div class="errors">{{ e }}</div>{% endfor %}{% for d in r.duplicates %}<div class="muted">Looks like {% if d.id %}<a href="{% url 'contacts:detail' d.id %}">{{ d.name }}</a>{% else %}{{ d.name }}{% endif %}</div>{% endfor %}</td></tr>{% endfor %}
+</tbody></table></div>{% if more %}<p class="card-pad small muted">And {{ more }} more row(s) not shown.</p>{% endif %}</section>
+{% endblock %}

@@ -30,7 +30,13 @@ def template_values(contact: Contact, policy: dict) -> dict:
         handler = assignment.user.full_name
     else:
         handler = "Our team"
-    return {"customer_name": contact.display_name, "handler_name": handler, "workspace_name": policy["workspace_name"]}
+    return {"customer_name": contact.display_name, "handler_name": handler, **company_values(policy)}
+
+
+def company_values(policy: dict) -> dict:
+    company = policy.get("company") or {}
+    return {"workspace_name": policy["workspace_name"],
+            **{f"company_{k}": company.get(k, "") for k in ("phone", "email", "website", "address")}}
 
 
 def adjust_for_quiet_hours(moment: dt.datetime, policy: dict) -> dt.datetime:

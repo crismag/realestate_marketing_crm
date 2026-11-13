@@ -9,10 +9,10 @@ until the items marked *Before pilot* are done and the product owner has reviewe
 | Item | Why | Notes |
 |---|---|---|
 | Owner review of implementation defaults | Every timing, cadence, lifecycle and email rule is an engineer's default, not an approval | OQ-002, OQ-008, OQ-010, OQ-011, OQ-012 |
-| Hosting decision and TLS | Production settings exist but no server was set up | OQ-012; see OPERATIONS.md |
-| Disk encryption + backup destination + restore drill | SQLite and backups are unencrypted | OPERATIONS.md |
+| Hosting decision and TLS | A Docker kit with automatic HTTPS exists (`deploy/`, tested locally on 2026-11-13); no real server was set up | OQ-012; see INSTALL_NEW_COMPANY.md |
+| Backup destination + restore drill | Backups are encrypted when `CRM_BACKUP_KEY` is set; copying them off the server and a drill per install are still manual | INSTALL_NEW_COMPANY.md |
 | Real email provider (if customer email is wanted) | Only the sandbox transport exists | Needs provider choice, sender identity, SPF/DKIM, signed callbacks, bounce handling, sandbox-account test |
-| Usability pass with 2–3 agents and a coordinator | No user has tried the screens | Watch capture, claim, handover and attention flows |
+| Usability pass with 2–3 agents and a coordinator | Only an automated walk-through of every screen was done | Use docs/PILOT_TEST_SCRIPT.md |
 | Accessibility review | Semantic HTML, labels, keyboard-reachable native controls and focus styles are in place; no audit with assistive tech was done | WCAG 2.1 AA check |
 
 ## Product backlog (not in this build)
@@ -22,10 +22,9 @@ until the items marked *Before pilot* are done and the product owner has reviewe
 - Engagement metrics beyond logged interactions (no website/email tracking).
 - Saved dynamic filters for watchlists (recommended, not required by REQ-021).
 - Sales pipeline board view (stages are a table column today).
-- Bulk actions (bulk reassign, bulk import from spreadsheet). Only CSV **export** exists.
-- Contact merge tool: duplicates are surfaced but merging must be done by hand.
+- Bulk reassign. (CSV import exists since 2026-11-13.)
 - Data retention and deletion workflow (only archiving).
-- Password reset by email, MFA, SSO.
+- SSO (password reset by email and two-step sign-in exist since 2026-11-13).
 - Notification channels other than in-app (email/SMS/chat to staff).
 - Attention digest delivered by email (today it is an in-app notification).
 - Calendar for tours/viewings (tours are logged as interactions; future ones as tasks).

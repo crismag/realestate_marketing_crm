@@ -8,3 +8,5 @@ cffi==2.1.1
 pycparser==3.12
 whitenoise==6.11.0
 waitress==3.0.2
+segno==1.6.6           # QR code for two-step sign-in setup (pure Python)
+cryptography==50.0.2   # AES-GCM encryption of database backups

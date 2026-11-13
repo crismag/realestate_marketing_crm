@@ -1,4 +1,4 @@
-"""Settings for the Realstate CRM.
+"""Settings for the Real Estate CRM.
 
 All environment-dependent values come from CRM_* environment variables (see
 .env.example). Nothing secret is committed. SQLite is the current database;
@@ -29,7 +29,11 @@ def env_list(name: str, default: str) -> list[str]:
 
 
 CRM_ENV = os.environ.get("CRM_ENV", "development")  # development | test | production
-DEBUG = env_bool("CRM_DEBUG", False)
+# Development defaults to DEBUG on so the README quick start works without a .env file
+# (DEBUG off needs collectstatic). Production refuses DEBUG below.
+DEBUG = env_bool("CRM_DEBUG", CRM_ENV == "development")
+if DEBUG and CRM_ENV == "production":
+    raise ImproperlyConfigured("CRM_DEBUG must be off when CRM_ENV=production.")
 
 
 def _load_secret_key() -> str:
@@ -78,8 +82,8 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.auth.middleware.LoginRequiredMiddleware",
-    "crm.accounts.middleware.ForcePasswordChangeMiddleware",
     "crm.core.middleware.WorkspaceTimezoneMiddleware",
+    "crm.accounts.middleware.ForcePasswordChangeMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "crm.core.middleware.SecurityHeadersMiddleware",
@@ -179,7 +183,7 @@ USE_I18N = False
 USE_TZ = True
 
 STATIC_URL = "static/"
-STATIC_ROOT = VAR_DIR / "staticfiles"
+STATIC_ROOT = Path(os.environ.get("CRM_STATIC_ROOT", VAR_DIR / "staticfiles"))
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
@@ -194,7 +198,24 @@ STORAGES = {
 
 # --- CRM runtime ----------------------------------------------------------------
 CRM_BACKUP_DIR = Path(os.environ.get("CRM_BACKUP_DIR", VAR_DIR / "backups"))
+CRM_BACKUP_KEY = os.environ.get("CRM_BACKUP_KEY", "")  # URL-safe base64, 32 bytes; empty = unencrypted backups
 CRM_EMAIL_TRANSPORT = os.environ.get("CRM_EMAIL_TRANSPORT", "sandbox")  # only 'sandbox' is implemented
+# Staff email (password reset links to employees, never customer messages). Nothing is sent unless an
+# SMTP server is configured; otherwise each message is written to var/staff_mail/ for the administrator.
+CRM_STAFF_SMTP_HOST = os.environ.get("CRM_STAFF_SMTP_HOST", "")
+if CRM_STAFF_SMTP_HOST:
+    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+    EMAIL_HOST = CRM_STAFF_SMTP_HOST
+    EMAIL_PORT = int(os.environ.get("CRM_STAFF_SMTP_PORT", "587"))
+    EMAIL_HOST_USER = os.environ.get("CRM_STAFF_SMTP_USER", "")
+    EMAIL_HOST_PASSWORD = os.environ.get("CRM_STAFF_SMTP_PASSWORD", "")
+    EMAIL_USE_TLS = env_bool("CRM_STAFF_SMTP_TLS", True)
+    EMAIL_TIMEOUT = 15
+else:
+    EMAIL_BACKEND = "django.core.mail.backends.filebased.EmailBackend"
+    EMAIL_FILE_PATH = VAR_DIR / "staff_mail"
+DEFAULT_FROM_EMAIL = os.environ.get("CRM_STAFF_FROM_EMAIL", "crm@localhost")
+PASSWORD_RESET_TIMEOUT = 60 * 60  # reset links work for one hour
 CRM_WORKER_LEASE_SECONDS = int(os.environ.get("CRM_WORKER_LEASE_SECONDS", "120"))
 CRM_WORKER_POLL_SECONDS = float(os.environ.get("CRM_WORKER_POLL_SECONDS", "5"))
 

@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import hashlib
+
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_not_required
 from django.core.exceptions import PermissionDenied
 from django.db import connection, transaction
-from django.http import JsonResponse
+from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
 from crm.accounts.models import Team
@@ -17,9 +19,9 @@ from crm.work.models import Handover, Pool, Task
 
 from . import clock
 from .errors import DomainError
-from .models import AuditEvent, SettingsVersion
+from .models import AuditEvent, BrandLogo, SettingsVersion
 from .services import audit, get_policy, get_settings_row, update_policy
-from .settings_forms import PolicyForm, PoolForm, SourceForm, TeamForm
+from .settings_forms import CompanyForm, PolicyForm, PoolForm, SourceForm, TeamForm
 from .web import paginate
 
 User = get_user_model()
@@ -73,7 +75,33 @@ def today(request):
         "items": mine[:25], "mine_total": len(mine), "summary": summary, "team_summary": team_summary,
         "reasons": attention.REASONS, "my_tasks": my_tasks, "to_decide": to_decide, "sent": sent, "coverage": coverage,
         "notes": notes, "now": now, "health": worker_health(now),
+        "setup": setup_steps(policy) if request.user.is_staff else None,
     })
+
+
+def setup_steps(policy) -> dict | None:
+    """First-run checklist for a new company install. Derived from data, nothing is stored; None when complete."""
+    from crm.contacts.models import Contact
+
+    from .policy import DEFAULT_POLICY
+
+    company = policy.get("company") or {}
+    steps = [
+        ("Fill in the company profile and logo", "core:company",
+         policy["workspace_name"] != DEFAULT_POLICY["workspace_name"] or any(company.values())),
+        ("Review timezone, currency, stages and follow-up timings", "core:settings",
+         bool(policy.get("setup", {}).get("settings_reviewed"))),
+        ("Add your agents and coordinators", "accounts:users",
+         get_user_model().objects.filter(is_active=True).count() > 1),
+        ("Create a shared pool with a coordinator", "core:pool_new",
+         Pool.objects.filter(active=True, coordinator__isnull=False).exists()),
+        ("Capture or import your first contacts", "contacts:new", Contact.objects.exists()),
+    ]
+    done = sum(1 for *_, ok in steps if ok)
+    if done == len(steps):
+        return None
+    return {"steps": [{"label": label, "url": url, "done": ok} for label, url, ok in steps], "done": done,
+            "total": len(steps)}
 
 
 def _require_admin_for_writes(request):
@@ -159,3 +187,49 @@ def audit_log(request):
     page, querystring = paginate(request, qs, per_page=50)
     return render(request, "core/audit.html", {"page": page, "querystring": querystring, "action": action, "actor": actor,
                                                "users": User.objects.order_by("full_name")})
+
+
+def company_profile(request):
+    _require_admin_for_writes(request)
+    row = get_settings_row()
+    policy = get_policy()
+    form = CompanyForm(request.POST or None, request.FILES or None, initial=CompanyForm.initial_from(policy, row.version))
+    logo = BrandLogo.objects.filter(pk=1).only("sha256", "uploaded_at").first()
+    if request.method == "POST" and form.is_valid():
+        d = form.cleaned_data
+        try:
+            with transaction.atomic():
+                update_policy(form.to_policy(policy), actor=request.user, expected_version=d["version"],
+                              note=d["note"] or "Company profile")
+                if d["logo"]:
+                    digest = hashlib.sha256(d["logo"]["data"]).hexdigest()
+                    BrandLogo.objects.update_or_create(pk=1, defaults={
+                        "data": d["logo"]["data"], "content_type": d["logo"]["content_type"], "sha256": digest,
+                        "uploaded_at": clock.now(), "uploaded_by": request.user})
+                    audit("brand.logo_uploaded", get_settings_row(), f"Logo uploaded ({len(d['logo']['data'])} bytes)",
+                          actor=request.user, data={"sha256": digest})
+                elif d["remove_logo"] and logo is not None:
+                    BrandLogo.objects.filter(pk=1).delete()
+                    audit("brand.logo_removed", get_settings_row(), "Logo removed", actor=request.user)
+        except DomainError as exc:
+            form.add_error(None, exc.message)
+        else:
+            messages.success(request, "Company profile saved.")
+            return redirect("core:company")
+    return render(request, "core/company.html", {"form": form, "logo": logo})
+
+
+@login_not_required
+def brand_logo(request):
+    logo = BrandLogo.objects.filter(pk=1).first()
+    if logo is None:
+        raise Http404("No logo")
+    etag = f'"{logo.sha256}"'
+    if request.headers.get("If-None-Match") == etag:
+        response = HttpResponse(status=304)
+    else:
+        response = HttpResponse(bytes(logo.data), content_type=logo.content_type)
+    response["ETag"] = etag
+    response["Cache-Control"] = "public, max-age=300"
+    response["X-Content-Type-Options"] = "nosniff"
+    return response

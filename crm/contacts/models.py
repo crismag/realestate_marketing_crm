@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+import unicodedata
 
 from django.conf import settings
 from django.db import models
@@ -14,6 +15,19 @@ DISPOSITIONS = [("active", "Active"), ("nurture", "Nurture"), ("inactive", "Inac
 
 def normalize_email(value: str | None) -> str:
     return (value or "").strip().lower()
+
+
+NAME_KEY_LENGTH = 255
+
+
+def name_key(value: str | None) -> str:
+    """Order-insensitive name key: "Smith, John" and "john  SMITH" both give "john smith"."""
+    text = unicodedata.normalize("NFKD", value or "")
+    text = "".join(ch for ch in text if not unicodedata.combining(ch)).casefold()
+    words = re.findall(r"[^\W_]+", text)  # Unicode letters/digits, so non-Latin names get a key too
+    key = " ".join(sorted(words))
+    # Never truncate: a cut key could make two different names equal. Over-long names get no key.
+    return key if len(key) <= NAME_KEY_LENGTH else ""
 
 
 def normalize_phone(value: str | None) -> str:
@@ -51,6 +65,8 @@ class Contact(models.Model):
     phone = models.CharField(max_length=40, blank=True)
     email_normalized = models.CharField(max_length=254, blank=True, db_index=True, editable=False)
     phone_normalized = models.CharField(max_length=20, blank=True, db_index=True, editable=False)
+    name_key = models.CharField(max_length=255, blank=True, db_index=True, editable=False, db_default="",
+                                help_text="Lowercased, accent-free, word-sorted name for duplicate matching")
     lifecycle = models.CharField(max_length=20, choices=LIFECYCLES, default="lead", db_index=True)
     disposition = models.CharField(max_length=20, choices=DISPOSITIONS, default="active")
     disposition_reason = models.CharField(max_length=200, blank=True)
@@ -70,6 +86,8 @@ class Contact(models.Model):
         null=True, blank=True, help_text="Customer-requested later contact date; suppresses routine inactivity reminders"
     )
     archived_at = models.DateTimeField(null=True, blank=True)
+    merged_into = models.ForeignKey("self", null=True, blank=True, on_delete=models.PROTECT, related_name="merged_from",
+                                    help_text="Set when this record was merged into another and archived")
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.PROTECT, related_name="+")
     created_at = models.DateTimeField(default=clock.now, db_index=True)
     updated_at = models.DateTimeField(default=clock.now)
@@ -85,6 +103,7 @@ class Contact(models.Model):
     def save(self, *args, **kwargs):
         self.email_normalized = normalize_email(self.email)
         self.phone_normalized = normalize_phone(self.phone)
+        self.name_key = name_key(self.display_name)
         super().save(*args, **kwargs)
 
     @property
@@ -134,6 +153,7 @@ class Opportunity(models.Model):
     contact = models.ForeignKey(Contact, on_delete=models.PROTECT, related_name="opportunities")
     title = models.CharField(max_length=200)
     stage = models.CharField(max_length=40, default="new")
+    stage_changed_at = models.DateTimeField(null=True, blank=True, help_text="When the stage last actually changed")
     outcome = models.CharField(max_length=10, choices=OUTCOMES, default="open", db_index=True)
     amount_minor = models.BigIntegerField(null=True, blank=True, help_text="Integer minor units (e.g. cents)")
     currency = models.CharField(max_length=3, blank=True)
@@ -159,3 +179,27 @@ class Watch(models.Model):
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=["user", "contact"], name="unique_watch")]
+
+
+class ContactImport(models.Model):
+    """A spreadsheet import: parsed and previewed first, then run once (status flip guards double submits)."""
+
+    STATUSES = [("preview", "Preview"), ("running", "Importing"), ("done", "Imported"), ("cancelled", "Cancelled")]
+
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+")
+    created_at = models.DateTimeField(default=clock.now)
+    filename = models.CharField(max_length=200)
+    destination = models.CharField(max_length=10, default="me")
+    pool = models.ForeignKey("work.Pool", null=True, blank=True, on_delete=models.PROTECT, related_name="+")
+    default_source = models.ForeignKey(Source, null=True, blank=True, on_delete=models.PROTECT, related_name="+")
+    columns = models.JSONField(default=dict)  # recognised header -> field
+    rows = models.JSONField(default=list)  # [{line, data, errors, duplicates, status, contact_id}]
+    status = models.CharField(max_length=12, choices=STATUSES, default="preview")
+    finished_at = models.DateTimeField(null=True, blank=True)
+    summary = models.JSONField(default=dict)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"Import {self.pk} ({self.filename})"
